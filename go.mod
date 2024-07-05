@@ -1,4 +1,4 @@
-module svelgo
+module mocku
 
 go 1.22
 

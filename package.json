@@ -21,5 +21,6 @@
   "dependencies": {
     "@inertiajs/svelte": "^1.2.0",
     "svelte": "^4.2.18"
-  }
+  },
+  "packageManager": "yarn@4.1.1+sha224.00f08619463229f8ba40c4ee90e8c2e4ced1f11c3115c26f3b98432e"
 }
