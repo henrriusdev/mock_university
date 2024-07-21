@@ -4,10 +4,12 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 	"mocku/backend/ent/careers"
 	"mocku/backend/ent/predicate"
+	"mocku/backend/ent/professor"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -21,6 +23,8 @@ type CareersQuery struct {
 	order      []careers.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Careers
+	withLeader *ProfessorQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -55,6 +59,28 @@ func (cq *CareersQuery) Unique(unique bool) *CareersQuery {
 func (cq *CareersQuery) Order(o ...careers.OrderOption) *CareersQuery {
 	cq.order = append(cq.order, o...)
 	return cq
+}
+
+// QueryLeader chains the current query on the "leader" edge.
+func (cq *CareersQuery) QueryLeader() *ProfessorQuery {
+	query := (&ProfessorClient{config: cq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(careers.Table, careers.FieldID, selector),
+			sqlgraph.To(professor.Table, professor.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, careers.LeaderTable, careers.LeaderColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Careers entity from the query.
@@ -249,10 +275,22 @@ func (cq *CareersQuery) Clone() *CareersQuery {
 		order:      append([]careers.OrderOption{}, cq.order...),
 		inters:     append([]Interceptor{}, cq.inters...),
 		predicates: append([]predicate.Careers{}, cq.predicates...),
+		withLeader: cq.withLeader.Clone(),
 		// clone intermediate query.
 		sql:  cq.sql.Clone(),
 		path: cq.path,
 	}
+}
+
+// WithLeader tells the query-builder to eager-load the nodes that are connected to
+// the "leader" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CareersQuery) WithLeader(opts ...func(*ProfessorQuery)) *CareersQuery {
+	query := (&ProfessorClient{config: cq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withLeader = query
+	return cq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -331,15 +369,23 @@ func (cq *CareersQuery) prepareQuery(ctx context.Context) error {
 
 func (cq *CareersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Careers, error) {
 	var (
-		nodes = []*Careers{}
-		_spec = cq.querySpec()
+		nodes       = []*Careers{}
+		withFKs     = cq.withFKs
+		_spec       = cq.querySpec()
+		loadedTypes = [1]bool{
+			cq.withLeader != nil,
+		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, careers.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Careers).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Careers{config: cq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -351,7 +397,46 @@ func (cq *CareersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Care
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := cq.withLeader; query != nil {
+		if err := cq.loadLeader(ctx, query, nodes,
+			func(n *Careers) { n.Edges.Leader = []*Professor{} },
+			func(n *Careers, e *Professor) { n.Edges.Leader = append(n.Edges.Leader, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (cq *CareersQuery) loadLeader(ctx context.Context, query *ProfessorQuery, nodes []*Careers, init func(*Careers), assign func(*Careers, *Professor)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Careers)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Professor(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(careers.LeaderColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.careers_leader
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "careers_leader" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "careers_leader" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (cq *CareersQuery) sqlCount(ctx context.Context) (int, error) {

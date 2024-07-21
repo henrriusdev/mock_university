@@ -12,8 +12,36 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Blog is the client for interacting with the Blog builders.
+	Blog *BlogClient
 	// Careers is the client for interacting with the Careers builders.
 	Careers *CareersClient
+	// Configuration is the client for interacting with the Configuration builders.
+	Configuration *ConfigurationClient
+	// Cycle is the client for interacting with the Cycle builders.
+	Cycle *CycleClient
+	// Module is the client for interacting with the Module builders.
+	Module *ModuleClient
+	// Note is the client for interacting with the Note builders.
+	Note *NoteClient
+	// Notification is the client for interacting with the Notification builders.
+	Notification *NotificationClient
+	// Payment is the client for interacting with the Payment builders.
+	Payment *PaymentClient
+	// PaymentMethod is the client for interacting with the PaymentMethod builders.
+	PaymentMethod *PaymentMethodClient
+	// Permission is the client for interacting with the Permission builders.
+	Permission *PermissionClient
+	// Professor is the client for interacting with the Professor builders.
+	Professor *ProfessorClient
+	// Request is the client for interacting with the Request builders.
+	Request *RequestClient
+	// Role is the client for interacting with the Role builders.
+	Role *RoleClient
+	// Student is the client for interacting with the Student builders.
+	Student *StudentClient
+	// Subject is the client for interacting with the Subject builders.
+	Subject *SubjectClient
 	// Users is the client for interacting with the Users builders.
 	Users *UsersClient
 
@@ -147,7 +175,21 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Blog = NewBlogClient(tx.config)
 	tx.Careers = NewCareersClient(tx.config)
+	tx.Configuration = NewConfigurationClient(tx.config)
+	tx.Cycle = NewCycleClient(tx.config)
+	tx.Module = NewModuleClient(tx.config)
+	tx.Note = NewNoteClient(tx.config)
+	tx.Notification = NewNotificationClient(tx.config)
+	tx.Payment = NewPaymentClient(tx.config)
+	tx.PaymentMethod = NewPaymentMethodClient(tx.config)
+	tx.Permission = NewPermissionClient(tx.config)
+	tx.Professor = NewProfessorClient(tx.config)
+	tx.Request = NewRequestClient(tx.config)
+	tx.Role = NewRoleClient(tx.config)
+	tx.Student = NewStudentClient(tx.config)
+	tx.Subject = NewSubjectClient(tx.config)
 	tx.Users = NewUsersClient(tx.config)
 }
 
@@ -158,7 +200,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Careers.QueryXXX(), the query will be executed
+// applies a query, for example: Blog.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

@@ -4,9 +4,13 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
+	"mocku/backend/ent/careers"
 	"mocku/backend/ent/predicate"
+	"mocku/backend/ent/request"
+	"mocku/backend/ent/role"
 	"mocku/backend/ent/users"
 
 	"entgo.io/ent/dialect/sql"
@@ -17,10 +21,14 @@ import (
 // UsersQuery is the builder for querying Users entities.
 type UsersQuery struct {
 	config
-	ctx        *QueryContext
-	order      []users.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Users
+	ctx                  *QueryContext
+	order                []users.OrderOption
+	inters               []Interceptor
+	predicates           []predicate.Users
+	withCareers          *CareersQuery
+	withRole             *RoleQuery
+	withRequestsMade     *RequestQuery
+	withRequestsReceived *RequestQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -55,6 +63,94 @@ func (uq *UsersQuery) Unique(unique bool) *UsersQuery {
 func (uq *UsersQuery) Order(o ...users.OrderOption) *UsersQuery {
 	uq.order = append(uq.order, o...)
 	return uq
+}
+
+// QueryCareers chains the current query on the "careers" edge.
+func (uq *UsersQuery) QueryCareers() *CareersQuery {
+	query := (&CareersClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, selector),
+			sqlgraph.To(careers.Table, careers.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, users.CareersTable, users.CareersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRole chains the current query on the "role" edge.
+func (uq *UsersQuery) QueryRole() *RoleQuery {
+	query := (&RoleClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, selector),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, users.RoleTable, users.RolePrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRequestsMade chains the current query on the "requests_made" edge.
+func (uq *UsersQuery) QueryRequestsMade() *RequestQuery {
+	query := (&RequestClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, selector),
+			sqlgraph.To(request.Table, request.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, users.RequestsMadeTable, users.RequestsMadeColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRequestsReceived chains the current query on the "requests_received" edge.
+func (uq *UsersQuery) QueryRequestsReceived() *RequestQuery {
+	query := (&RequestClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, selector),
+			sqlgraph.To(request.Table, request.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, users.RequestsReceivedTable, users.RequestsReceivedColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Users entity from the query.
@@ -244,15 +340,63 @@ func (uq *UsersQuery) Clone() *UsersQuery {
 		return nil
 	}
 	return &UsersQuery{
-		config:     uq.config,
-		ctx:        uq.ctx.Clone(),
-		order:      append([]users.OrderOption{}, uq.order...),
-		inters:     append([]Interceptor{}, uq.inters...),
-		predicates: append([]predicate.Users{}, uq.predicates...),
+		config:               uq.config,
+		ctx:                  uq.ctx.Clone(),
+		order:                append([]users.OrderOption{}, uq.order...),
+		inters:               append([]Interceptor{}, uq.inters...),
+		predicates:           append([]predicate.Users{}, uq.predicates...),
+		withCareers:          uq.withCareers.Clone(),
+		withRole:             uq.withRole.Clone(),
+		withRequestsMade:     uq.withRequestsMade.Clone(),
+		withRequestsReceived: uq.withRequestsReceived.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
 	}
+}
+
+// WithCareers tells the query-builder to eager-load the nodes that are connected to
+// the "careers" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UsersQuery) WithCareers(opts ...func(*CareersQuery)) *UsersQuery {
+	query := (&CareersClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withCareers = query
+	return uq
+}
+
+// WithRole tells the query-builder to eager-load the nodes that are connected to
+// the "role" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UsersQuery) WithRole(opts ...func(*RoleQuery)) *UsersQuery {
+	query := (&RoleClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withRole = query
+	return uq
+}
+
+// WithRequestsMade tells the query-builder to eager-load the nodes that are connected to
+// the "requests_made" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UsersQuery) WithRequestsMade(opts ...func(*RequestQuery)) *UsersQuery {
+	query := (&RequestClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withRequestsMade = query
+	return uq
+}
+
+// WithRequestsReceived tells the query-builder to eager-load the nodes that are connected to
+// the "requests_received" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UsersQuery) WithRequestsReceived(opts ...func(*RequestQuery)) *UsersQuery {
+	query := (&RequestClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withRequestsReceived = query
+	return uq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -331,8 +475,14 @@ func (uq *UsersQuery) prepareQuery(ctx context.Context) error {
 
 func (uq *UsersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Users, error) {
 	var (
-		nodes = []*Users{}
-		_spec = uq.querySpec()
+		nodes       = []*Users{}
+		_spec       = uq.querySpec()
+		loadedTypes = [4]bool{
+			uq.withCareers != nil,
+			uq.withRole != nil,
+			uq.withRequestsMade != nil,
+			uq.withRequestsReceived != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Users).scanValues(nil, columns)
@@ -340,6 +490,7 @@ func (uq *UsersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Users,
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Users{config: uq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -351,7 +502,190 @@ func (uq *UsersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Users,
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := uq.withCareers; query != nil {
+		if err := uq.loadCareers(ctx, query, nodes,
+			func(n *Users) { n.Edges.Careers = []*Careers{} },
+			func(n *Users, e *Careers) { n.Edges.Careers = append(n.Edges.Careers, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withRole; query != nil {
+		if err := uq.loadRole(ctx, query, nodes,
+			func(n *Users) { n.Edges.Role = []*Role{} },
+			func(n *Users, e *Role) { n.Edges.Role = append(n.Edges.Role, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withRequestsMade; query != nil {
+		if err := uq.loadRequestsMade(ctx, query, nodes,
+			func(n *Users) { n.Edges.RequestsMade = []*Request{} },
+			func(n *Users, e *Request) { n.Edges.RequestsMade = append(n.Edges.RequestsMade, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withRequestsReceived; query != nil {
+		if err := uq.loadRequestsReceived(ctx, query, nodes,
+			func(n *Users) { n.Edges.RequestsReceived = []*Request{} },
+			func(n *Users, e *Request) { n.Edges.RequestsReceived = append(n.Edges.RequestsReceived, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (uq *UsersQuery) loadCareers(ctx context.Context, query *CareersQuery, nodes []*Users, init func(*Users), assign func(*Users, *Careers)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Users)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Careers(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(users.CareersColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.users_careers
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "users_careers" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "users_careers" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UsersQuery) loadRole(ctx context.Context, query *RoleQuery, nodes []*Users, init func(*Users), assign func(*Users, *Role)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Users)
+	nids := make(map[int]map[*Users]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(users.RoleTable)
+		s.Join(joinT).On(s.C(role.FieldID), joinT.C(users.RolePrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(users.RolePrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(users.RolePrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Users]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Role](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "role" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (uq *UsersQuery) loadRequestsMade(ctx context.Context, query *RequestQuery, nodes []*Users, init func(*Users), assign func(*Users, *Request)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Users)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Request(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(users.RequestsMadeColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.users_requests_made
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "users_requests_made" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "users_requests_made" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UsersQuery) loadRequestsReceived(ctx context.Context, query *RequestQuery, nodes []*Users, init func(*Users), assign func(*Users, *Request)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Users)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Request(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(users.RequestsReceivedColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.users_requests_received
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "users_requests_received" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "users_requests_received" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (uq *UsersQuery) sqlCount(ctx context.Context) (int, error) {

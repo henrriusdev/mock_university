@@ -6,8 +6,50 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Blog is the predicate function for blog builders.
+type Blog func(*sql.Selector)
+
 // Careers is the predicate function for careers builders.
 type Careers func(*sql.Selector)
+
+// Configuration is the predicate function for configuration builders.
+type Configuration func(*sql.Selector)
+
+// Cycle is the predicate function for cycle builders.
+type Cycle func(*sql.Selector)
+
+// Module is the predicate function for module builders.
+type Module func(*sql.Selector)
+
+// Note is the predicate function for note builders.
+type Note func(*sql.Selector)
+
+// Notification is the predicate function for notification builders.
+type Notification func(*sql.Selector)
+
+// Payment is the predicate function for payment builders.
+type Payment func(*sql.Selector)
+
+// PaymentMethod is the predicate function for paymentmethod builders.
+type PaymentMethod func(*sql.Selector)
+
+// Permission is the predicate function for permission builders.
+type Permission func(*sql.Selector)
+
+// Professor is the predicate function for professor builders.
+type Professor func(*sql.Selector)
+
+// Request is the predicate function for request builders.
+type Request func(*sql.Selector)
+
+// Role is the predicate function for role builders.
+type Role func(*sql.Selector)
+
+// Student is the predicate function for student builders.
+type Student func(*sql.Selector)
+
+// Subject is the predicate function for subject builders.
+type Subject func(*sql.Selector)
 
 // Users is the predicate function for users builders.
 type Users func(*sql.Selector)

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"mocku/backend/ent/careers"
+	"mocku/backend/ent/professor"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -29,6 +30,21 @@ func (cc *CareersCreate) SetName(s string) *CareersCreate {
 func (cc *CareersCreate) SetDescription(s string) *CareersCreate {
 	cc.mutation.SetDescription(s)
 	return cc
+}
+
+// AddLeaderIDs adds the "leader" edge to the Professor entity by IDs.
+func (cc *CareersCreate) AddLeaderIDs(ids ...int) *CareersCreate {
+	cc.mutation.AddLeaderIDs(ids...)
+	return cc
+}
+
+// AddLeader adds the "leader" edges to the Professor entity.
+func (cc *CareersCreate) AddLeader(p ...*Professor) *CareersCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cc.AddLeaderIDs(ids...)
 }
 
 // Mutation returns the CareersMutation object of the builder.
@@ -114,6 +130,22 @@ func (cc *CareersCreate) createSpec() (*Careers, *sqlgraph.CreateSpec) {
 	if value, ok := cc.mutation.Description(); ok {
 		_spec.SetField(careers.FieldDescription, field.TypeString, value)
 		_node.Description = value
+	}
+	if nodes := cc.mutation.LeaderIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   careers.LeaderTable,
+			Columns: []string{careers.LeaderColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

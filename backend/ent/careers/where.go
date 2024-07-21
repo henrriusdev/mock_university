@@ -6,6 +6,7 @@ import (
 	"mocku/backend/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -191,6 +192,29 @@ func DescriptionEqualFold(v string) predicate.Careers {
 // DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
 func DescriptionContainsFold(v string) predicate.Careers {
 	return predicate.Careers(sql.FieldContainsFold(FieldDescription, v))
+}
+
+// HasLeader applies the HasEdge predicate on the "leader" edge.
+func HasLeader() predicate.Careers {
+	return predicate.Careers(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, LeaderTable, LeaderColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasLeaderWith applies the HasEdge predicate on the "leader" edge with a given conditions (other predicates).
+func HasLeaderWith(preds ...predicate.Professor) predicate.Careers {
+	return predicate.Careers(func(s *sql.Selector) {
+		step := newLeaderStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

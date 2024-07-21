@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -27,8 +28,42 @@ const (
 	FieldIsActive = "is_active"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
+	// EdgeCareers holds the string denoting the careers edge name in mutations.
+	EdgeCareers = "careers"
+	// EdgeRole holds the string denoting the role edge name in mutations.
+	EdgeRole = "role"
+	// EdgeRequestsMade holds the string denoting the requests_made edge name in mutations.
+	EdgeRequestsMade = "requests_made"
+	// EdgeRequestsReceived holds the string denoting the requests_received edge name in mutations.
+	EdgeRequestsReceived = "requests_received"
 	// Table holds the table name of the users in the database.
 	Table = "users"
+	// CareersTable is the table that holds the careers relation/edge.
+	CareersTable = "careers"
+	// CareersInverseTable is the table name for the Careers entity.
+	// It exists in this package in order to avoid circular dependency with the "careers" package.
+	CareersInverseTable = "careers"
+	// CareersColumn is the table column denoting the careers relation/edge.
+	CareersColumn = "users_careers"
+	// RoleTable is the table that holds the role relation/edge. The primary key declared below.
+	RoleTable = "users_role"
+	// RoleInverseTable is the table name for the Role entity.
+	// It exists in this package in order to avoid circular dependency with the "role" package.
+	RoleInverseTable = "roles"
+	// RequestsMadeTable is the table that holds the requests_made relation/edge.
+	RequestsMadeTable = "requests"
+	// RequestsMadeInverseTable is the table name for the Request entity.
+	// It exists in this package in order to avoid circular dependency with the "request" package.
+	RequestsMadeInverseTable = "requests"
+	// RequestsMadeColumn is the table column denoting the requests_made relation/edge.
+	RequestsMadeColumn = "users_requests_made"
+	// RequestsReceivedTable is the table that holds the requests_received relation/edge.
+	RequestsReceivedTable = "requests"
+	// RequestsReceivedInverseTable is the table name for the Request entity.
+	// It exists in this package in order to avoid circular dependency with the "request" package.
+	RequestsReceivedInverseTable = "requests"
+	// RequestsReceivedColumn is the table column denoting the requests_received relation/edge.
+	RequestsReceivedColumn = "users_requests_received"
 )
 
 // Columns holds all SQL columns for users fields.
@@ -42,6 +77,12 @@ var Columns = []string{
 	FieldIsActive,
 	FieldCreatedAt,
 }
+
+var (
+	// RolePrimaryKey and RoleColumn2 are the table columns denoting the
+	// primary key for the role relation (M2M).
+	RolePrimaryKey = []string{"users_id", "role_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -111,4 +152,88 @@ func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByCareersCount orders the results by careers count.
+func ByCareersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCareersStep(), opts...)
+	}
+}
+
+// ByCareers orders the results by careers terms.
+func ByCareers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCareersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByRoleCount orders the results by role count.
+func ByRoleCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRoleStep(), opts...)
+	}
+}
+
+// ByRole orders the results by role terms.
+func ByRole(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRoleStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByRequestsMadeCount orders the results by requests_made count.
+func ByRequestsMadeCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRequestsMadeStep(), opts...)
+	}
+}
+
+// ByRequestsMade orders the results by requests_made terms.
+func ByRequestsMade(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRequestsMadeStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByRequestsReceivedCount orders the results by requests_received count.
+func ByRequestsReceivedCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRequestsReceivedStep(), opts...)
+	}
+}
+
+// ByRequestsReceived orders the results by requests_received terms.
+func ByRequestsReceived(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRequestsReceivedStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newCareersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CareersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CareersTable, CareersColumn),
+	)
+}
+func newRoleStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RoleInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, RoleTable, RolePrimaryKey...),
+	)
+}
+func newRequestsMadeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RequestsMadeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RequestsMadeTable, RequestsMadeColumn),
+	)
+}
+func newRequestsReceivedStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RequestsReceivedInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RequestsReceivedTable, RequestsReceivedColumn),
+	)
 }

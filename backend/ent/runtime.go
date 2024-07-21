@@ -3,8 +3,20 @@
 package ent
 
 import (
+	"mocku/backend/ent/blog"
 	"mocku/backend/ent/careers"
+	"mocku/backend/ent/configuration"
+	"mocku/backend/ent/cycle"
+	"mocku/backend/ent/module"
+	"mocku/backend/ent/payment"
+	"mocku/backend/ent/paymentmethod"
+	"mocku/backend/ent/permission"
+	"mocku/backend/ent/professor"
+	"mocku/backend/ent/request"
+	"mocku/backend/ent/role"
 	"mocku/backend/ent/schema"
+	"mocku/backend/ent/student"
+	"mocku/backend/ent/subject"
 	"mocku/backend/ent/users"
 	"time"
 )
@@ -13,6 +25,24 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	blogFields := schema.Blog{}.Fields()
+	_ = blogFields
+	// blogDescTitle is the schema descriptor for title field.
+	blogDescTitle := blogFields[0].Descriptor()
+	// blog.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	blog.TitleValidator = blogDescTitle.Validators[0].(func(string) error)
+	// blogDescText is the schema descriptor for text field.
+	blogDescText := blogFields[1].Descriptor()
+	// blog.TextValidator is a validator for the "text" field. It is called by the builders before save.
+	blog.TextValidator = blogDescText.Validators[0].(func(string) error)
+	// blogDescPublished is the schema descriptor for published field.
+	blogDescPublished := blogFields[4].Descriptor()
+	// blog.DefaultPublished holds the default value on creation for the published field.
+	blog.DefaultPublished = blogDescPublished.Default.(bool)
+	// blogDescViewCount is the schema descriptor for view_count field.
+	blogDescViewCount := blogFields[7].Descriptor()
+	// blog.DefaultViewCount holds the default value on creation for the view_count field.
+	blog.DefaultViewCount = blogDescViewCount.Default.(int)
 	careersFields := schema.Careers{}.Fields()
 	_ = careersFields
 	// careersDescName is the schema descriptor for name field.
@@ -37,6 +67,512 @@ func init() {
 	careersDescDescription := careersFields[1].Descriptor()
 	// careers.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	careers.DescriptionValidator = careersDescDescription.Validators[0].(func(string) error)
+	configurationFields := schema.Configuration{}.Fields()
+	_ = configurationFields
+	// configurationDescBlockNotPayInscription is the schema descriptor for block_not_pay_inscription field.
+	configurationDescBlockNotPayInscription := configurationFields[2].Descriptor()
+	// configuration.DefaultBlockNotPayInscription holds the default value on creation for the block_not_pay_inscription field.
+	configuration.DefaultBlockNotPayInscription = configurationDescBlockNotPayInscription.Default.(bool)
+	// configurationDescNumberFees is the schema descriptor for number_fees field.
+	configurationDescNumberFees := configurationFields[4].Descriptor()
+	// configuration.DefaultNumberFees holds the default value on creation for the number_fees field.
+	configuration.DefaultNumberFees = configurationDescNumberFees.Default.(int)
+	// configurationDescNumberNotes is the schema descriptor for number_notes field.
+	configurationDescNumberNotes := configurationFields[5].Descriptor()
+	// configuration.DefaultNumberNotes holds the default value on creation for the number_notes field.
+	configuration.DefaultNumberNotes = configurationDescNumberNotes.Default.(int)
+	cycleFields := schema.Cycle{}.Fields()
+	_ = cycleFields
+	// cycleDescName is the schema descriptor for name field.
+	cycleDescName := cycleFields[0].Descriptor()
+	// cycle.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	cycle.NameValidator = func() func(string) error {
+		validators := cycleDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// cycleDescStartDate is the schema descriptor for start_date field.
+	cycleDescStartDate := cycleFields[1].Descriptor()
+	// cycle.DefaultStartDate holds the default value on creation for the start_date field.
+	cycle.DefaultStartDate = cycleDescStartDate.Default.(func() time.Time)
+	// cycleDescEndDate is the schema descriptor for end_date field.
+	cycleDescEndDate := cycleFields[2].Descriptor()
+	// cycle.DefaultEndDate holds the default value on creation for the end_date field.
+	cycle.DefaultEndDate = cycleDescEndDate.Default.(func() time.Time)
+	moduleFields := schema.Module{}.Fields()
+	_ = moduleFields
+	// moduleDescName is the schema descriptor for name field.
+	moduleDescName := moduleFields[0].Descriptor()
+	// module.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	module.NameValidator = func() func(string) error {
+		validators := moduleDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	paymentFields := schema.Payment{}.Fields()
+	_ = paymentFields
+	// paymentDescReference is the schema descriptor for reference field.
+	paymentDescReference := paymentFields[0].Descriptor()
+	// payment.ReferenceValidator is a validator for the "reference" field. It is called by the builders before save.
+	payment.ReferenceValidator = func() func(string) error {
+		validators := paymentDescReference.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(reference string) error {
+			for _, fn := range fns {
+				if err := fn(reference); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// paymentDescAmount is the schema descriptor for amount field.
+	paymentDescAmount := paymentFields[2].Descriptor()
+	// payment.AmountValidator is a validator for the "amount" field. It is called by the builders before save.
+	payment.AmountValidator = paymentDescAmount.Validators[0].(func(float64) error)
+	// paymentDescDescription is the schema descriptor for description field.
+	paymentDescDescription := paymentFields[3].Descriptor()
+	// payment.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	payment.DescriptionValidator = func() func(string) error {
+		validators := paymentDescDescription.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(description string) error {
+			for _, fn := range fns {
+				if err := fn(description); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// paymentDescFeeNumber is the schema descriptor for fee_number field.
+	paymentDescFeeNumber := paymentFields[4].Descriptor()
+	// payment.FeeNumberValidator is a validator for the "fee_number" field. It is called by the builders before save.
+	payment.FeeNumberValidator = paymentDescFeeNumber.Validators[0].(func(int) error)
+	paymentmethodFields := schema.PaymentMethod{}.Fields()
+	_ = paymentmethodFields
+	// paymentmethodDescName is the schema descriptor for name field.
+	paymentmethodDescName := paymentmethodFields[0].Descriptor()
+	// paymentmethod.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	paymentmethod.NameValidator = func() func(string) error {
+		validators := paymentmethodDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	permissionFields := schema.Permission{}.Fields()
+	_ = permissionFields
+	// permissionDescName is the schema descriptor for name field.
+	permissionDescName := permissionFields[0].Descriptor()
+	// permission.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	permission.NameValidator = func() func(string) error {
+		validators := permissionDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// permissionDescDescription is the schema descriptor for description field.
+	permissionDescDescription := permissionFields[1].Descriptor()
+	// permission.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	permission.DescriptionValidator = permissionDescDescription.Validators[0].(func(string) error)
+	// permissionDescRead is the schema descriptor for read field.
+	permissionDescRead := permissionFields[2].Descriptor()
+	// permission.DefaultRead holds the default value on creation for the read field.
+	permission.DefaultRead = permissionDescRead.Default.(bool)
+	// permissionDescCreate is the schema descriptor for create field.
+	permissionDescCreate := permissionFields[3].Descriptor()
+	// permission.DefaultCreate holds the default value on creation for the create field.
+	permission.DefaultCreate = permissionDescCreate.Default.(bool)
+	// permissionDescUpdate is the schema descriptor for update field.
+	permissionDescUpdate := permissionFields[4].Descriptor()
+	// permission.DefaultUpdate holds the default value on creation for the update field.
+	permission.DefaultUpdate = permissionDescUpdate.Default.(bool)
+	// permissionDescDelete is the schema descriptor for delete field.
+	permissionDescDelete := permissionFields[5].Descriptor()
+	// permission.DefaultDelete holds the default value on creation for the delete field.
+	permission.DefaultDelete = permissionDescDelete.Default.(bool)
+	professorFields := schema.Professor{}.Fields()
+	_ = professorFields
+	// professorDescIdentityCard is the schema descriptor for identity_card field.
+	professorDescIdentityCard := professorFields[0].Descriptor()
+	// professor.IdentityCardValidator is a validator for the "identity_card" field. It is called by the builders before save.
+	professor.IdentityCardValidator = func() func(string) error {
+		validators := professorDescIdentityCard.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(identity_card string) error {
+			for _, fn := range fns {
+				if err := fn(identity_card); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// professorDescPhone is the schema descriptor for phone field.
+	professorDescPhone := professorFields[2].Descriptor()
+	// professor.PhoneValidator is a validator for the "phone" field. It is called by the builders before save.
+	professor.PhoneValidator = func() func(string) error {
+		validators := professorDescPhone.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(phone string) error {
+			for _, fn := range fns {
+				if err := fn(phone); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// professorDescAddress is the schema descriptor for address field.
+	professorDescAddress := professorFields[3].Descriptor()
+	// professor.AddressValidator is a validator for the "address" field. It is called by the builders before save.
+	professor.AddressValidator = func() func(string) error {
+		validators := professorDescAddress.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(address string) error {
+			for _, fn := range fns {
+				if err := fn(address); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	requestFields := schema.Request{}.Fields()
+	_ = requestFields
+	// requestDescType is the schema descriptor for type field.
+	requestDescType := requestFields[0].Descriptor()
+	// request.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	request.TypeValidator = func() func(string) error {
+		validators := requestDescType.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(_type string) error {
+			for _, fn := range fns {
+				if err := fn(_type); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// requestDescStatus is the schema descriptor for status field.
+	requestDescStatus := requestFields[1].Descriptor()
+	// request.DefaultStatus holds the default value on creation for the status field.
+	request.DefaultStatus = requestDescStatus.Default.(string)
+	// requestDescTitle is the schema descriptor for title field.
+	requestDescTitle := requestFields[2].Descriptor()
+	// request.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	request.TitleValidator = func() func(string) error {
+		validators := requestDescTitle.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(title string) error {
+			for _, fn := range fns {
+				if err := fn(title); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// requestDescDescription is the schema descriptor for description field.
+	requestDescDescription := requestFields[3].Descriptor()
+	// request.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	request.DescriptionValidator = requestDescDescription.Validators[0].(func(string) error)
+	// requestDescCreatedAt is the schema descriptor for created_at field.
+	requestDescCreatedAt := requestFields[4].Descriptor()
+	// request.DefaultCreatedAt holds the default value on creation for the created_at field.
+	request.DefaultCreatedAt = requestDescCreatedAt.Default.(func() time.Time)
+	// requestDescUpdatedAt is the schema descriptor for updated_at field.
+	requestDescUpdatedAt := requestFields[5].Descriptor()
+	// request.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	request.DefaultUpdatedAt = requestDescUpdatedAt.Default.(func() time.Time)
+	// request.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	request.UpdateDefaultUpdatedAt = requestDescUpdatedAt.UpdateDefault.(func() time.Time)
+	roleFields := schema.Role{}.Fields()
+	_ = roleFields
+	// roleDescName is the schema descriptor for name field.
+	roleDescName := roleFields[0].Descriptor()
+	// role.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	role.NameValidator = func() func(string) error {
+		validators := roleDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// roleDescDescription is the schema descriptor for description field.
+	roleDescDescription := roleFields[1].Descriptor()
+	// role.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	role.DescriptionValidator = roleDescDescription.Validators[0].(func(string) error)
+	studentFields := schema.Student{}.Fields()
+	_ = studentFields
+	// studentDescIdentityCard is the schema descriptor for identity_card field.
+	studentDescIdentityCard := studentFields[0].Descriptor()
+	// student.IdentityCardValidator is a validator for the "identity_card" field. It is called by the builders before save.
+	student.IdentityCardValidator = func() func(string) error {
+		validators := studentDescIdentityCard.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(identity_card string) error {
+			for _, fn := range fns {
+				if err := fn(identity_card); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// studentDescPhone is the schema descriptor for phone field.
+	studentDescPhone := studentFields[2].Descriptor()
+	// student.PhoneValidator is a validator for the "phone" field. It is called by the builders before save.
+	student.PhoneValidator = func() func(string) error {
+		validators := studentDescPhone.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(phone string) error {
+			for _, fn := range fns {
+				if err := fn(phone); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// studentDescAddress is the schema descriptor for address field.
+	studentDescAddress := studentFields[3].Descriptor()
+	// student.AddressValidator is a validator for the "address" field. It is called by the builders before save.
+	student.AddressValidator = func() func(string) error {
+		validators := studentDescAddress.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(address string) error {
+			for _, fn := range fns {
+				if err := fn(address); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// studentDescNumber is the schema descriptor for number field.
+	studentDescNumber := studentFields[4].Descriptor()
+	// student.NumberValidator is a validator for the "number" field. It is called by the builders before save.
+	student.NumberValidator = studentDescNumber.Validators[0].(func(int) error)
+	// studentDescDistrict is the schema descriptor for district field.
+	studentDescDistrict := studentFields[5].Descriptor()
+	// student.DistrictValidator is a validator for the "district" field. It is called by the builders before save.
+	student.DistrictValidator = func() func(string) error {
+		validators := studentDescDistrict.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(district string) error {
+			for _, fn := range fns {
+				if err := fn(district); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// studentDescCity is the schema descriptor for city field.
+	studentDescCity := studentFields[6].Descriptor()
+	// student.CityValidator is a validator for the "city" field. It is called by the builders before save.
+	student.CityValidator = func() func(string) error {
+		validators := studentDescCity.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(city string) error {
+			for _, fn := range fns {
+				if err := fn(city); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// studentDescPostalCode is the schema descriptor for postal_code field.
+	studentDescPostalCode := studentFields[7].Descriptor()
+	// student.PostalCodeValidator is a validator for the "postal_code" field. It is called by the builders before save.
+	student.PostalCodeValidator = studentDescPostalCode.Validators[0].(func(int) error)
+	// studentDescCreditUnitsAccumulated is the schema descriptor for credit_units_accumulated field.
+	studentDescCreditUnitsAccumulated := studentFields[8].Descriptor()
+	// student.CreditUnitsAccumulatedValidator is a validator for the "credit_units_accumulated" field. It is called by the builders before save.
+	student.CreditUnitsAccumulatedValidator = studentDescCreditUnitsAccumulated.Validators[0].(func(int) error)
+	// studentDescTotalAverage is the schema descriptor for total_average field.
+	studentDescTotalAverage := studentFields[9].Descriptor()
+	// student.TotalAverageValidator is a validator for the "total_average" field. It is called by the builders before save.
+	student.TotalAverageValidator = func() func(float64) error {
+		validators := studentDescTotalAverage.Validators
+		fns := [...]func(float64) error{
+			validators[0].(func(float64) error),
+			validators[1].(func(float64) error),
+		}
+		return func(total_average float64) error {
+			for _, fn := range fns {
+				if err := fn(total_average); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	subjectFields := schema.Subject{}.Fields()
+	_ = subjectFields
+	// subjectDescName is the schema descriptor for name field.
+	subjectDescName := subjectFields[0].Descriptor()
+	// subject.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	subject.NameValidator = func() func(string) error {
+		validators := subjectDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subjectDescDescription is the schema descriptor for description field.
+	subjectDescDescription := subjectFields[1].Descriptor()
+	// subject.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	subject.DescriptionValidator = func() func(string) error {
+		validators := subjectDescDescription.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(description string) error {
+			for _, fn := range fns {
+				if err := fn(description); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subjectDescCreditUnits is the schema descriptor for credit_units field.
+	subjectDescCreditUnits := subjectFields[2].Descriptor()
+	// subject.CreditUnitsValidator is a validator for the "credit_units" field. It is called by the builders before save.
+	subject.CreditUnitsValidator = subjectDescCreditUnits.Validators[0].(func(int) error)
+	// subjectDescSemester is the schema descriptor for semester field.
+	subjectDescSemester := subjectFields[3].Descriptor()
+	// subject.SemesterValidator is a validator for the "semester" field. It is called by the builders before save.
+	subject.SemesterValidator = subjectDescSemester.Validators[0].(func(int) error)
+	// subjectDescCode is the schema descriptor for code field.
+	subjectDescCode := subjectFields[4].Descriptor()
+	// subject.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	subject.CodeValidator = func() func(string) error {
+		validators := subjectDescCode.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(code string) error {
+			for _, fn := range fns {
+				if err := fn(code); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subjectDescPracticeHours is the schema descriptor for practice_hours field.
+	subjectDescPracticeHours := subjectFields[5].Descriptor()
+	// subject.PracticeHoursValidator is a validator for the "practice_hours" field. It is called by the builders before save.
+	subject.PracticeHoursValidator = subjectDescPracticeHours.Validators[0].(func(int) error)
+	// subjectDescTheoryHours is the schema descriptor for theory_hours field.
+	subjectDescTheoryHours := subjectFields[6].Descriptor()
+	// subject.TheoryHoursValidator is a validator for the "theory_hours" field. It is called by the builders before save.
+	subject.TheoryHoursValidator = subjectDescTheoryHours.Validators[0].(func(int) error)
+	// subjectDescLabHours is the schema descriptor for lab_hours field.
+	subjectDescLabHours := subjectFields[7].Descriptor()
+	// subject.LabHoursValidator is a validator for the "lab_hours" field. It is called by the builders before save.
+	subject.LabHoursValidator = subjectDescLabHours.Validators[0].(func(int) error)
+	// subjectDescTotalHours is the schema descriptor for total_hours field.
+	subjectDescTotalHours := subjectFields[8].Descriptor()
+	// subject.TotalHoursValidator is a validator for the "total_hours" field. It is called by the builders before save.
+	subject.TotalHoursValidator = subjectDescTotalHours.Validators[0].(func(int) error)
 	usersFields := schema.Users{}.Fields()
 	_ = usersFields
 	// usersDescUsername is the schema descriptor for username field.

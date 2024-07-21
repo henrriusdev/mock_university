@@ -4,6 +4,7 @@ package careers
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -15,8 +16,17 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// EdgeLeader holds the string denoting the leader edge name in mutations.
+	EdgeLeader = "leader"
 	// Table holds the table name of the careers in the database.
 	Table = "careers"
+	// LeaderTable is the table that holds the leader relation/edge.
+	LeaderTable = "professors"
+	// LeaderInverseTable is the table name for the Professor entity.
+	// It exists in this package in order to avoid circular dependency with the "professor" package.
+	LeaderInverseTable = "professors"
+	// LeaderColumn is the table column denoting the leader relation/edge.
+	LeaderColumn = "careers_leader"
 )
 
 // Columns holds all SQL columns for careers fields.
@@ -26,10 +36,21 @@ var Columns = []string{
 	FieldDescription,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "careers"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"users_careers",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -59,4 +80,25 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByDescription orders the results by the description field.
 func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
+// ByLeaderCount orders the results by leader count.
+func ByLeaderCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newLeaderStep(), opts...)
+	}
+}
+
+// ByLeader orders the results by leader terms.
+func ByLeader(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newLeaderStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newLeaderStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(LeaderInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, LeaderTable, LeaderColumn),
+	)
 }

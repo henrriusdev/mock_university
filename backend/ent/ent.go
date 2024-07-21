@@ -6,7 +6,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mocku/backend/ent/blog"
 	"mocku/backend/ent/careers"
+	"mocku/backend/ent/configuration"
+	"mocku/backend/ent/cycle"
+	"mocku/backend/ent/module"
+	"mocku/backend/ent/note"
+	"mocku/backend/ent/notification"
+	"mocku/backend/ent/payment"
+	"mocku/backend/ent/paymentmethod"
+	"mocku/backend/ent/permission"
+	"mocku/backend/ent/professor"
+	"mocku/backend/ent/request"
+	"mocku/backend/ent/role"
+	"mocku/backend/ent/student"
+	"mocku/backend/ent/subject"
 	"mocku/backend/ent/users"
 	"reflect"
 	"sync"
@@ -74,8 +88,22 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			careers.Table: careers.ValidColumn,
-			users.Table:   users.ValidColumn,
+			blog.Table:          blog.ValidColumn,
+			careers.Table:       careers.ValidColumn,
+			configuration.Table: configuration.ValidColumn,
+			cycle.Table:         cycle.ValidColumn,
+			module.Table:        module.ValidColumn,
+			note.Table:          note.ValidColumn,
+			notification.Table:  notification.ValidColumn,
+			payment.Table:       payment.ValidColumn,
+			paymentmethod.Table: paymentmethod.ValidColumn,
+			permission.Table:    permission.ValidColumn,
+			professor.Table:     professor.ValidColumn,
+			request.Table:       request.ValidColumn,
+			role.Table:          role.ValidColumn,
+			student.Table:       student.ValidColumn,
+			subject.Table:       subject.ValidColumn,
+			users.Table:         users.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

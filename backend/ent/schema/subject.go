@@ -30,6 +30,6 @@ func (Subject) Fields() []ent.Field {
 // Edges of the Subject.
 func (Subject) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("professors", Professor.Type).Ref("subjects"),
+		edge.To("professor", Professor.Type),
 	}
 }

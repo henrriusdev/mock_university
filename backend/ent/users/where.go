@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -462,6 +463,98 @@ func CreatedAtLT(v time.Time) predicate.Users {
 // CreatedAtLTE applies the LTE predicate on the "created_at" field.
 func CreatedAtLTE(v time.Time) predicate.Users {
 	return predicate.Users(sql.FieldLTE(FieldCreatedAt, v))
+}
+
+// HasCareers applies the HasEdge predicate on the "careers" edge.
+func HasCareers() predicate.Users {
+	return predicate.Users(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CareersTable, CareersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCareersWith applies the HasEdge predicate on the "careers" edge with a given conditions (other predicates).
+func HasCareersWith(preds ...predicate.Careers) predicate.Users {
+	return predicate.Users(func(s *sql.Selector) {
+		step := newCareersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRole applies the HasEdge predicate on the "role" edge.
+func HasRole() predicate.Users {
+	return predicate.Users(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, RoleTable, RolePrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRoleWith applies the HasEdge predicate on the "role" edge with a given conditions (other predicates).
+func HasRoleWith(preds ...predicate.Role) predicate.Users {
+	return predicate.Users(func(s *sql.Selector) {
+		step := newRoleStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRequestsMade applies the HasEdge predicate on the "requests_made" edge.
+func HasRequestsMade() predicate.Users {
+	return predicate.Users(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RequestsMadeTable, RequestsMadeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRequestsMadeWith applies the HasEdge predicate on the "requests_made" edge with a given conditions (other predicates).
+func HasRequestsMadeWith(preds ...predicate.Request) predicate.Users {
+	return predicate.Users(func(s *sql.Selector) {
+		step := newRequestsMadeStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRequestsReceived applies the HasEdge predicate on the "requests_received" edge.
+func HasRequestsReceived() predicate.Users {
+	return predicate.Users(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RequestsReceivedTable, RequestsReceivedColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRequestsReceivedWith applies the HasEdge predicate on the "requests_received" edge with a given conditions (other predicates).
+func HasRequestsReceivedWith(preds ...predicate.Request) predicate.Users {
+	return predicate.Users(func(s *sql.Selector) {
+		step := newRequestsReceivedStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

@@ -6,6 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mocku/backend/ent/careers"
+	"mocku/backend/ent/request"
+	"mocku/backend/ent/role"
 	"mocku/backend/ent/users"
 	"time"
 
@@ -76,6 +79,66 @@ func (uc *UsersCreate) SetNillableCreatedAt(t *time.Time) *UsersCreate {
 		uc.SetCreatedAt(*t)
 	}
 	return uc
+}
+
+// AddCareerIDs adds the "careers" edge to the Careers entity by IDs.
+func (uc *UsersCreate) AddCareerIDs(ids ...int) *UsersCreate {
+	uc.mutation.AddCareerIDs(ids...)
+	return uc
+}
+
+// AddCareers adds the "careers" edges to the Careers entity.
+func (uc *UsersCreate) AddCareers(c ...*Careers) *UsersCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uc.AddCareerIDs(ids...)
+}
+
+// AddRoleIDs adds the "role" edge to the Role entity by IDs.
+func (uc *UsersCreate) AddRoleIDs(ids ...int) *UsersCreate {
+	uc.mutation.AddRoleIDs(ids...)
+	return uc
+}
+
+// AddRole adds the "role" edges to the Role entity.
+func (uc *UsersCreate) AddRole(r ...*Role) *UsersCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uc.AddRoleIDs(ids...)
+}
+
+// AddRequestsMadeIDs adds the "requests_made" edge to the Request entity by IDs.
+func (uc *UsersCreate) AddRequestsMadeIDs(ids ...int) *UsersCreate {
+	uc.mutation.AddRequestsMadeIDs(ids...)
+	return uc
+}
+
+// AddRequestsMade adds the "requests_made" edges to the Request entity.
+func (uc *UsersCreate) AddRequestsMade(r ...*Request) *UsersCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uc.AddRequestsMadeIDs(ids...)
+}
+
+// AddRequestsReceivedIDs adds the "requests_received" edge to the Request entity by IDs.
+func (uc *UsersCreate) AddRequestsReceivedIDs(ids ...int) *UsersCreate {
+	uc.mutation.AddRequestsReceivedIDs(ids...)
+	return uc
+}
+
+// AddRequestsReceived adds the "requests_received" edges to the Request entity.
+func (uc *UsersCreate) AddRequestsReceived(r ...*Request) *UsersCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uc.AddRequestsReceivedIDs(ids...)
 }
 
 // Mutation returns the UsersMutation object of the builder.
@@ -224,6 +287,70 @@ func (uc *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.CreatedAt(); ok {
 		_spec.SetField(users.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
+	}
+	if nodes := uc.mutation.CareersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   users.CareersTable,
+			Columns: []string{users.CareersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.RoleIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   users.RoleTable,
+			Columns: users.RolePrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.RequestsMadeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   users.RequestsMadeTable,
+			Columns: []string{users.RequestsMadeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.RequestsReceivedIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   users.RequestsReceivedTable,
+			Columns: []string{users.RequestsReceivedColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

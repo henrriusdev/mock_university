@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"mocku/backend/ent/careers"
 	"mocku/backend/ent/predicate"
+	"mocku/backend/ent/professor"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -55,9 +56,45 @@ func (cu *CareersUpdate) SetNillableDescription(s *string) *CareersUpdate {
 	return cu
 }
 
+// AddLeaderIDs adds the "leader" edge to the Professor entity by IDs.
+func (cu *CareersUpdate) AddLeaderIDs(ids ...int) *CareersUpdate {
+	cu.mutation.AddLeaderIDs(ids...)
+	return cu
+}
+
+// AddLeader adds the "leader" edges to the Professor entity.
+func (cu *CareersUpdate) AddLeader(p ...*Professor) *CareersUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cu.AddLeaderIDs(ids...)
+}
+
 // Mutation returns the CareersMutation object of the builder.
 func (cu *CareersUpdate) Mutation() *CareersMutation {
 	return cu.mutation
+}
+
+// ClearLeader clears all "leader" edges to the Professor entity.
+func (cu *CareersUpdate) ClearLeader() *CareersUpdate {
+	cu.mutation.ClearLeader()
+	return cu
+}
+
+// RemoveLeaderIDs removes the "leader" edge to Professor entities by IDs.
+func (cu *CareersUpdate) RemoveLeaderIDs(ids ...int) *CareersUpdate {
+	cu.mutation.RemoveLeaderIDs(ids...)
+	return cu
+}
+
+// RemoveLeader removes "leader" edges to Professor entities.
+func (cu *CareersUpdate) RemoveLeader(p ...*Professor) *CareersUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cu.RemoveLeaderIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -120,6 +157,51 @@ func (cu *CareersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := cu.mutation.Description(); ok {
 		_spec.SetField(careers.FieldDescription, field.TypeString, value)
 	}
+	if cu.mutation.LeaderCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   careers.LeaderTable,
+			Columns: []string{careers.LeaderColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.RemovedLeaderIDs(); len(nodes) > 0 && !cu.mutation.LeaderCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   careers.LeaderTable,
+			Columns: []string{careers.LeaderColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.LeaderIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   careers.LeaderTable,
+			Columns: []string{careers.LeaderColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{careers.Label}
@@ -168,9 +250,45 @@ func (cuo *CareersUpdateOne) SetNillableDescription(s *string) *CareersUpdateOne
 	return cuo
 }
 
+// AddLeaderIDs adds the "leader" edge to the Professor entity by IDs.
+func (cuo *CareersUpdateOne) AddLeaderIDs(ids ...int) *CareersUpdateOne {
+	cuo.mutation.AddLeaderIDs(ids...)
+	return cuo
+}
+
+// AddLeader adds the "leader" edges to the Professor entity.
+func (cuo *CareersUpdateOne) AddLeader(p ...*Professor) *CareersUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cuo.AddLeaderIDs(ids...)
+}
+
 // Mutation returns the CareersMutation object of the builder.
 func (cuo *CareersUpdateOne) Mutation() *CareersMutation {
 	return cuo.mutation
+}
+
+// ClearLeader clears all "leader" edges to the Professor entity.
+func (cuo *CareersUpdateOne) ClearLeader() *CareersUpdateOne {
+	cuo.mutation.ClearLeader()
+	return cuo
+}
+
+// RemoveLeaderIDs removes the "leader" edge to Professor entities by IDs.
+func (cuo *CareersUpdateOne) RemoveLeaderIDs(ids ...int) *CareersUpdateOne {
+	cuo.mutation.RemoveLeaderIDs(ids...)
+	return cuo
+}
+
+// RemoveLeader removes "leader" edges to Professor entities.
+func (cuo *CareersUpdateOne) RemoveLeader(p ...*Professor) *CareersUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cuo.RemoveLeaderIDs(ids...)
 }
 
 // Where appends a list predicates to the CareersUpdate builder.
@@ -262,6 +380,51 @@ func (cuo *CareersUpdateOne) sqlSave(ctx context.Context) (_node *Careers, err e
 	}
 	if value, ok := cuo.mutation.Description(); ok {
 		_spec.SetField(careers.FieldDescription, field.TypeString, value)
+	}
+	if cuo.mutation.LeaderCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   careers.LeaderTable,
+			Columns: []string{careers.LeaderColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.RemovedLeaderIDs(); len(nodes) > 0 && !cuo.mutation.LeaderCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   careers.LeaderTable,
+			Columns: []string{careers.LeaderColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.LeaderIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   careers.LeaderTable,
+			Columns: []string{careers.LeaderColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Careers{config: cuo.config}
 	_spec.Assign = _node.assignValues

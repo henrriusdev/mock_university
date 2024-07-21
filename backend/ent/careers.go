@@ -19,8 +19,30 @@ type Careers struct {
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
-	Description  string `json:"description,omitempty"`
-	selectValues sql.SelectValues
+	Description string `json:"description,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the CareersQuery when eager-loading is set.
+	Edges         CareersEdges `json:"edges"`
+	users_careers *int
+	selectValues  sql.SelectValues
+}
+
+// CareersEdges holds the relations/edges for other nodes in the graph.
+type CareersEdges struct {
+	// Leader holds the value of the leader edge.
+	Leader []*Professor `json:"leader,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// LeaderOrErr returns the Leader value or an error if the edge
+// was not loaded in eager-loading.
+func (e CareersEdges) LeaderOrErr() ([]*Professor, error) {
+	if e.loadedTypes[0] {
+		return e.Leader, nil
+	}
+	return nil, &NotLoadedError{edge: "leader"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -32,6 +54,8 @@ func (*Careers) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case careers.FieldName, careers.FieldDescription:
 			values[i] = new(sql.NullString)
+		case careers.ForeignKeys[0]: // users_careers
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -65,6 +89,13 @@ func (c *Careers) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				c.Description = value.String
 			}
+		case careers.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field users_careers", value)
+			} else if value.Valid {
+				c.users_careers = new(int)
+				*c.users_careers = int(value.Int64)
+			}
 		default:
 			c.selectValues.Set(columns[i], values[i])
 		}
@@ -76,6 +107,11 @@ func (c *Careers) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (c *Careers) Value(name string) (ent.Value, error) {
 	return c.selectValues.Get(name)
+}
+
+// QueryLeader queries the "leader" edge of the Careers entity.
+func (c *Careers) QueryLeader() *ProfessorQuery {
+	return NewCareersClient(c.config).QueryLeader(c)
 }
 
 // Update returns a builder for updating this Careers.

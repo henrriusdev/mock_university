@@ -26,7 +26,7 @@ func (Professor) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("user", Users.Type).Unique(),
 		edge.From("boss", Professor.Type).Ref("subordinates").Unique(),
-		edge.To("subordinates", Professor.Type).From("boss"),
-		edge.To("subjects", Subject.Type),
+		edge.To("subordinates", Professor.Type),
+		edge.From("subjects", Subject.Type).Ref("professor"),
 	}
 }
