@@ -1,22 +1,48 @@
 package backend
 
 import (
+	"context"
+	"fmt"
 	inertia "github.com/romsar/gonertia"
 	"log"
+	"mocku/backend/ent"
 	"mocku/backend/handlers"
 	"mocku/backend/utils"
 	"net/http"
 	"os"
+
+	_ "github.com/lib/pq"
 )
 
-func MountHandlers() {
+func MountApp() {
 	i := initInertia()
 	mux := http.NewServeMux()
 
-	mux.Handle("/", i.Middleware(handlers.HomeHandler(i)))
+	client := initDatabase()
+	handler := handlers.Handler{
+		DB: client,
+	}
+
+	mux.Handle("/", i.Middleware(handler.HomeHandler(i)))
 	mux.Handle("/build/", http.StripPrefix("/build/", http.FileServer(http.Dir("./public/build"))))
 
 	http.ListenAndServe(":3000", mux)
+}
+
+func initDatabase() *ent.Client {
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", os.Getenv("PG_HOST"), os.Getenv("PG_PORT"), os.Getenv("PG_USER"), os.Getenv("PG_PASSWORD"), os.Getenv("PG_DATABASE"))
+	println(dsn)
+	client, err := ent.Open("postgres", dsn)
+	if err != nil {
+		log.Fatalf("failed opening connection to postgres: %v", err)
+	}
+	defer client.Close()
+
+	if err := client.Schema.Create(context.Background()); err != nil {
+		log.Fatalf("failed creating schema resources: %v", err)
+	}
+
+	return client
 }
 
 func initInertia() *inertia.Inertia {

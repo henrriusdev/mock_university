@@ -1,7 +1,11 @@
 package main
 
-import "mocku/backend"
+import (
+	"github.com/joho/godotenv"
+	"mocku/backend"
+)
 
 func main() {
-	backend.MountHandlers()
+	godotenv.Load()
+	backend.MountApp()
 }
