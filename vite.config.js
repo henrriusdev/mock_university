@@ -9,7 +9,7 @@ export default defineConfig({
             input: 'resources/js/app.js',
             publicDirectory: 'public',
             buildDirectory: 'build',
-            refresh: true,
+            refresh: ['resources/**'],
         }),
         svelte({
             compilerOptions: {
@@ -30,14 +30,9 @@ export default defineConfig({
             },
         },
     },
-    server: {
-        hmr: {
-            host: 'localhost',
-        },
-    },
     resolve: {
         alias: {
-            $lib: path.resolve("./resources/js/lib"),
+            $lib: path.resolve(__dirname, 'resources/js/lib'),
         },
     },
 });

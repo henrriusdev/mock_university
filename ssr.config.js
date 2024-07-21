@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import {svelte} from "@sveltejs/vite-plugin-svelte"
 import laravel from "laravel-vite-plugin";
-
+import path from "path";
 export default defineConfig({
     plugins: [
         laravel({
@@ -9,7 +9,7 @@ export default defineConfig({
             ssr: 'resources/js/ssr.js', // Enable SSR
             publicDirectory: 'public',
             buildDirectory: 'bootstrap',
-            refresh: true,
+            refresh: ['resources/**'],
         }),
         svelte(),
     ],
@@ -24,6 +24,11 @@ export default defineConfig({
                 assetFileNames: 'assets/[name][extname]',
                 manualChunks: undefined, // Disable automatic chunk splitting
             },
+        },
+    },
+    resolve: {
+        alias: {
+            $lib: path.resolve(__dirname, 'resources/js/lib'),
         },
     },
 });

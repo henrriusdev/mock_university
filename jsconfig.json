@@ -2,9 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "$lib": ["./sresources/js/lib"],
+      "$lib": ["./resources/js/lib"],
       "$lib/*": ["./resources/js/lib/*"]
     }
   },
-  "exclude": ["node_modules", "public/build"]
+  "exclude": ["node_modules", "public/build", "bootstrap"]
 }
