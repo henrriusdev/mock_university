@@ -30,5 +30,7 @@ func (Users) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("careers", Careers.Type),
 		edge.To("role", Role.Type),
+		edge.To("requests_made", Request.Type),
+		edge.To("requests_received", Request.Type),
 	}
 }

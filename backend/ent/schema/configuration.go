@@ -19,7 +19,8 @@ func (Configuration) Fields() []ent.Field {
 		field.Time("end_registration_subjects"),
 		field.Bool("block_not_pay_inscription").Default(false),
 		field.JSON("fee_dates", []time.Time{}).Optional(), // Arreglo de fechas para las cuotas
-		field.Int("number_of_fees").Default(0),            // Cantidad de cuotas durante el ciclo
+		field.Int("number_fees").Default(0),               // Cantidad de cuotas durante el ciclo
+		field.Int("number_notes").Default(3),              // Cantidad de notas a ingresar
 	}
 }
 
