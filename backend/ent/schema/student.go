@@ -21,6 +21,8 @@ func (Student) Fields() []ent.Field {
 		field.Int("number").NonNegative(),
 		field.String("district").NotEmpty().MaxLen(100),
 		field.String("city").NotEmpty().MaxLen(100),
+		field.Int("postal_code").NonNegative(),
+		field.Int("credit_units_accumulated").NonNegative(),
 	}
 }
 
