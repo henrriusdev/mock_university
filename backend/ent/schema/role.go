@@ -22,6 +22,6 @@ func (Role) Fields() []ent.Field {
 // Edges of the Role.
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("permissions", Permission.Type).Ref("roles"),
+		edge.From("users", Users.Type).Ref("role"),
 	}
 }

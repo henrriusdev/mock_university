@@ -1,11 +1,7 @@
 <script>
-    import * as Menubar from "$lib/components/ui/menubar";
+
     export let careers = [];
 
-    let bookmarks = false;
-    let fullUrls = true;
-
-    const profileRadioValue = "benoit";
 </script>
 
 <div class="flex w-full justify-between items-center py-1 px-4">
@@ -29,68 +25,40 @@
             <Menubar.Trigger>About</Menubar.Trigger>
             <Menubar.Content>
                 <Menubar.Item>
-                    Undo
-                    <Menubar.Shortcut>⌘Z</Menubar.Shortcut>
+                    About <span class="text-bold">MockU</span>
                 </Menubar.Item>
                 <Menubar.Item>
-                    Redo
-                    <Menubar.Shortcut>⇧⌘Z</Menubar.Shortcut>
+                    Mission & Vision
                 </Menubar.Item>
                 <Menubar.Separator/>
                 <Menubar.Sub>
-                    <Menubar.SubTrigger>Find</Menubar.SubTrigger>
+                    <Menubar.SubTrigger>More about us</Menubar.SubTrigger>
                     <Menubar.SubContent>
-                        <Menubar.Item>Search the web</Menubar.Item>
+                        <Menubar.Item>Our campuses</Menubar.Item>
                         <Menubar.Separator/>
-                        <Menubar.Item>Find...</Menubar.Item>
-                        <Menubar.Item>Find Next</Menubar.Item>
-                        <Menubar.Item>Find Previous</Menubar.Item>
+                        <Menubar.Item>The Student Community</Menubar.Item>
+                        <Menubar.Item>The Teacher Community</Menubar.Item>
+                        <Menubar.Item>Admissions</Menubar.Item>
                     </Menubar.SubContent>
                 </Menubar.Sub>
-                <Menubar.Separator/>
-                <Menubar.Item>Cut</Menubar.Item>
-                <Menubar.Item>Copy</Menubar.Item>
-                <Menubar.Item>Paste</Menubar.Item>
-            </Menubar.Content>
-        </Menubar.Menu>
-        <Menubar.Menu>
-            <Menubar.Trigger>Services</Menubar.Trigger>
-            <Menubar.Content>
-                <Menubar.CheckboxItem bind:checked={bookmarks}
-                >Always Show Bookmarks Bar
-                </Menubar.CheckboxItem
-                >
-                <Menubar.CheckboxItem bind:checked={fullUrls}>
-                    Always Show Full URLs
-                </Menubar.CheckboxItem>
-                <Menubar.Separator/>
-                <Menubar.Item inset>
-                    Reload
-                    <Menubar.Shortcut>⌘R</Menubar.Shortcut>
-                </Menubar.Item>
-                <Menubar.Item inset>
-                    Force Reload
-                    <Menubar.Shortcut>⇧⌘R</Menubar.Shortcut>
-                </Menubar.Item>
-                <Menubar.Separator/>
-                <Menubar.Item inset>Toggle Fullscreen</Menubar.Item>
-                <Menubar.Separator/>
-                <Menubar.Item inset>Hide Sidebar</Menubar.Item>
             </Menubar.Content>
         </Menubar.Menu>
         <Menubar.Menu>
             <Menubar.Trigger>Contact</Menubar.Trigger>
             <Menubar.Content>
-                <Menubar.RadioGroup value={profileRadioValue}>
-                    <Menubar.RadioItem value="andy">Andy</Menubar.RadioItem>
-                    <Menubar.RadioItem value="benoit">Benoit</Menubar.RadioItem>
-                    <Menubar.RadioItem value="Luis">Luis</Menubar.RadioItem>
-                </Menubar.RadioGroup>
+                <Menubar.Item inset>WhatsApp</Menubar.Item>
                 <Menubar.Separator/>
-                <Menubar.Item inset>Edit...</Menubar.Item>
+                <Menubar.Item inset>Facebook</Menubar.Item>
+                <Menubar.Item inset>Twitter</Menubar.Item>
+                <Menubar.Item inset>Instagram</Menubar.Item>
                 <Menubar.Separator/>
-                <Menubar.Item inset>Add Profile...</Menubar.Item>
+                <Menubar.Item inset>Contact page</Menubar.Item>
             </Menubar.Content>
+        </Menubar.Menu>
+        <Menubar.Menu>
+            <Menubar.Trigger class="bg-default">
+                <a href="/login" class="text-default-foreground">Login</a>
+            </Menubar.Trigger>
         </Menubar.Menu>
     </Menubar.Root>
 </div>
