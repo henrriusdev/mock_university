@@ -8,6 +8,18 @@ import (
 )
 
 var (
+	// CareersColumns holds the columns for the "careers" table.
+	CareersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "description", Type: field.TypeString, Size: 2147483647},
+	}
+	// CareersTable holds the schema information for the "careers" table.
+	CareersTable = &schema.Table{
+		Name:       "careers",
+		Columns:    CareersColumns,
+		PrimaryKey: []*schema.Column{CareersColumns[0]},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -27,6 +39,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		CareersTable,
 		UsersTable,
 	}
 )

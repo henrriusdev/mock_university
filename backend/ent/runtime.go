@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"mocku/backend/ent/careers"
 	"mocku/backend/ent/schema"
 	"mocku/backend/ent/users"
 	"time"
@@ -12,6 +13,30 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	careersFields := schema.Careers{}.Fields()
+	_ = careersFields
+	// careersDescName is the schema descriptor for name field.
+	careersDescName := careersFields[0].Descriptor()
+	// careers.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	careers.NameValidator = func() func(string) error {
+		validators := careersDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// careersDescDescription is the schema descriptor for description field.
+	careersDescDescription := careersFields[1].Descriptor()
+	// careers.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	careers.DescriptionValidator = careersDescDescription.Validators[0].(func(string) error)
 	usersFields := schema.Users{}.Fields()
 	_ = usersFields
 	// usersDescUsername is the schema descriptor for username field.

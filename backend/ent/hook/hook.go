@@ -8,6 +8,18 @@ import (
 	"mocku/backend/ent"
 )
 
+// The CareersFunc type is an adapter to allow the use of ordinary
+// function as Careers mutator.
+type CareersFunc func(context.Context, *ent.CareersMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CareersFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CareersMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CareersMutation", m)
+}
+
 // The UsersFunc type is an adapter to allow the use of ordinary
 // function as Users mutator.
 type UsersFunc func(context.Context, *ent.UsersMutation) (ent.Value, error)

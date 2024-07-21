@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mocku/backend/ent/careers"
 	"mocku/backend/ent/users"
 	"reflect"
 	"sync"
@@ -73,7 +74,8 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			users.Table: users.ValidColumn,
+			careers.Table: careers.ValidColumn,
+			users.Table:   users.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

@@ -11,6 +11,7 @@ import (
 
 	"mocku/backend/ent/migrate"
 
+	"mocku/backend/ent/careers"
 	"mocku/backend/ent/users"
 
 	"entgo.io/ent"
@@ -23,6 +24,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Careers is the client for interacting with the Careers builders.
+	Careers *CareersClient
 	// Users is the client for interacting with the Users builders.
 	Users *UsersClient
 }
@@ -36,6 +39,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Careers = NewCareersClient(c.config)
 	c.Users = NewUsersClient(c.config)
 }
 
@@ -127,9 +131,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Users:  NewUsersClient(cfg),
+		ctx:     ctx,
+		config:  cfg,
+		Careers: NewCareersClient(cfg),
+		Users:   NewUsersClient(cfg),
 	}, nil
 }
 
@@ -147,16 +152,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Users:  NewUsersClient(cfg),
+		ctx:     ctx,
+		config:  cfg,
+		Careers: NewCareersClient(cfg),
+		Users:   NewUsersClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Users.
+//		Careers.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -178,22 +184,159 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Careers.Use(hooks...)
 	c.Users.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.Careers.Intercept(interceptors...)
 	c.Users.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *CareersMutation:
+		return c.Careers.mutate(ctx, m)
 	case *UsersMutation:
 		return c.Users.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// CareersClient is a client for the Careers schema.
+type CareersClient struct {
+	config
+}
+
+// NewCareersClient returns a client for the Careers from the given config.
+func NewCareersClient(c config) *CareersClient {
+	return &CareersClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `careers.Hooks(f(g(h())))`.
+func (c *CareersClient) Use(hooks ...Hook) {
+	c.hooks.Careers = append(c.hooks.Careers, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `careers.Intercept(f(g(h())))`.
+func (c *CareersClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Careers = append(c.inters.Careers, interceptors...)
+}
+
+// Create returns a builder for creating a Careers entity.
+func (c *CareersClient) Create() *CareersCreate {
+	mutation := newCareersMutation(c.config, OpCreate)
+	return &CareersCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Careers entities.
+func (c *CareersClient) CreateBulk(builders ...*CareersCreate) *CareersCreateBulk {
+	return &CareersCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CareersClient) MapCreateBulk(slice any, setFunc func(*CareersCreate, int)) *CareersCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CareersCreateBulk{err: fmt.Errorf("calling to CareersClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CareersCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CareersCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Careers.
+func (c *CareersClient) Update() *CareersUpdate {
+	mutation := newCareersMutation(c.config, OpUpdate)
+	return &CareersUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CareersClient) UpdateOne(ca *Careers) *CareersUpdateOne {
+	mutation := newCareersMutation(c.config, OpUpdateOne, withCareers(ca))
+	return &CareersUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CareersClient) UpdateOneID(id int) *CareersUpdateOne {
+	mutation := newCareersMutation(c.config, OpUpdateOne, withCareersID(id))
+	return &CareersUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Careers.
+func (c *CareersClient) Delete() *CareersDelete {
+	mutation := newCareersMutation(c.config, OpDelete)
+	return &CareersDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CareersClient) DeleteOne(ca *Careers) *CareersDeleteOne {
+	return c.DeleteOneID(ca.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CareersClient) DeleteOneID(id int) *CareersDeleteOne {
+	builder := c.Delete().Where(careers.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CareersDeleteOne{builder}
+}
+
+// Query returns a query builder for Careers.
+func (c *CareersClient) Query() *CareersQuery {
+	return &CareersQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCareers},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Careers entity by its id.
+func (c *CareersClient) Get(ctx context.Context, id int) (*Careers, error) {
+	return c.Query().Where(careers.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CareersClient) GetX(ctx context.Context, id int) *Careers {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CareersClient) Hooks() []Hook {
+	return c.hooks.Careers
+}
+
+// Interceptors returns the client interceptors.
+func (c *CareersClient) Interceptors() []Interceptor {
+	return c.inters.Careers
+}
+
+func (c *CareersClient) mutate(ctx context.Context, m *CareersMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CareersCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CareersUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CareersUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CareersDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Careers mutation op: %q", m.Op())
 	}
 }
 
@@ -333,9 +476,9 @@ func (c *UsersClient) mutate(ctx context.Context, m *UsersMutation) (Value, erro
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Users []ent.Hook
+		Careers, Users []ent.Hook
 	}
 	inters struct {
-		Users []ent.Interceptor
+		Careers, Users []ent.Interceptor
 	}
 )

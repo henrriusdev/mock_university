@@ -7,8 +7,15 @@ import (
 
 func (h *Handler) HomeHandler(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		err := i.Render(w, r, "Home/Index", inertia.Props{
-			"text": "Inertia.js with Svelte and Go! 💙",
+		careers, err := h.DB.Careers.Query().All(r.Context())
+		println(len(careers), err)
+		if err != nil {
+			HandleServerErr(w, err)
+			return
+		}
+
+		err = i.Render(w, r, "Home/Index", inertia.Props{
+			"careers": careers,
 		})
 
 		if err != nil {
