@@ -6523,7 +6523,7 @@ func (m *PermissionMutation) OldUpdate(ctx context.Context) (v bool, err error) 
 	if err != nil {
 		return v, fmt.Errorf("querying old value for OldUpdate: %w", err)
 	}
-	return oldValue.Update, nil
+	return oldValue.Updated, nil
 }
 
 // ResetUpdate resets all changes to the "update" field.

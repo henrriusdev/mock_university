@@ -246,7 +246,7 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := pc.mutation.Update(); ok {
 		_spec.SetField(permission.FieldUpdate, field.TypeBool, value)
-		_node.Update = value
+		_node.Updated = value
 	}
 	if value, ok := pc.mutation.Delete(); ok {
 		_spec.SetField(permission.FieldDelete, field.TypeBool, value)

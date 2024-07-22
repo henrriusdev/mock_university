@@ -24,8 +24,8 @@ type Permission struct {
 	Read bool `json:"read,omitempty"`
 	// Create holds the value of the "create" field.
 	Create bool `json:"create,omitempty"`
-	// Update holds the value of the "update" field.
-	Update bool `json:"update,omitempty"`
+	// Updated holds the value of the "update" field.
+	Updated bool `json:"update,omitempty"`
 	// Delete holds the value of the "delete" field.
 	Delete bool `json:"delete,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -123,7 +123,7 @@ func (pe *Permission) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field update", values[i])
 			} else if value.Valid {
-				pe.Update = value.Bool
+				pe.Updated = value.Bool
 			}
 		case permission.FieldDelete:
 			if value, ok := values[i].(*sql.NullBool); !ok {
