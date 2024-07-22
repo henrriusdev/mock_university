@@ -1,4 +1,4 @@
-import { fontFamily } from "tailwindcss/defaultTheme";
+import {fontFamily} from "tailwindcss/defaultTheme";
 
 /** @type {import('tailwindcss').Config} */
 const config = {
@@ -56,7 +56,14 @@ const config = {
 			},
 			fontFamily: {
 				sans: [...fontFamily.sans]
-			}
+			},
+				// make the min-height of the screen as calc(100vh - 48px)
+			minHeight: {
+			  'scn': 'calc(100vh - 48px)',
+			},
+			height: {
+			  'scn': 'calc(100vh - 48px)',
+			},
 		}
 	},
 };

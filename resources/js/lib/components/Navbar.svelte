@@ -1,5 +1,7 @@
 <script>
     import {Menubar, Trigger, Content, Menu, Item, Separator, Sub, SubContent, SubTrigger} from '$lib/components/ui/menubar/index.js';
+    import LightSwitch from "$lib/components/LightSwitch.svelte";
+    import {ChevronRight} from "lucide-svelte";
     export let careers = [];
 
 </script>
@@ -57,8 +59,11 @@
         </Menu>
         <Menu>
             <Trigger class="bg-default">
-                <a href="/login" class="text-default-foreground">Login</a>
+                <a href="/login" class="text-white flex justify-center gap-x-2 items-center">
+                    Login <ChevronRight class="w-4 h-4"/>
+                </a>
             </Trigger>
         </Menu>
+        <LightSwitch/>
     </Menubar>
 </div>
