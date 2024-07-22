@@ -335,7 +335,7 @@ func HasStudent() predicate.Payment {
 	return predicate.Payment(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, StudentTable, StudentColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, StudentTable, StudentPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

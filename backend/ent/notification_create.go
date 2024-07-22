@@ -4,8 +4,11 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"mocku/backend/ent/notification"
+	"mocku/backend/ent/users"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -18,6 +21,61 @@ type NotificationCreate struct {
 	hooks    []Hook
 }
 
+// SetTitle sets the "title" field.
+func (nc *NotificationCreate) SetTitle(s string) *NotificationCreate {
+	nc.mutation.SetTitle(s)
+	return nc
+}
+
+// SetMessage sets the "message" field.
+func (nc *NotificationCreate) SetMessage(s string) *NotificationCreate {
+	nc.mutation.SetMessage(s)
+	return nc
+}
+
+// SetStatus sets the "status" field.
+func (nc *NotificationCreate) SetStatus(s string) *NotificationCreate {
+	nc.mutation.SetStatus(s)
+	return nc
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (nc *NotificationCreate) SetNillableStatus(s *string) *NotificationCreate {
+	if s != nil {
+		nc.SetStatus(*s)
+	}
+	return nc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (nc *NotificationCreate) SetCreatedAt(t time.Time) *NotificationCreate {
+	nc.mutation.SetCreatedAt(t)
+	return nc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (nc *NotificationCreate) SetNillableCreatedAt(t *time.Time) *NotificationCreate {
+	if t != nil {
+		nc.SetCreatedAt(*t)
+	}
+	return nc
+}
+
+// AddRecipientIDs adds the "recipient" edge to the Users entity by IDs.
+func (nc *NotificationCreate) AddRecipientIDs(ids ...int) *NotificationCreate {
+	nc.mutation.AddRecipientIDs(ids...)
+	return nc
+}
+
+// AddRecipient adds the "recipient" edges to the Users entity.
+func (nc *NotificationCreate) AddRecipient(u ...*Users) *NotificationCreate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return nc.AddRecipientIDs(ids...)
+}
+
 // Mutation returns the NotificationMutation object of the builder.
 func (nc *NotificationCreate) Mutation() *NotificationMutation {
 	return nc.mutation
@@ -25,6 +83,7 @@ func (nc *NotificationCreate) Mutation() *NotificationMutation {
 
 // Save creates the Notification in the database.
 func (nc *NotificationCreate) Save(ctx context.Context) (*Notification, error) {
+	nc.defaults()
 	return withHooks(ctx, nc.sqlSave, nc.mutation, nc.hooks)
 }
 
@@ -50,8 +109,42 @@ func (nc *NotificationCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (nc *NotificationCreate) defaults() {
+	if _, ok := nc.mutation.Status(); !ok {
+		v := notification.DefaultStatus
+		nc.mutation.SetStatus(v)
+	}
+	if _, ok := nc.mutation.CreatedAt(); !ok {
+		v := notification.DefaultCreatedAt()
+		nc.mutation.SetCreatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (nc *NotificationCreate) check() error {
+	if _, ok := nc.mutation.Title(); !ok {
+		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Notification.title"`)}
+	}
+	if v, ok := nc.mutation.Title(); ok {
+		if err := notification.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Notification.title": %w`, err)}
+		}
+	}
+	if _, ok := nc.mutation.Message(); !ok {
+		return &ValidationError{Name: "message", err: errors.New(`ent: missing required field "Notification.message"`)}
+	}
+	if v, ok := nc.mutation.Message(); ok {
+		if err := notification.MessageValidator(v); err != nil {
+			return &ValidationError{Name: "message", err: fmt.Errorf(`ent: validator failed for field "Notification.message": %w`, err)}
+		}
+	}
+	if _, ok := nc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Notification.status"`)}
+	}
+	if _, ok := nc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Notification.created_at"`)}
+	}
 	return nil
 }
 
@@ -78,6 +171,38 @@ func (nc *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec)
 		_node = &Notification{config: nc.config}
 		_spec = sqlgraph.NewCreateSpec(notification.Table, sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt))
 	)
+	if value, ok := nc.mutation.Title(); ok {
+		_spec.SetField(notification.FieldTitle, field.TypeString, value)
+		_node.Title = value
+	}
+	if value, ok := nc.mutation.Message(); ok {
+		_spec.SetField(notification.FieldMessage, field.TypeString, value)
+		_node.Message = value
+	}
+	if value, ok := nc.mutation.Status(); ok {
+		_spec.SetField(notification.FieldStatus, field.TypeString, value)
+		_node.Status = value
+	}
+	if value, ok := nc.mutation.CreatedAt(); ok {
+		_spec.SetField(notification.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if nodes := nc.mutation.RecipientIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   notification.RecipientTable,
+			Columns: notification.RecipientPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -99,6 +224,7 @@ func (ncb *NotificationCreateBulk) Save(ctx context.Context) ([]*Notification, e
 	for i := range ncb.builders {
 		func(i int, root context.Context) {
 			builder := ncb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*NotificationMutation)
 				if !ok {

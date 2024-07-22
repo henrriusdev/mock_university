@@ -89,14 +89,14 @@ func (pc *PermissionCreate) SetNillableDelete(b *bool) *PermissionCreate {
 	return pc
 }
 
-// AddRoleIDs adds the "role" edge to the Role entity by IDs.
+// AddRoleIDs adds the "roles" edge to the Role entity by IDs.
 func (pc *PermissionCreate) AddRoleIDs(ids ...int) *PermissionCreate {
 	pc.mutation.AddRoleIDs(ids...)
 	return pc
 }
 
-// AddRole adds the "role" edges to the Role entity.
-func (pc *PermissionCreate) AddRole(r ...*Role) *PermissionCreate {
+// AddRoles adds the "roles" edges to the Role entity.
+func (pc *PermissionCreate) AddRoles(r ...*Role) *PermissionCreate {
 	ids := make([]int, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
@@ -252,12 +252,12 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 		_spec.SetField(permission.FieldDelete, field.TypeBool, value)
 		_node.Delete = value
 	}
-	if nodes := pc.mutation.RoleIDs(); len(nodes) > 0 {
+	if nodes := pc.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   permission.RoleTable,
-			Columns: []string{permission.RoleColumn},
+			Table:   permission.RolesTable,
+			Columns: permission.RolesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),

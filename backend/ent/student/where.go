@@ -75,11 +75,6 @@ func Address(v string) predicate.Student {
 	return predicate.Student(sql.FieldEQ(FieldAddress, v))
 }
 
-// Number applies equality check predicate on the "number" field. It's identical to NumberEQ.
-func Number(v int) predicate.Student {
-	return predicate.Student(sql.FieldEQ(FieldNumber, v))
-}
-
 // District applies equality check predicate on the "district" field. It's identical to DistrictEQ.
 func District(v string) predicate.Student {
 	return predicate.Student(sql.FieldEQ(FieldDistrict, v))
@@ -338,46 +333,6 @@ func AddressEqualFold(v string) predicate.Student {
 // AddressContainsFold applies the ContainsFold predicate on the "address" field.
 func AddressContainsFold(v string) predicate.Student {
 	return predicate.Student(sql.FieldContainsFold(FieldAddress, v))
-}
-
-// NumberEQ applies the EQ predicate on the "number" field.
-func NumberEQ(v int) predicate.Student {
-	return predicate.Student(sql.FieldEQ(FieldNumber, v))
-}
-
-// NumberNEQ applies the NEQ predicate on the "number" field.
-func NumberNEQ(v int) predicate.Student {
-	return predicate.Student(sql.FieldNEQ(FieldNumber, v))
-}
-
-// NumberIn applies the In predicate on the "number" field.
-func NumberIn(vs ...int) predicate.Student {
-	return predicate.Student(sql.FieldIn(FieldNumber, vs...))
-}
-
-// NumberNotIn applies the NotIn predicate on the "number" field.
-func NumberNotIn(vs ...int) predicate.Student {
-	return predicate.Student(sql.FieldNotIn(FieldNumber, vs...))
-}
-
-// NumberGT applies the GT predicate on the "number" field.
-func NumberGT(v int) predicate.Student {
-	return predicate.Student(sql.FieldGT(FieldNumber, v))
-}
-
-// NumberGTE applies the GTE predicate on the "number" field.
-func NumberGTE(v int) predicate.Student {
-	return predicate.Student(sql.FieldGTE(FieldNumber, v))
-}
-
-// NumberLT applies the LT predicate on the "number" field.
-func NumberLT(v int) predicate.Student {
-	return predicate.Student(sql.FieldLT(FieldNumber, v))
-}
-
-// NumberLTE applies the LTE predicate on the "number" field.
-func NumberLTE(v int) predicate.Student {
-	return predicate.Student(sql.FieldLTE(FieldNumber, v))
 }
 
 // DistrictEQ applies the EQ predicate on the "district" field.
@@ -645,6 +600,75 @@ func HasUser() predicate.Student {
 func HasUserWith(preds ...predicate.Users) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
 		step := newUserStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasNotes applies the HasEdge predicate on the "notes" edge.
+func HasNotes() predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, NotesTable, NotesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasNotesWith applies the HasEdge predicate on the "notes" edge with a given conditions (other predicates).
+func HasNotesWith(preds ...predicate.Note) predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		step := newNotesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPayments applies the HasEdge predicate on the "payments" edge.
+func HasPayments() predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, PaymentsTable, PaymentsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPaymentsWith applies the HasEdge predicate on the "payments" edge with a given conditions (other predicates).
+func HasPaymentsWith(preds ...predicate.Payment) predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		step := newPaymentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCareer applies the HasEdge predicate on the "career" edge.
+func HasCareer() predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, CareerTable, CareerPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCareerWith applies the HasEdge predicate on the "career" edge with a given conditions (other predicates).
+func HasCareerWith(preds ...predicate.Careers) predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		step := newCareerStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

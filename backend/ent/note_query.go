@@ -10,7 +10,6 @@ import (
 	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/note"
 	"mocku/backend/ent/predicate"
-	"mocku/backend/ent/professor"
 	"mocku/backend/ent/student"
 	"mocku/backend/ent/subject"
 
@@ -22,14 +21,13 @@ import (
 // NoteQuery is the builder for querying Note entities.
 type NoteQuery struct {
 	config
-	ctx           *QueryContext
-	order         []note.OrderOption
-	inters        []Interceptor
-	predicates    []predicate.Note
-	withStudent   *StudentQuery
-	withProfessor *ProfessorQuery
-	withSubject   *SubjectQuery
-	withCycle     *CycleQuery
+	ctx         *QueryContext
+	order       []note.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.Note
+	withStudent *StudentQuery
+	withSubject *SubjectQuery
+	withCycle   *CycleQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -80,29 +78,7 @@ func (nq *NoteQuery) QueryStudent() *StudentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(note.Table, note.FieldID, selector),
 			sqlgraph.To(student.Table, student.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, note.StudentTable, note.StudentColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(nq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryProfessor chains the current query on the "professor" edge.
-func (nq *NoteQuery) QueryProfessor() *ProfessorQuery {
-	query := (&ProfessorClient{config: nq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := nq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := nq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(note.Table, note.FieldID, selector),
-			sqlgraph.To(professor.Table, professor.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, note.ProfessorTable, note.ProfessorColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, note.StudentTable, note.StudentPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(nq.driver.Dialect(), step)
 		return fromU, nil
@@ -124,7 +100,7 @@ func (nq *NoteQuery) QuerySubject() *SubjectQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(note.Table, note.FieldID, selector),
 			sqlgraph.To(subject.Table, subject.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, note.SubjectTable, note.SubjectColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, note.SubjectTable, note.SubjectPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(nq.driver.Dialect(), step)
 		return fromU, nil
@@ -341,15 +317,14 @@ func (nq *NoteQuery) Clone() *NoteQuery {
 		return nil
 	}
 	return &NoteQuery{
-		config:        nq.config,
-		ctx:           nq.ctx.Clone(),
-		order:         append([]note.OrderOption{}, nq.order...),
-		inters:        append([]Interceptor{}, nq.inters...),
-		predicates:    append([]predicate.Note{}, nq.predicates...),
-		withStudent:   nq.withStudent.Clone(),
-		withProfessor: nq.withProfessor.Clone(),
-		withSubject:   nq.withSubject.Clone(),
-		withCycle:     nq.withCycle.Clone(),
+		config:      nq.config,
+		ctx:         nq.ctx.Clone(),
+		order:       append([]note.OrderOption{}, nq.order...),
+		inters:      append([]Interceptor{}, nq.inters...),
+		predicates:  append([]predicate.Note{}, nq.predicates...),
+		withStudent: nq.withStudent.Clone(),
+		withSubject: nq.withSubject.Clone(),
+		withCycle:   nq.withCycle.Clone(),
 		// clone intermediate query.
 		sql:  nq.sql.Clone(),
 		path: nq.path,
@@ -364,17 +339,6 @@ func (nq *NoteQuery) WithStudent(opts ...func(*StudentQuery)) *NoteQuery {
 		opt(query)
 	}
 	nq.withStudent = query
-	return nq
-}
-
-// WithProfessor tells the query-builder to eager-load the nodes that are connected to
-// the "professor" edge. The optional arguments are used to configure the query builder of the edge.
-func (nq *NoteQuery) WithProfessor(opts ...func(*ProfessorQuery)) *NoteQuery {
-	query := (&ProfessorClient{config: nq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	nq.withProfessor = query
 	return nq
 }
 
@@ -478,9 +442,8 @@ func (nq *NoteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Note, e
 	var (
 		nodes       = []*Note{}
 		_spec       = nq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [3]bool{
 			nq.withStudent != nil,
-			nq.withProfessor != nil,
 			nq.withSubject != nil,
 			nq.withCycle != nil,
 		}
@@ -510,13 +473,6 @@ func (nq *NoteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Note, e
 			return nil, err
 		}
 	}
-	if query := nq.withProfessor; query != nil {
-		if err := nq.loadProfessor(ctx, query, nodes,
-			func(n *Note) { n.Edges.Professor = []*Professor{} },
-			func(n *Note, e *Professor) { n.Edges.Professor = append(n.Edges.Professor, e) }); err != nil {
-			return nil, err
-		}
-	}
 	if query := nq.withSubject; query != nil {
 		if err := nq.loadSubject(ctx, query, nodes,
 			func(n *Note) { n.Edges.Subject = []*Subject{} },
@@ -535,95 +491,124 @@ func (nq *NoteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Note, e
 }
 
 func (nq *NoteQuery) loadStudent(ctx context.Context, query *StudentQuery, nodes []*Note, init func(*Note), assign func(*Note, *Student)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Note)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Note)
+	nids := make(map[int]map[*Note]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
 		if init != nil {
-			init(nodes[i])
+			init(node)
 		}
 	}
-	query.withFKs = true
-	query.Where(predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(note.StudentColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(note.StudentTable)
+		s.Join(joinT).On(s.C(student.FieldID), joinT.C(note.StudentPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(note.StudentPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(note.StudentPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Note]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Student](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.note_student
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "note_student" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "note_student" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected "student" node returned %v`, n.ID)
 		}
-		assign(node, n)
-	}
-	return nil
-}
-func (nq *NoteQuery) loadProfessor(ctx context.Context, query *ProfessorQuery, nodes []*Note, init func(*Note), assign func(*Note, *Professor)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Note)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		for kn := range nodes {
+			assign(kn, n)
 		}
-	}
-	query.withFKs = true
-	query.Where(predicate.Professor(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(note.ProfessorColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.note_professor
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "note_professor" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "note_professor" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
 	}
 	return nil
 }
 func (nq *NoteQuery) loadSubject(ctx context.Context, query *SubjectQuery, nodes []*Note, init func(*Note), assign func(*Note, *Subject)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Note)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Note)
+	nids := make(map[int]map[*Note]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
 		if init != nil {
-			init(nodes[i])
+			init(node)
 		}
 	}
-	query.withFKs = true
-	query.Where(predicate.Subject(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(note.SubjectColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(note.SubjectTable)
+		s.Join(joinT).On(s.C(subject.FieldID), joinT.C(note.SubjectPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(note.SubjectPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(note.SubjectPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Note]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Subject](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.note_subject
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "note_subject" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "note_subject" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected "subject" node returned %v`, n.ID)
 		}
-		assign(node, n)
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

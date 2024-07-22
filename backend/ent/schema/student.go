@@ -18,7 +18,6 @@ func (Student) Fields() []ent.Field {
 		field.Time("birth_date"),
 		field.String("phone").NotEmpty().MaxLen(20),
 		field.String("address").NotEmpty().MaxLen(255),
-		field.Int("number").NonNegative(),
 		field.String("district").NotEmpty().MaxLen(100),
 		field.String("city").NotEmpty().MaxLen(100),
 		field.Int("postal_code").NonNegative(),
@@ -31,5 +30,8 @@ func (Student) Fields() []ent.Field {
 func (Student) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("user", Users.Type).Unique(),
+		edge.From("notes", Note.Type).Ref("student"),
+		edge.From("payments", Payment.Type).Ref("student"),
+		edge.To("career", Careers.Type),
 	}
 }

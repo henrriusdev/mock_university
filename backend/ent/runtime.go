@@ -3,11 +3,13 @@
 package ent
 
 import (
+	"mocku/backend/ent/activity"
 	"mocku/backend/ent/blog"
 	"mocku/backend/ent/careers"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/module"
+	"mocku/backend/ent/notification"
 	"mocku/backend/ent/payment"
 	"mocku/backend/ent/paymentmethod"
 	"mocku/backend/ent/permission"
@@ -25,6 +27,20 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	activityFields := schema.Activity{}.Fields()
+	_ = activityFields
+	// activityDescAction is the schema descriptor for action field.
+	activityDescAction := activityFields[0].Descriptor()
+	// activity.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	activity.ActionValidator = activityDescAction.Validators[0].(func(string) error)
+	// activityDescDescription is the schema descriptor for description field.
+	activityDescDescription := activityFields[1].Descriptor()
+	// activity.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	activity.DescriptionValidator = activityDescDescription.Validators[0].(func(string) error)
+	// activityDescTimestamp is the schema descriptor for timestamp field.
+	activityDescTimestamp := activityFields[2].Descriptor()
+	// activity.DefaultTimestamp holds the default value on creation for the timestamp field.
+	activity.DefaultTimestamp = activityDescTimestamp.Default.(func() time.Time)
 	blogFields := schema.Blog{}.Fields()
 	_ = blogFields
 	// blogDescTitle is the schema descriptor for title field.
@@ -129,6 +145,38 @@ func init() {
 			return nil
 		}
 	}()
+	notificationFields := schema.Notification{}.Fields()
+	_ = notificationFields
+	// notificationDescTitle is the schema descriptor for title field.
+	notificationDescTitle := notificationFields[0].Descriptor()
+	// notification.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	notification.TitleValidator = func() func(string) error {
+		validators := notificationDescTitle.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(title string) error {
+			for _, fn := range fns {
+				if err := fn(title); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// notificationDescMessage is the schema descriptor for message field.
+	notificationDescMessage := notificationFields[1].Descriptor()
+	// notification.MessageValidator is a validator for the "message" field. It is called by the builders before save.
+	notification.MessageValidator = notificationDescMessage.Validators[0].(func(string) error)
+	// notificationDescStatus is the schema descriptor for status field.
+	notificationDescStatus := notificationFields[2].Descriptor()
+	// notification.DefaultStatus holds the default value on creation for the status field.
+	notification.DefaultStatus = notificationDescStatus.Default.(string)
+	// notificationDescCreatedAt is the schema descriptor for created_at field.
+	notificationDescCreatedAt := notificationFields[3].Descriptor()
+	// notification.DefaultCreatedAt holds the default value on creation for the created_at field.
+	notification.DefaultCreatedAt = notificationDescCreatedAt.Default.(func() time.Time)
 	paymentFields := schema.Payment{}.Fields()
 	_ = paymentFields
 	// paymentDescReference is the schema descriptor for reference field.
@@ -427,12 +475,8 @@ func init() {
 			return nil
 		}
 	}()
-	// studentDescNumber is the schema descriptor for number field.
-	studentDescNumber := studentFields[4].Descriptor()
-	// student.NumberValidator is a validator for the "number" field. It is called by the builders before save.
-	student.NumberValidator = studentDescNumber.Validators[0].(func(int) error)
 	// studentDescDistrict is the schema descriptor for district field.
-	studentDescDistrict := studentFields[5].Descriptor()
+	studentDescDistrict := studentFields[4].Descriptor()
 	// student.DistrictValidator is a validator for the "district" field. It is called by the builders before save.
 	student.DistrictValidator = func() func(string) error {
 		validators := studentDescDistrict.Validators
@@ -450,7 +494,7 @@ func init() {
 		}
 	}()
 	// studentDescCity is the schema descriptor for city field.
-	studentDescCity := studentFields[6].Descriptor()
+	studentDescCity := studentFields[5].Descriptor()
 	// student.CityValidator is a validator for the "city" field. It is called by the builders before save.
 	student.CityValidator = func() func(string) error {
 		validators := studentDescCity.Validators
@@ -468,15 +512,15 @@ func init() {
 		}
 	}()
 	// studentDescPostalCode is the schema descriptor for postal_code field.
-	studentDescPostalCode := studentFields[7].Descriptor()
+	studentDescPostalCode := studentFields[6].Descriptor()
 	// student.PostalCodeValidator is a validator for the "postal_code" field. It is called by the builders before save.
 	student.PostalCodeValidator = studentDescPostalCode.Validators[0].(func(int) error)
 	// studentDescCreditUnitsAccumulated is the schema descriptor for credit_units_accumulated field.
-	studentDescCreditUnitsAccumulated := studentFields[8].Descriptor()
+	studentDescCreditUnitsAccumulated := studentFields[7].Descriptor()
 	// student.CreditUnitsAccumulatedValidator is a validator for the "credit_units_accumulated" field. It is called by the builders before save.
 	student.CreditUnitsAccumulatedValidator = studentDescCreditUnitsAccumulated.Validators[0].(func(int) error)
 	// studentDescTotalAverage is the schema descriptor for total_average field.
-	studentDescTotalAverage := studentFields[9].Descriptor()
+	studentDescTotalAverage := studentFields[8].Descriptor()
 	// student.TotalAverageValidator is a validator for the "total_average" field. It is called by the builders before save.
 	student.TotalAverageValidator = func() func(float64) error {
 		validators := studentDescTotalAverage.Validators

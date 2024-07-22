@@ -6,9 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"mocku/backend/ent/careers"
+	"mocku/backend/ent/activity"
+	"mocku/backend/ent/blog"
+	"mocku/backend/ent/notification"
+	"mocku/backend/ent/professor"
 	"mocku/backend/ent/request"
 	"mocku/backend/ent/role"
+	"mocku/backend/ent/student"
 	"mocku/backend/ent/users"
 	"time"
 
@@ -81,21 +85,6 @@ func (uc *UsersCreate) SetNillableCreatedAt(t *time.Time) *UsersCreate {
 	return uc
 }
 
-// AddCareerIDs adds the "careers" edge to the Careers entity by IDs.
-func (uc *UsersCreate) AddCareerIDs(ids ...int) *UsersCreate {
-	uc.mutation.AddCareerIDs(ids...)
-	return uc
-}
-
-// AddCareers adds the "careers" edges to the Careers entity.
-func (uc *UsersCreate) AddCareers(c ...*Careers) *UsersCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return uc.AddCareerIDs(ids...)
-}
-
 // AddRoleIDs adds the "role" edge to the Role entity by IDs.
 func (uc *UsersCreate) AddRoleIDs(ids ...int) *UsersCreate {
 	uc.mutation.AddRoleIDs(ids...)
@@ -139,6 +128,81 @@ func (uc *UsersCreate) AddRequestsReceived(r ...*Request) *UsersCreate {
 		ids[i] = r[i].ID
 	}
 	return uc.AddRequestsReceivedIDs(ids...)
+}
+
+// AddBlogIDs adds the "blog" edge to the Blog entity by IDs.
+func (uc *UsersCreate) AddBlogIDs(ids ...int) *UsersCreate {
+	uc.mutation.AddBlogIDs(ids...)
+	return uc
+}
+
+// AddBlog adds the "blog" edges to the Blog entity.
+func (uc *UsersCreate) AddBlog(b ...*Blog) *UsersCreate {
+	ids := make([]int, len(b))
+	for i := range b {
+		ids[i] = b[i].ID
+	}
+	return uc.AddBlogIDs(ids...)
+}
+
+// AddNotificationIDs adds the "notifications" edge to the Notification entity by IDs.
+func (uc *UsersCreate) AddNotificationIDs(ids ...int) *UsersCreate {
+	uc.mutation.AddNotificationIDs(ids...)
+	return uc
+}
+
+// AddNotifications adds the "notifications" edges to the Notification entity.
+func (uc *UsersCreate) AddNotifications(n ...*Notification) *UsersCreate {
+	ids := make([]int, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return uc.AddNotificationIDs(ids...)
+}
+
+// AddActivityIDs adds the "activity" edge to the Activity entity by IDs.
+func (uc *UsersCreate) AddActivityIDs(ids ...int) *UsersCreate {
+	uc.mutation.AddActivityIDs(ids...)
+	return uc
+}
+
+// AddActivity adds the "activity" edges to the Activity entity.
+func (uc *UsersCreate) AddActivity(a ...*Activity) *UsersCreate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return uc.AddActivityIDs(ids...)
+}
+
+// AddStudentIDs adds the "students" edge to the Student entity by IDs.
+func (uc *UsersCreate) AddStudentIDs(ids ...int) *UsersCreate {
+	uc.mutation.AddStudentIDs(ids...)
+	return uc
+}
+
+// AddStudents adds the "students" edges to the Student entity.
+func (uc *UsersCreate) AddStudents(s ...*Student) *UsersCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uc.AddStudentIDs(ids...)
+}
+
+// AddProfessorIDs adds the "professor" edge to the Professor entity by IDs.
+func (uc *UsersCreate) AddProfessorIDs(ids ...int) *UsersCreate {
+	uc.mutation.AddProfessorIDs(ids...)
+	return uc
+}
+
+// AddProfessor adds the "professor" edges to the Professor entity.
+func (uc *UsersCreate) AddProfessor(p ...*Professor) *UsersCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uc.AddProfessorIDs(ids...)
 }
 
 // Mutation returns the UsersMutation object of the builder.
@@ -288,22 +352,6 @@ func (uc *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 		_spec.SetField(users.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if nodes := uc.mutation.CareersIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   users.CareersTable,
-			Columns: []string{users.CareersColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
 	if nodes := uc.mutation.RoleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -322,10 +370,10 @@ func (uc *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 	}
 	if nodes := uc.mutation.RequestsMadeIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   users.RequestsMadeTable,
-			Columns: []string{users.RequestsMadeColumn},
+			Columns: users.RequestsMadePrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -338,13 +386,93 @@ func (uc *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 	}
 	if nodes := uc.mutation.RequestsReceivedIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
 			Table:   users.RequestsReceivedTable,
-			Columns: []string{users.RequestsReceivedColumn},
+			Columns: users.RequestsReceivedPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.BlogIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   users.BlogTable,
+			Columns: []string{users.BlogColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(blog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.NotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   users.NotificationsTable,
+			Columns: users.NotificationsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ActivityIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   users.ActivityTable,
+			Columns: users.ActivityPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.StudentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   users.StudentsTable,
+			Columns: []string{users.StudentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ProfessorIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   users.ProfessorTable,
+			Columns: []string{users.ProfessorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

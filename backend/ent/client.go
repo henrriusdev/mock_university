@@ -11,6 +11,7 @@ import (
 
 	"mocku/backend/ent/migrate"
 
+	"mocku/backend/ent/activity"
 	"mocku/backend/ent/blog"
 	"mocku/backend/ent/careers"
 	"mocku/backend/ent/configuration"
@@ -39,6 +40,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Activity is the client for interacting with the Activity builders.
+	Activity *ActivityClient
 	// Blog is the client for interacting with the Blog builders.
 	Blog *BlogClient
 	// Careers is the client for interacting with the Careers builders.
@@ -82,6 +85,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Activity = NewActivityClient(c.config)
 	c.Blog = NewBlogClient(c.config)
 	c.Careers = NewCareersClient(c.config)
 	c.Configuration = NewConfigurationClient(c.config)
@@ -190,6 +194,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:           ctx,
 		config:        cfg,
+		Activity:      NewActivityClient(cfg),
 		Blog:          NewBlogClient(cfg),
 		Careers:       NewCareersClient(cfg),
 		Configuration: NewConfigurationClient(cfg),
@@ -225,6 +230,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:           ctx,
 		config:        cfg,
+		Activity:      NewActivityClient(cfg),
 		Blog:          NewBlogClient(cfg),
 		Careers:       NewCareersClient(cfg),
 		Configuration: NewConfigurationClient(cfg),
@@ -247,7 +253,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Blog.
+//		Activity.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -270,9 +276,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Blog, c.Careers, c.Configuration, c.Cycle, c.Module, c.Note, c.Notification,
-		c.Payment, c.PaymentMethod, c.Permission, c.Professor, c.Request, c.Role,
-		c.Student, c.Subject, c.Users,
+		c.Activity, c.Blog, c.Careers, c.Configuration, c.Cycle, c.Module, c.Note,
+		c.Notification, c.Payment, c.PaymentMethod, c.Permission, c.Professor,
+		c.Request, c.Role, c.Student, c.Subject, c.Users,
 	} {
 		n.Use(hooks...)
 	}
@@ -282,9 +288,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Blog, c.Careers, c.Configuration, c.Cycle, c.Module, c.Note, c.Notification,
-		c.Payment, c.PaymentMethod, c.Permission, c.Professor, c.Request, c.Role,
-		c.Student, c.Subject, c.Users,
+		c.Activity, c.Blog, c.Careers, c.Configuration, c.Cycle, c.Module, c.Note,
+		c.Notification, c.Payment, c.PaymentMethod, c.Permission, c.Professor,
+		c.Request, c.Role, c.Student, c.Subject, c.Users,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -293,6 +299,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *ActivityMutation:
+		return c.Activity.mutate(ctx, m)
 	case *BlogMutation:
 		return c.Blog.mutate(ctx, m)
 	case *CareersMutation:
@@ -327,6 +335,155 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Users.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// ActivityClient is a client for the Activity schema.
+type ActivityClient struct {
+	config
+}
+
+// NewActivityClient returns a client for the Activity from the given config.
+func NewActivityClient(c config) *ActivityClient {
+	return &ActivityClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `activity.Hooks(f(g(h())))`.
+func (c *ActivityClient) Use(hooks ...Hook) {
+	c.hooks.Activity = append(c.hooks.Activity, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `activity.Intercept(f(g(h())))`.
+func (c *ActivityClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Activity = append(c.inters.Activity, interceptors...)
+}
+
+// Create returns a builder for creating a Activity entity.
+func (c *ActivityClient) Create() *ActivityCreate {
+	mutation := newActivityMutation(c.config, OpCreate)
+	return &ActivityCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Activity entities.
+func (c *ActivityClient) CreateBulk(builders ...*ActivityCreate) *ActivityCreateBulk {
+	return &ActivityCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ActivityClient) MapCreateBulk(slice any, setFunc func(*ActivityCreate, int)) *ActivityCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ActivityCreateBulk{err: fmt.Errorf("calling to ActivityClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ActivityCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ActivityCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Activity.
+func (c *ActivityClient) Update() *ActivityUpdate {
+	mutation := newActivityMutation(c.config, OpUpdate)
+	return &ActivityUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ActivityClient) UpdateOne(a *Activity) *ActivityUpdateOne {
+	mutation := newActivityMutation(c.config, OpUpdateOne, withActivity(a))
+	return &ActivityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ActivityClient) UpdateOneID(id int) *ActivityUpdateOne {
+	mutation := newActivityMutation(c.config, OpUpdateOne, withActivityID(id))
+	return &ActivityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Activity.
+func (c *ActivityClient) Delete() *ActivityDelete {
+	mutation := newActivityMutation(c.config, OpDelete)
+	return &ActivityDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ActivityClient) DeleteOne(a *Activity) *ActivityDeleteOne {
+	return c.DeleteOneID(a.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ActivityClient) DeleteOneID(id int) *ActivityDeleteOne {
+	builder := c.Delete().Where(activity.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ActivityDeleteOne{builder}
+}
+
+// Query returns a query builder for Activity.
+func (c *ActivityClient) Query() *ActivityQuery {
+	return &ActivityQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeActivity},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Activity entity by its id.
+func (c *ActivityClient) Get(ctx context.Context, id int) (*Activity, error) {
+	return c.Query().Where(activity.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ActivityClient) GetX(ctx context.Context, id int) *Activity {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a Activity.
+func (c *ActivityClient) QueryUser(a *Activity) *UsersQuery {
+	query := (&UsersClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(activity.Table, activity.FieldID, id),
+			sqlgraph.To(users.Table, users.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, activity.UserTable, activity.UserPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ActivityClient) Hooks() []Hook {
+	return c.hooks.Activity
+}
+
+// Interceptors returns the client interceptors.
+func (c *ActivityClient) Interceptors() []Interceptor {
+	return c.inters.Activity
+}
+
+func (c *ActivityClient) mutate(ctx context.Context, m *ActivityMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ActivityCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ActivityUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ActivityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ActivityDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Activity mutation op: %q", m.Op())
 	}
 }
 
@@ -596,6 +753,22 @@ func (c *CareersClient) QueryLeader(ca *Careers) *ProfessorQuery {
 			sqlgraph.From(careers.Table, careers.FieldID, id),
 			sqlgraph.To(professor.Table, professor.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, careers.LeaderTable, careers.LeaderColumn),
+		)
+		fromV = sqlgraph.Neighbors(ca.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryStudents queries the students edge of a Careers.
+func (c *CareersClient) QueryStudents(ca *Careers) *StudentQuery {
+	query := (&StudentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ca.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(careers.Table, careers.FieldID, id),
+			sqlgraph.To(student.Table, student.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, careers.StudentsTable, careers.StudentsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(ca.driver.Dialect(), step)
 		return fromV, nil
@@ -1159,23 +1332,7 @@ func (c *NoteClient) QueryStudent(n *Note) *StudentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(note.Table, note.FieldID, id),
 			sqlgraph.To(student.Table, student.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, note.StudentTable, note.StudentColumn),
-		)
-		fromV = sqlgraph.Neighbors(n.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryProfessor queries the professor edge of a Note.
-func (c *NoteClient) QueryProfessor(n *Note) *ProfessorQuery {
-	query := (&ProfessorClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := n.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(note.Table, note.FieldID, id),
-			sqlgraph.To(professor.Table, professor.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, note.ProfessorTable, note.ProfessorColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, note.StudentTable, note.StudentPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(n.driver.Dialect(), step)
 		return fromV, nil
@@ -1191,7 +1348,7 @@ func (c *NoteClient) QuerySubject(n *Note) *SubjectQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(note.Table, note.FieldID, id),
 			sqlgraph.To(subject.Table, subject.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, note.SubjectTable, note.SubjectColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, note.SubjectTable, note.SubjectPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(n.driver.Dialect(), step)
 		return fromV, nil
@@ -1348,6 +1505,22 @@ func (c *NotificationClient) GetX(ctx context.Context, id int) *Notification {
 	return obj
 }
 
+// QueryRecipient queries the recipient edge of a Notification.
+func (c *NotificationClient) QueryRecipient(n *Notification) *UsersQuery {
+	query := (&UsersClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := n.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(notification.Table, notification.FieldID, id),
+			sqlgraph.To(users.Table, users.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, notification.RecipientTable, notification.RecipientPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(n.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *NotificationClient) Hooks() []Hook {
 	return c.hooks.Notification
@@ -1489,7 +1662,7 @@ func (c *PaymentClient) QueryStudent(pa *Payment) *StudentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(payment.Table, payment.FieldID, id),
 			sqlgraph.To(student.Table, student.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, payment.StudentTable, payment.StudentColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, payment.StudentTable, payment.StudentPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(pa.driver.Dialect(), step)
 		return fromV, nil
@@ -1795,15 +1968,15 @@ func (c *PermissionClient) GetX(ctx context.Context, id int) *Permission {
 	return obj
 }
 
-// QueryRole queries the role edge of a Permission.
-func (c *PermissionClient) QueryRole(pe *Permission) *RoleQuery {
+// QueryRoles queries the roles edge of a Permission.
+func (c *PermissionClient) QueryRoles(pe *Permission) *RoleQuery {
 	query := (&RoleClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := pe.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(permission.Table, permission.FieldID, id),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, permission.RoleTable, permission.RoleColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, permission.RolesTable, permission.RolesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(pe.driver.Dialect(), step)
 		return fromV, nil
@@ -2024,6 +2197,22 @@ func (c *ProfessorClient) QuerySubjects(pr *Professor) *SubjectQuery {
 	return query
 }
 
+// QueryCareers queries the careers edge of a Professor.
+func (c *ProfessorClient) QueryCareers(pr *Professor) *CareersQuery {
+	query := (&CareersClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(professor.Table, professor.FieldID, id),
+			sqlgraph.To(careers.Table, careers.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, professor.CareersTable, professor.CareersColumn),
+		)
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ProfessorClient) Hooks() []Hook {
 	return c.hooks.Professor
@@ -2165,7 +2354,7 @@ func (c *RequestClient) QueryRequester(r *Request) *UsersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(request.Table, request.FieldID, id),
 			sqlgraph.To(users.Table, users.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, request.RequesterTable, request.RequesterColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, request.RequesterTable, request.RequesterPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -2181,7 +2370,7 @@ func (c *RequestClient) QueryReceiver(r *Request) *UsersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(request.Table, request.FieldID, id),
 			sqlgraph.To(users.Table, users.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, request.ReceiverTable, request.ReceiverColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, request.ReceiverTable, request.ReceiverPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -2338,6 +2527,22 @@ func (c *RoleClient) QueryUsers(r *Role) *UsersQuery {
 	return query
 }
 
+// QueryPermissions queries the permissions edge of a Role.
+func (c *RoleClient) QueryPermissions(r *Role) *PermissionQuery {
+	query := (&PermissionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(permission.Table, permission.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, role.PermissionsTable, role.PermissionsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *RoleClient) Hooks() []Hook {
 	return c.hooks.Role
@@ -2480,6 +2685,54 @@ func (c *StudentClient) QueryUser(s *Student) *UsersQuery {
 			sqlgraph.From(student.Table, student.FieldID, id),
 			sqlgraph.To(users.Table, users.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, student.UserTable, student.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryNotes queries the notes edge of a Student.
+func (c *StudentClient) QueryNotes(s *Student) *NoteQuery {
+	query := (&NoteClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(student.Table, student.FieldID, id),
+			sqlgraph.To(note.Table, note.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, student.NotesTable, student.NotesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPayments queries the payments edge of a Student.
+func (c *StudentClient) QueryPayments(s *Student) *PaymentQuery {
+	query := (&PaymentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(student.Table, student.FieldID, id),
+			sqlgraph.To(payment.Table, payment.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, student.PaymentsTable, student.PaymentsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCareer queries the career edge of a Student.
+func (c *StudentClient) QueryCareer(s *Student) *CareersQuery {
+	query := (&CareersClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(student.Table, student.FieldID, id),
+			sqlgraph.To(careers.Table, careers.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, student.CareerTable, student.CareerPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
@@ -2636,6 +2889,38 @@ func (c *SubjectClient) QueryProfessor(s *Subject) *ProfessorQuery {
 	return query
 }
 
+// QueryCareer queries the career edge of a Subject.
+func (c *SubjectClient) QueryCareer(s *Subject) *CareersQuery {
+	query := (&CareersClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(subject.Table, subject.FieldID, id),
+			sqlgraph.To(careers.Table, careers.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, subject.CareerTable, subject.CareerColumn),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryNotes queries the notes edge of a Subject.
+func (c *SubjectClient) QueryNotes(s *Subject) *NoteQuery {
+	query := (&NoteClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(subject.Table, subject.FieldID, id),
+			sqlgraph.To(note.Table, note.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, subject.NotesTable, subject.NotesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *SubjectClient) Hooks() []Hook {
 	return c.hooks.Subject
@@ -2769,22 +3054,6 @@ func (c *UsersClient) GetX(ctx context.Context, id int) *Users {
 	return obj
 }
 
-// QueryCareers queries the careers edge of a Users.
-func (c *UsersClient) QueryCareers(u *Users) *CareersQuery {
-	query := (&CareersClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(users.Table, users.FieldID, id),
-			sqlgraph.To(careers.Table, careers.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, users.CareersTable, users.CareersColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryRole queries the role edge of a Users.
 func (c *UsersClient) QueryRole(u *Users) *RoleQuery {
 	query := (&RoleClient{config: c.config}).Query()
@@ -2809,7 +3078,7 @@ func (c *UsersClient) QueryRequestsMade(u *Users) *RequestQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, id),
 			sqlgraph.To(request.Table, request.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, users.RequestsMadeTable, users.RequestsMadeColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, users.RequestsMadeTable, users.RequestsMadePrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -2825,7 +3094,87 @@ func (c *UsersClient) QueryRequestsReceived(u *Users) *RequestQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, id),
 			sqlgraph.To(request.Table, request.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, users.RequestsReceivedTable, users.RequestsReceivedColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, users.RequestsReceivedTable, users.RequestsReceivedPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBlog queries the blog edge of a Users.
+func (c *UsersClient) QueryBlog(u *Users) *BlogQuery {
+	query := (&BlogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, id),
+			sqlgraph.To(blog.Table, blog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.BlogTable, users.BlogColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryNotifications queries the notifications edge of a Users.
+func (c *UsersClient) QueryNotifications(u *Users) *NotificationQuery {
+	query := (&NotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, id),
+			sqlgraph.To(notification.Table, notification.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, users.NotificationsTable, users.NotificationsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryActivity queries the activity edge of a Users.
+func (c *UsersClient) QueryActivity(u *Users) *ActivityQuery {
+	query := (&ActivityClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, id),
+			sqlgraph.To(activity.Table, activity.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, users.ActivityTable, users.ActivityPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryStudents queries the students edge of a Users.
+func (c *UsersClient) QueryStudents(u *Users) *StudentQuery {
+	query := (&StudentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, id),
+			sqlgraph.To(student.Table, student.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.StudentsTable, users.StudentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryProfessor queries the professor edge of a Users.
+func (c *UsersClient) QueryProfessor(u *Users) *ProfessorQuery {
+	query := (&ProfessorClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, id),
+			sqlgraph.To(professor.Table, professor.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.ProfessorTable, users.ProfessorColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -2861,13 +3210,13 @@ func (c *UsersClient) mutate(ctx context.Context, m *UsersMutation) (Value, erro
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Blog, Careers, Configuration, Cycle, Module, Note, Notification, Payment,
-		PaymentMethod, Permission, Professor, Request, Role, Student, Subject,
+		Activity, Blog, Careers, Configuration, Cycle, Module, Note, Notification,
+		Payment, PaymentMethod, Permission, Professor, Request, Role, Student, Subject,
 		Users []ent.Hook
 	}
 	inters struct {
-		Blog, Careers, Configuration, Cycle, Module, Note, Notification, Payment,
-		PaymentMethod, Permission, Professor, Request, Role, Student, Subject,
+		Activity, Blog, Careers, Configuration, Cycle, Module, Note, Notification,
+		Payment, PaymentMethod, Permission, Professor, Request, Role, Student, Subject,
 		Users []ent.Interceptor
 	}
 )

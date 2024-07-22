@@ -27,7 +27,7 @@ func (Request) Fields() []ent.Field {
 // Edges of the Request.
 func (Request) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("requester", Users.Type).Ref("requests_made").Unique().Required(),    // Usuario que hace la petición
-		edge.From("receiver", Users.Type).Ref("requests_received").Unique().Required(), // Usuario que recibe la petición
+		edge.To("requester", Users.Type),
+		edge.To("receiver", Users.Type),
 	}
 }

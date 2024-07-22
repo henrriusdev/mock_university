@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mocku/backend/ent/careers"
+	"mocku/backend/ent/note"
 	"mocku/backend/ent/professor"
 	"mocku/backend/ent/subject"
 
@@ -93,6 +95,36 @@ func (sc *SubjectCreate) AddProfessor(p ...*Professor) *SubjectCreate {
 		ids[i] = p[i].ID
 	}
 	return sc.AddProfessorIDs(ids...)
+}
+
+// AddCareerIDs adds the "career" edge to the Careers entity by IDs.
+func (sc *SubjectCreate) AddCareerIDs(ids ...int) *SubjectCreate {
+	sc.mutation.AddCareerIDs(ids...)
+	return sc
+}
+
+// AddCareer adds the "career" edges to the Careers entity.
+func (sc *SubjectCreate) AddCareer(c ...*Careers) *SubjectCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return sc.AddCareerIDs(ids...)
+}
+
+// AddNoteIDs adds the "notes" edge to the Note entity by IDs.
+func (sc *SubjectCreate) AddNoteIDs(ids ...int) *SubjectCreate {
+	sc.mutation.AddNoteIDs(ids...)
+	return sc
+}
+
+// AddNotes adds the "notes" edges to the Note entity.
+func (sc *SubjectCreate) AddNotes(n ...*Note) *SubjectCreate {
+	ids := make([]int, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return sc.AddNoteIDs(ids...)
 }
 
 // Mutation returns the SubjectMutation object of the builder.
@@ -276,6 +308,38 @@ func (sc *SubjectCreate) createSpec() (*Subject, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sc.mutation.CareerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   subject.CareerTable,
+			Columns: []string{subject.CareerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sc.mutation.NotesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NotesTable,
+			Columns: subject.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

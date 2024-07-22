@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"mocku/backend/ent/notification"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -13,10 +14,39 @@ import (
 
 // Notification is the model entity for the Notification schema.
 type Notification struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
-	ID           int `json:"id,omitempty"`
+	ID int `json:"id,omitempty"`
+	// Title holds the value of the "title" field.
+	Title string `json:"title,omitempty"`
+	// Message holds the value of the "message" field.
+	Message string `json:"message,omitempty"`
+	// Status holds the value of the "status" field.
+	Status string `json:"status,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the NotificationQuery when eager-loading is set.
+	Edges        NotificationEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// NotificationEdges holds the relations/edges for other nodes in the graph.
+type NotificationEdges struct {
+	// Recipient holds the value of the recipient edge.
+	Recipient []*Users `json:"recipient,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// RecipientOrErr returns the Recipient value or an error if the edge
+// was not loaded in eager-loading.
+func (e NotificationEdges) RecipientOrErr() ([]*Users, error) {
+	if e.loadedTypes[0] {
+		return e.Recipient, nil
+	}
+	return nil, &NotLoadedError{edge: "recipient"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -26,6 +56,10 @@ func (*Notification) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case notification.FieldID:
 			values[i] = new(sql.NullInt64)
+		case notification.FieldTitle, notification.FieldMessage, notification.FieldStatus:
+			values[i] = new(sql.NullString)
+		case notification.FieldCreatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -47,6 +81,30 @@ func (n *Notification) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			n.ID = int(value.Int64)
+		case notification.FieldTitle:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field title", values[i])
+			} else if value.Valid {
+				n.Title = value.String
+			}
+		case notification.FieldMessage:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field message", values[i])
+			} else if value.Valid {
+				n.Message = value.String
+			}
+		case notification.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				n.Status = value.String
+			}
+		case notification.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				n.CreatedAt = value.Time
+			}
 		default:
 			n.selectValues.Set(columns[i], values[i])
 		}
@@ -58,6 +116,11 @@ func (n *Notification) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (n *Notification) Value(name string) (ent.Value, error) {
 	return n.selectValues.Get(name)
+}
+
+// QueryRecipient queries the "recipient" edge of the Notification entity.
+func (n *Notification) QueryRecipient() *UsersQuery {
+	return NewNotificationClient(n.config).QueryRecipient(n)
 }
 
 // Update returns a builder for updating this Notification.
@@ -82,7 +145,18 @@ func (n *Notification) Unwrap() *Notification {
 func (n *Notification) String() string {
 	var builder strings.Builder
 	builder.WriteString("Notification(")
-	builder.WriteString(fmt.Sprintf("id=%v", n.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", n.ID))
+	builder.WriteString("title=")
+	builder.WriteString(n.Title)
+	builder.WriteString(", ")
+	builder.WriteString("message=")
+	builder.WriteString(n.Message)
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(n.Status)
+	builder.WriteString(", ")
+	builder.WriteString("created_at=")
+	builder.WriteString(n.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

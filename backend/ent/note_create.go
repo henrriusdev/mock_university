@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/note"
-	"mocku/backend/ent/professor"
 	"mocku/backend/ent/student"
 	"mocku/backend/ent/subject"
 
@@ -55,21 +54,6 @@ func (nc *NoteCreate) AddStudent(s ...*Student) *NoteCreate {
 		ids[i] = s[i].ID
 	}
 	return nc.AddStudentIDs(ids...)
-}
-
-// AddProfessorIDs adds the "professor" edge to the Professor entity by IDs.
-func (nc *NoteCreate) AddProfessorIDs(ids ...int) *NoteCreate {
-	nc.mutation.AddProfessorIDs(ids...)
-	return nc
-}
-
-// AddProfessor adds the "professor" edges to the Professor entity.
-func (nc *NoteCreate) AddProfessor(p ...*Professor) *NoteCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return nc.AddProfessorIDs(ids...)
 }
 
 // AddSubjectIDs adds the "subject" edge to the Subject entity by IDs.
@@ -172,10 +156,10 @@ func (nc *NoteCreate) createSpec() (*Note, *sqlgraph.CreateSpec) {
 	}
 	if nodes := nc.mutation.StudentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: []string{note.StudentColumn},
+			Columns: note.StudentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -186,28 +170,12 @@ func (nc *NoteCreate) createSpec() (*Note, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := nc.mutation.ProfessorIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   note.ProfessorTable,
-			Columns: []string{note.ProfessorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
 	if nodes := nc.mutation.SubjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: []string{note.SubjectColumn},
+			Columns: note.SubjectPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),

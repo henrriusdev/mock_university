@@ -6,6 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mocku/backend/ent/careers"
+	"mocku/backend/ent/note"
+	"mocku/backend/ent/payment"
 	"mocku/backend/ent/student"
 	"mocku/backend/ent/users"
 	"time"
@@ -42,12 +45,6 @@ func (sc *StudentCreate) SetPhone(s string) *StudentCreate {
 // SetAddress sets the "address" field.
 func (sc *StudentCreate) SetAddress(s string) *StudentCreate {
 	sc.mutation.SetAddress(s)
-	return sc
-}
-
-// SetNumber sets the "number" field.
-func (sc *StudentCreate) SetNumber(i int) *StudentCreate {
-	sc.mutation.SetNumber(i)
 	return sc
 }
 
@@ -98,6 +95,51 @@ func (sc *StudentCreate) SetNillableUserID(id *int) *StudentCreate {
 // SetUser sets the "user" edge to the Users entity.
 func (sc *StudentCreate) SetUser(u *Users) *StudentCreate {
 	return sc.SetUserID(u.ID)
+}
+
+// AddNoteIDs adds the "notes" edge to the Note entity by IDs.
+func (sc *StudentCreate) AddNoteIDs(ids ...int) *StudentCreate {
+	sc.mutation.AddNoteIDs(ids...)
+	return sc
+}
+
+// AddNotes adds the "notes" edges to the Note entity.
+func (sc *StudentCreate) AddNotes(n ...*Note) *StudentCreate {
+	ids := make([]int, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return sc.AddNoteIDs(ids...)
+}
+
+// AddPaymentIDs adds the "payments" edge to the Payment entity by IDs.
+func (sc *StudentCreate) AddPaymentIDs(ids ...int) *StudentCreate {
+	sc.mutation.AddPaymentIDs(ids...)
+	return sc
+}
+
+// AddPayments adds the "payments" edges to the Payment entity.
+func (sc *StudentCreate) AddPayments(p ...*Payment) *StudentCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return sc.AddPaymentIDs(ids...)
+}
+
+// AddCareerIDs adds the "career" edge to the Careers entity by IDs.
+func (sc *StudentCreate) AddCareerIDs(ids ...int) *StudentCreate {
+	sc.mutation.AddCareerIDs(ids...)
+	return sc
+}
+
+// AddCareer adds the "career" edges to the Careers entity.
+func (sc *StudentCreate) AddCareer(c ...*Careers) *StudentCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return sc.AddCareerIDs(ids...)
 }
 
 // Mutation returns the StudentMutation object of the builder.
@@ -159,14 +201,6 @@ func (sc *StudentCreate) check() error {
 	if v, ok := sc.mutation.Address(); ok {
 		if err := student.AddressValidator(v); err != nil {
 			return &ValidationError{Name: "address", err: fmt.Errorf(`ent: validator failed for field "Student.address": %w`, err)}
-		}
-	}
-	if _, ok := sc.mutation.Number(); !ok {
-		return &ValidationError{Name: "number", err: errors.New(`ent: missing required field "Student.number"`)}
-	}
-	if v, ok := sc.mutation.Number(); ok {
-		if err := student.NumberValidator(v); err != nil {
-			return &ValidationError{Name: "number", err: fmt.Errorf(`ent: validator failed for field "Student.number": %w`, err)}
 		}
 	}
 	if _, ok := sc.mutation.District(); !ok {
@@ -251,10 +285,6 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 		_spec.SetField(student.FieldAddress, field.TypeString, value)
 		_node.Address = value
 	}
-	if value, ok := sc.mutation.Number(); ok {
-		_spec.SetField(student.FieldNumber, field.TypeInt, value)
-		_node.Number = value
-	}
 	if value, ok := sc.mutation.District(); ok {
 		_spec.SetField(student.FieldDistrict, field.TypeString, value)
 		_node.District = value
@@ -290,6 +320,54 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.student_user = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sc.mutation.NotesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.NotesTable,
+			Columns: student.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sc.mutation.PaymentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.PaymentsTable,
+			Columns: student.PaymentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(payment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sc.mutation.CareerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   student.CareerTable,
+			Columns: student.CareerPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

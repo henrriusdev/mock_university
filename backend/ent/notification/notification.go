@@ -3,7 +3,10 @@
 package notification
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -11,14 +14,39 @@ const (
 	Label = "notification"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldTitle holds the string denoting the title field in the database.
+	FieldTitle = "title"
+	// FieldMessage holds the string denoting the message field in the database.
+	FieldMessage = "message"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// EdgeRecipient holds the string denoting the recipient edge name in mutations.
+	EdgeRecipient = "recipient"
 	// Table holds the table name of the notification in the database.
 	Table = "notifications"
+	// RecipientTable is the table that holds the recipient relation/edge. The primary key declared below.
+	RecipientTable = "notification_recipient"
+	// RecipientInverseTable is the table name for the Users entity.
+	// It exists in this package in order to avoid circular dependency with the "users" package.
+	RecipientInverseTable = "users"
 )
 
 // Columns holds all SQL columns for notification fields.
 var Columns = []string{
 	FieldID,
+	FieldTitle,
+	FieldMessage,
+	FieldStatus,
+	FieldCreatedAt,
 }
+
+var (
+	// RecipientPrimaryKey and RecipientColumn2 are the table columns denoting the
+	// primary key for the recipient relation (M2M).
+	RecipientPrimaryKey = []string{"notification_id", "users_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -30,10 +58,62 @@ func ValidColumn(column string) bool {
 	return false
 }
 
+var (
+	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	TitleValidator func(string) error
+	// MessageValidator is a validator for the "message" field. It is called by the builders before save.
+	MessageValidator func(string) error
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus string
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+)
+
 // OrderOption defines the ordering options for the Notification queries.
 type OrderOption func(*sql.Selector)
 
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByTitle orders the results by the title field.
+func ByTitle(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTitle, opts...).ToFunc()
+}
+
+// ByMessage orders the results by the message field.
+func ByMessage(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMessage, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByRecipientCount orders the results by recipient count.
+func ByRecipientCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRecipientStep(), opts...)
+	}
+}
+
+// ByRecipient orders the results by recipient terms.
+func ByRecipient(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRecipientStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newRecipientStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RecipientInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, RecipientTable, RecipientPrimaryKey...),
+	)
 }

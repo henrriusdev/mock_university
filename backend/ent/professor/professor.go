@@ -28,6 +28,8 @@ const (
 	EdgeSubordinates = "subordinates"
 	// EdgeSubjects holds the string denoting the subjects edge name in mutations.
 	EdgeSubjects = "subjects"
+	// EdgeCareers holds the string denoting the careers edge name in mutations.
+	EdgeCareers = "careers"
 	// Table holds the table name of the professor in the database.
 	Table = "professors"
 	// UserTable is the table that holds the user relation/edge.
@@ -50,6 +52,13 @@ const (
 	// SubjectsInverseTable is the table name for the Subject entity.
 	// It exists in this package in order to avoid circular dependency with the "subject" package.
 	SubjectsInverseTable = "subjects"
+	// CareersTable is the table that holds the careers relation/edge.
+	CareersTable = "professors"
+	// CareersInverseTable is the table name for the Careers entity.
+	// It exists in this package in order to avoid circular dependency with the "careers" package.
+	CareersInverseTable = "careers"
+	// CareersColumn is the table column denoting the careers relation/edge.
+	CareersColumn = "careers_leader"
 )
 
 // Columns holds all SQL columns for professor fields.
@@ -65,7 +74,6 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"careers_leader",
-	"note_professor",
 	"professor_user",
 	"professor_subordinates",
 }
@@ -169,6 +177,13 @@ func BySubjects(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newSubjectsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByCareersField orders the results by careers field.
+func ByCareersField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCareersStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -195,5 +210,12 @@ func newSubjectsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SubjectsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, SubjectsTable, SubjectsPrimaryKey...),
+	)
+}
+func newCareersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CareersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, CareersTable, CareersColumn),
 	)
 }

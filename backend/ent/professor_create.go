@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mocku/backend/ent/careers"
 	"mocku/backend/ent/professor"
 	"mocku/backend/ent/subject"
 	"mocku/backend/ent/users"
@@ -112,6 +113,25 @@ func (pc *ProfessorCreate) AddSubjects(s ...*Subject) *ProfessorCreate {
 		ids[i] = s[i].ID
 	}
 	return pc.AddSubjectIDs(ids...)
+}
+
+// SetCareersID sets the "careers" edge to the Careers entity by ID.
+func (pc *ProfessorCreate) SetCareersID(id int) *ProfessorCreate {
+	pc.mutation.SetCareersID(id)
+	return pc
+}
+
+// SetNillableCareersID sets the "careers" edge to the Careers entity by ID if the given value is not nil.
+func (pc *ProfessorCreate) SetNillableCareersID(id *int) *ProfessorCreate {
+	if id != nil {
+		pc = pc.SetCareersID(*id)
+	}
+	return pc
+}
+
+// SetCareers sets the "careers" edge to the Careers entity.
+func (pc *ProfessorCreate) SetCareers(c *Careers) *ProfessorCreate {
+	return pc.SetCareersID(c.ID)
 }
 
 // Mutation returns the ProfessorMutation object of the builder.
@@ -281,6 +301,23 @@ func (pc *ProfessorCreate) createSpec() (*Professor, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.CareersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   professor.CareersTable,
+			Columns: []string{professor.CareersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.careers_leader = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

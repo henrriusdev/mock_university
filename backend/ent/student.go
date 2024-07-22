@@ -26,8 +26,6 @@ type Student struct {
 	Phone string `json:"phone,omitempty"`
 	// Address holds the value of the "address" field.
 	Address string `json:"address,omitempty"`
-	// Number holds the value of the "number" field.
-	Number int `json:"number,omitempty"`
 	// District holds the value of the "district" field.
 	District string `json:"district,omitempty"`
 	// City holds the value of the "city" field.
@@ -40,20 +38,24 @@ type Student struct {
 	TotalAverage float64 `json:"total_average,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the StudentQuery when eager-loading is set.
-	Edges           StudentEdges `json:"edges"`
-	note_student    *int
-	payment_student *int
-	student_user    *int
-	selectValues    sql.SelectValues
+	Edges        StudentEdges `json:"edges"`
+	student_user *int
+	selectValues sql.SelectValues
 }
 
 // StudentEdges holds the relations/edges for other nodes in the graph.
 type StudentEdges struct {
 	// User holds the value of the user edge.
 	User *Users `json:"user,omitempty"`
+	// Notes holds the value of the notes edge.
+	Notes []*Note `json:"notes,omitempty"`
+	// Payments holds the value of the payments edge.
+	Payments []*Payment `json:"payments,omitempty"`
+	// Career holds the value of the career edge.
+	Career []*Careers `json:"career,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [4]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -67,6 +69,33 @@ func (e StudentEdges) UserOrErr() (*Users, error) {
 	return nil, &NotLoadedError{edge: "user"}
 }
 
+// NotesOrErr returns the Notes value or an error if the edge
+// was not loaded in eager-loading.
+func (e StudentEdges) NotesOrErr() ([]*Note, error) {
+	if e.loadedTypes[1] {
+		return e.Notes, nil
+	}
+	return nil, &NotLoadedError{edge: "notes"}
+}
+
+// PaymentsOrErr returns the Payments value or an error if the edge
+// was not loaded in eager-loading.
+func (e StudentEdges) PaymentsOrErr() ([]*Payment, error) {
+	if e.loadedTypes[2] {
+		return e.Payments, nil
+	}
+	return nil, &NotLoadedError{edge: "payments"}
+}
+
+// CareerOrErr returns the Career value or an error if the edge
+// was not loaded in eager-loading.
+func (e StudentEdges) CareerOrErr() ([]*Careers, error) {
+	if e.loadedTypes[3] {
+		return e.Career, nil
+	}
+	return nil, &NotLoadedError{edge: "career"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Student) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -74,17 +103,13 @@ func (*Student) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case student.FieldTotalAverage:
 			values[i] = new(sql.NullFloat64)
-		case student.FieldID, student.FieldNumber, student.FieldPostalCode, student.FieldCreditUnitsAccumulated:
+		case student.FieldID, student.FieldPostalCode, student.FieldCreditUnitsAccumulated:
 			values[i] = new(sql.NullInt64)
 		case student.FieldIdentityCard, student.FieldPhone, student.FieldAddress, student.FieldDistrict, student.FieldCity:
 			values[i] = new(sql.NullString)
 		case student.FieldBirthDate:
 			values[i] = new(sql.NullTime)
-		case student.ForeignKeys[0]: // note_student
-			values[i] = new(sql.NullInt64)
-		case student.ForeignKeys[1]: // payment_student
-			values[i] = new(sql.NullInt64)
-		case student.ForeignKeys[2]: // student_user
+		case student.ForeignKeys[0]: // student_user
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -131,12 +156,6 @@ func (s *Student) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				s.Address = value.String
 			}
-		case student.FieldNumber:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field number", values[i])
-			} else if value.Valid {
-				s.Number = int(value.Int64)
-			}
 		case student.FieldDistrict:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field district", values[i])
@@ -169,20 +188,6 @@ func (s *Student) assignValues(columns []string, values []any) error {
 			}
 		case student.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field note_student", value)
-			} else if value.Valid {
-				s.note_student = new(int)
-				*s.note_student = int(value.Int64)
-			}
-		case student.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field payment_student", value)
-			} else if value.Valid {
-				s.payment_student = new(int)
-				*s.payment_student = int(value.Int64)
-			}
-		case student.ForeignKeys[2]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field student_user", value)
 			} else if value.Valid {
 				s.student_user = new(int)
@@ -204,6 +209,21 @@ func (s *Student) Value(name string) (ent.Value, error) {
 // QueryUser queries the "user" edge of the Student entity.
 func (s *Student) QueryUser() *UsersQuery {
 	return NewStudentClient(s.config).QueryUser(s)
+}
+
+// QueryNotes queries the "notes" edge of the Student entity.
+func (s *Student) QueryNotes() *NoteQuery {
+	return NewStudentClient(s.config).QueryNotes(s)
+}
+
+// QueryPayments queries the "payments" edge of the Student entity.
+func (s *Student) QueryPayments() *PaymentQuery {
+	return NewStudentClient(s.config).QueryPayments(s)
+}
+
+// QueryCareer queries the "career" edge of the Student entity.
+func (s *Student) QueryCareer() *CareersQuery {
+	return NewStudentClient(s.config).QueryCareer(s)
 }
 
 // Update returns a builder for updating this Student.
@@ -240,9 +260,6 @@ func (s *Student) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("address=")
 	builder.WriteString(s.Address)
-	builder.WriteString(", ")
-	builder.WriteString("number=")
-	builder.WriteString(fmt.Sprintf("%v", s.Number))
 	builder.WriteString(", ")
 	builder.WriteString("district=")
 	builder.WriteString(s.District)

@@ -31,15 +31,13 @@ type Note struct {
 type NoteEdges struct {
 	// Student holds the value of the student edge.
 	Student []*Student `json:"student,omitempty"`
-	// Professor holds the value of the professor edge.
-	Professor []*Professor `json:"professor,omitempty"`
 	// Subject holds the value of the subject edge.
 	Subject []*Subject `json:"subject,omitempty"`
 	// Cycle holds the value of the cycle edge.
 	Cycle []*Cycle `json:"cycle,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [3]bool
 }
 
 // StudentOrErr returns the Student value or an error if the edge
@@ -51,19 +49,10 @@ func (e NoteEdges) StudentOrErr() ([]*Student, error) {
 	return nil, &NotLoadedError{edge: "student"}
 }
 
-// ProfessorOrErr returns the Professor value or an error if the edge
-// was not loaded in eager-loading.
-func (e NoteEdges) ProfessorOrErr() ([]*Professor, error) {
-	if e.loadedTypes[1] {
-		return e.Professor, nil
-	}
-	return nil, &NotLoadedError{edge: "professor"}
-}
-
 // SubjectOrErr returns the Subject value or an error if the edge
 // was not loaded in eager-loading.
 func (e NoteEdges) SubjectOrErr() ([]*Subject, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.Subject, nil
 	}
 	return nil, &NotLoadedError{edge: "subject"}
@@ -72,7 +61,7 @@ func (e NoteEdges) SubjectOrErr() ([]*Subject, error) {
 // CycleOrErr returns the Cycle value or an error if the edge
 // was not loaded in eager-loading.
 func (e NoteEdges) CycleOrErr() ([]*Cycle, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.Cycle, nil
 	}
 	return nil, &NotLoadedError{edge: "cycle"}
@@ -140,11 +129,6 @@ func (n *Note) Value(name string) (ent.Value, error) {
 // QueryStudent queries the "student" edge of the Note entity.
 func (n *Note) QueryStudent() *StudentQuery {
 	return NewNoteClient(n.config).QueryStudent(n)
-}
-
-// QueryProfessor queries the "professor" edge of the Note entity.
-func (n *Note) QueryProfessor() *ProfessorQuery {
-	return NewNoteClient(n.config).QueryProfessor(n)
 }
 
 // QuerySubject queries the "subject" edge of the Note entity.

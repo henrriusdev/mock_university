@@ -39,32 +39,31 @@ type Users struct {
 
 // UsersEdges holds the relations/edges for other nodes in the graph.
 type UsersEdges struct {
-	// Careers holds the value of the careers edge.
-	Careers []*Careers `json:"careers,omitempty"`
 	// Role holds the value of the role edge.
 	Role []*Role `json:"role,omitempty"`
 	// RequestsMade holds the value of the requests_made edge.
 	RequestsMade []*Request `json:"requests_made,omitempty"`
 	// RequestsReceived holds the value of the requests_received edge.
 	RequestsReceived []*Request `json:"requests_received,omitempty"`
+	// Blog holds the value of the blog edge.
+	Blog []*Blog `json:"blog,omitempty"`
+	// Notifications holds the value of the notifications edge.
+	Notifications []*Notification `json:"notifications,omitempty"`
+	// Activity holds the value of the activity edge.
+	Activity []*Activity `json:"activity,omitempty"`
+	// Students holds the value of the students edge.
+	Students []*Student `json:"students,omitempty"`
+	// Professor holds the value of the professor edge.
+	Professor []*Professor `json:"professor,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
-}
-
-// CareersOrErr returns the Careers value or an error if the edge
-// was not loaded in eager-loading.
-func (e UsersEdges) CareersOrErr() ([]*Careers, error) {
-	if e.loadedTypes[0] {
-		return e.Careers, nil
-	}
-	return nil, &NotLoadedError{edge: "careers"}
+	loadedTypes [8]bool
 }
 
 // RoleOrErr returns the Role value or an error if the edge
 // was not loaded in eager-loading.
 func (e UsersEdges) RoleOrErr() ([]*Role, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[0] {
 		return e.Role, nil
 	}
 	return nil, &NotLoadedError{edge: "role"}
@@ -73,7 +72,7 @@ func (e UsersEdges) RoleOrErr() ([]*Role, error) {
 // RequestsMadeOrErr returns the RequestsMade value or an error if the edge
 // was not loaded in eager-loading.
 func (e UsersEdges) RequestsMadeOrErr() ([]*Request, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.RequestsMade, nil
 	}
 	return nil, &NotLoadedError{edge: "requests_made"}
@@ -82,10 +81,55 @@ func (e UsersEdges) RequestsMadeOrErr() ([]*Request, error) {
 // RequestsReceivedOrErr returns the RequestsReceived value or an error if the edge
 // was not loaded in eager-loading.
 func (e UsersEdges) RequestsReceivedOrErr() ([]*Request, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.RequestsReceived, nil
 	}
 	return nil, &NotLoadedError{edge: "requests_received"}
+}
+
+// BlogOrErr returns the Blog value or an error if the edge
+// was not loaded in eager-loading.
+func (e UsersEdges) BlogOrErr() ([]*Blog, error) {
+	if e.loadedTypes[3] {
+		return e.Blog, nil
+	}
+	return nil, &NotLoadedError{edge: "blog"}
+}
+
+// NotificationsOrErr returns the Notifications value or an error if the edge
+// was not loaded in eager-loading.
+func (e UsersEdges) NotificationsOrErr() ([]*Notification, error) {
+	if e.loadedTypes[4] {
+		return e.Notifications, nil
+	}
+	return nil, &NotLoadedError{edge: "notifications"}
+}
+
+// ActivityOrErr returns the Activity value or an error if the edge
+// was not loaded in eager-loading.
+func (e UsersEdges) ActivityOrErr() ([]*Activity, error) {
+	if e.loadedTypes[5] {
+		return e.Activity, nil
+	}
+	return nil, &NotLoadedError{edge: "activity"}
+}
+
+// StudentsOrErr returns the Students value or an error if the edge
+// was not loaded in eager-loading.
+func (e UsersEdges) StudentsOrErr() ([]*Student, error) {
+	if e.loadedTypes[6] {
+		return e.Students, nil
+	}
+	return nil, &NotLoadedError{edge: "students"}
+}
+
+// ProfessorOrErr returns the Professor value or an error if the edge
+// was not loaded in eager-loading.
+func (e UsersEdges) ProfessorOrErr() ([]*Professor, error) {
+	if e.loadedTypes[7] {
+		return e.Professor, nil
+	}
+	return nil, &NotLoadedError{edge: "professor"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -177,11 +221,6 @@ func (u *Users) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
 }
 
-// QueryCareers queries the "careers" edge of the Users entity.
-func (u *Users) QueryCareers() *CareersQuery {
-	return NewUsersClient(u.config).QueryCareers(u)
-}
-
 // QueryRole queries the "role" edge of the Users entity.
 func (u *Users) QueryRole() *RoleQuery {
 	return NewUsersClient(u.config).QueryRole(u)
@@ -195,6 +234,31 @@ func (u *Users) QueryRequestsMade() *RequestQuery {
 // QueryRequestsReceived queries the "requests_received" edge of the Users entity.
 func (u *Users) QueryRequestsReceived() *RequestQuery {
 	return NewUsersClient(u.config).QueryRequestsReceived(u)
+}
+
+// QueryBlog queries the "blog" edge of the Users entity.
+func (u *Users) QueryBlog() *BlogQuery {
+	return NewUsersClient(u.config).QueryBlog(u)
+}
+
+// QueryNotifications queries the "notifications" edge of the Users entity.
+func (u *Users) QueryNotifications() *NotificationQuery {
+	return NewUsersClient(u.config).QueryNotifications(u)
+}
+
+// QueryActivity queries the "activity" edge of the Users entity.
+func (u *Users) QueryActivity() *ActivityQuery {
+	return NewUsersClient(u.config).QueryActivity(u)
+}
+
+// QueryStudents queries the "students" edge of the Users entity.
+func (u *Users) QueryStudents() *StudentQuery {
+	return NewUsersClient(u.config).QueryStudents(u)
+}
+
+// QueryProfessor queries the "professor" edge of the Users entity.
+func (u *Users) QueryProfessor() *ProfessorQuery {
+	return NewUsersClient(u.config).QueryProfessor(u)
 }
 
 // Update returns a builder for updating this Users.

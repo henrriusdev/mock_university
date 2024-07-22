@@ -23,7 +23,6 @@ func (Note) Fields() []ent.Field {
 func (Note) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("student", Student.Type),
-		edge.To("professor", Professor.Type),
 		edge.To("subject", Subject.Type),
 		edge.To("cycle", Cycle.Type),
 	}

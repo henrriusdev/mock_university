@@ -34,6 +34,10 @@ const (
 	FieldClassSchedule = "class_schedule"
 	// EdgeProfessor holds the string denoting the professor edge name in mutations.
 	EdgeProfessor = "professor"
+	// EdgeCareer holds the string denoting the career edge name in mutations.
+	EdgeCareer = "career"
+	// EdgeNotes holds the string denoting the notes edge name in mutations.
+	EdgeNotes = "notes"
 	// Table holds the table name of the subject in the database.
 	Table = "subjects"
 	// ProfessorTable is the table that holds the professor relation/edge. The primary key declared below.
@@ -41,6 +45,18 @@ const (
 	// ProfessorInverseTable is the table name for the Professor entity.
 	// It exists in this package in order to avoid circular dependency with the "professor" package.
 	ProfessorInverseTable = "professors"
+	// CareerTable is the table that holds the career relation/edge.
+	CareerTable = "careers"
+	// CareerInverseTable is the table name for the Careers entity.
+	// It exists in this package in order to avoid circular dependency with the "careers" package.
+	CareerInverseTable = "careers"
+	// CareerColumn is the table column denoting the career relation/edge.
+	CareerColumn = "subject_career"
+	// NotesTable is the table that holds the notes relation/edge. The primary key declared below.
+	NotesTable = "note_subject"
+	// NotesInverseTable is the table name for the Note entity.
+	// It exists in this package in order to avoid circular dependency with the "note" package.
+	NotesInverseTable = "notes"
 )
 
 // Columns holds all SQL columns for subject fields.
@@ -58,27 +74,19 @@ var Columns = []string{
 	FieldClassSchedule,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "subjects"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"note_subject",
-}
-
 var (
 	// ProfessorPrimaryKey and ProfessorColumn2 are the table columns denoting the
 	// primary key for the professor relation (M2M).
 	ProfessorPrimaryKey = []string{"subject_id", "professor_id"}
+	// NotesPrimaryKey and NotesColumn2 are the table columns denoting the
+	// primary key for the notes relation (M2M).
+	NotesPrimaryKey = []string{"note_id", "subject_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -172,10 +180,52 @@ func ByProfessor(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newProfessorStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByCareerCount orders the results by career count.
+func ByCareerCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCareerStep(), opts...)
+	}
+}
+
+// ByCareer orders the results by career terms.
+func ByCareer(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCareerStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByNotesCount orders the results by notes count.
+func ByNotesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newNotesStep(), opts...)
+	}
+}
+
+// ByNotes orders the results by notes terms.
+func ByNotes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newNotesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newProfessorStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProfessorInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, ProfessorTable, ProfessorPrimaryKey...),
+	)
+}
+func newCareerStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CareerInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CareerTable, CareerColumn),
+	)
+}
+func newNotesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(NotesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, NotesTable, NotesPrimaryKey...),
 	)
 }

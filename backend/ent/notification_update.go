@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"mocku/backend/ent/notification"
 	"mocku/backend/ent/predicate"
+	"mocku/backend/ent/users"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -27,9 +29,101 @@ func (nu *NotificationUpdate) Where(ps ...predicate.Notification) *NotificationU
 	return nu
 }
 
+// SetTitle sets the "title" field.
+func (nu *NotificationUpdate) SetTitle(s string) *NotificationUpdate {
+	nu.mutation.SetTitle(s)
+	return nu
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (nu *NotificationUpdate) SetNillableTitle(s *string) *NotificationUpdate {
+	if s != nil {
+		nu.SetTitle(*s)
+	}
+	return nu
+}
+
+// SetMessage sets the "message" field.
+func (nu *NotificationUpdate) SetMessage(s string) *NotificationUpdate {
+	nu.mutation.SetMessage(s)
+	return nu
+}
+
+// SetNillableMessage sets the "message" field if the given value is not nil.
+func (nu *NotificationUpdate) SetNillableMessage(s *string) *NotificationUpdate {
+	if s != nil {
+		nu.SetMessage(*s)
+	}
+	return nu
+}
+
+// SetStatus sets the "status" field.
+func (nu *NotificationUpdate) SetStatus(s string) *NotificationUpdate {
+	nu.mutation.SetStatus(s)
+	return nu
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (nu *NotificationUpdate) SetNillableStatus(s *string) *NotificationUpdate {
+	if s != nil {
+		nu.SetStatus(*s)
+	}
+	return nu
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (nu *NotificationUpdate) SetCreatedAt(t time.Time) *NotificationUpdate {
+	nu.mutation.SetCreatedAt(t)
+	return nu
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (nu *NotificationUpdate) SetNillableCreatedAt(t *time.Time) *NotificationUpdate {
+	if t != nil {
+		nu.SetCreatedAt(*t)
+	}
+	return nu
+}
+
+// AddRecipientIDs adds the "recipient" edge to the Users entity by IDs.
+func (nu *NotificationUpdate) AddRecipientIDs(ids ...int) *NotificationUpdate {
+	nu.mutation.AddRecipientIDs(ids...)
+	return nu
+}
+
+// AddRecipient adds the "recipient" edges to the Users entity.
+func (nu *NotificationUpdate) AddRecipient(u ...*Users) *NotificationUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return nu.AddRecipientIDs(ids...)
+}
+
 // Mutation returns the NotificationMutation object of the builder.
 func (nu *NotificationUpdate) Mutation() *NotificationMutation {
 	return nu.mutation
+}
+
+// ClearRecipient clears all "recipient" edges to the Users entity.
+func (nu *NotificationUpdate) ClearRecipient() *NotificationUpdate {
+	nu.mutation.ClearRecipient()
+	return nu
+}
+
+// RemoveRecipientIDs removes the "recipient" edge to Users entities by IDs.
+func (nu *NotificationUpdate) RemoveRecipientIDs(ids ...int) *NotificationUpdate {
+	nu.mutation.RemoveRecipientIDs(ids...)
+	return nu
+}
+
+// RemoveRecipient removes "recipient" edges to Users entities.
+func (nu *NotificationUpdate) RemoveRecipient(u ...*Users) *NotificationUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return nu.RemoveRecipientIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -59,7 +153,25 @@ func (nu *NotificationUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (nu *NotificationUpdate) check() error {
+	if v, ok := nu.mutation.Title(); ok {
+		if err := notification.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Notification.title": %w`, err)}
+		}
+	}
+	if v, ok := nu.mutation.Message(); ok {
+		if err := notification.MessageValidator(v); err != nil {
+			return &ValidationError{Name: "message", err: fmt.Errorf(`ent: validator failed for field "Notification.message": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (nu *NotificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := nu.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(notification.Table, notification.Columns, sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt))
 	if ps := nu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -67,6 +179,63 @@ func (nu *NotificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := nu.mutation.Title(); ok {
+		_spec.SetField(notification.FieldTitle, field.TypeString, value)
+	}
+	if value, ok := nu.mutation.Message(); ok {
+		_spec.SetField(notification.FieldMessage, field.TypeString, value)
+	}
+	if value, ok := nu.mutation.Status(); ok {
+		_spec.SetField(notification.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := nu.mutation.CreatedAt(); ok {
+		_spec.SetField(notification.FieldCreatedAt, field.TypeTime, value)
+	}
+	if nu.mutation.RecipientCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   notification.RecipientTable,
+			Columns: notification.RecipientPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nu.mutation.RemovedRecipientIDs(); len(nodes) > 0 && !nu.mutation.RecipientCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   notification.RecipientTable,
+			Columns: notification.RecipientPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nu.mutation.RecipientIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   notification.RecipientTable,
+			Columns: notification.RecipientPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, nu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -88,9 +257,101 @@ type NotificationUpdateOne struct {
 	mutation *NotificationMutation
 }
 
+// SetTitle sets the "title" field.
+func (nuo *NotificationUpdateOne) SetTitle(s string) *NotificationUpdateOne {
+	nuo.mutation.SetTitle(s)
+	return nuo
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (nuo *NotificationUpdateOne) SetNillableTitle(s *string) *NotificationUpdateOne {
+	if s != nil {
+		nuo.SetTitle(*s)
+	}
+	return nuo
+}
+
+// SetMessage sets the "message" field.
+func (nuo *NotificationUpdateOne) SetMessage(s string) *NotificationUpdateOne {
+	nuo.mutation.SetMessage(s)
+	return nuo
+}
+
+// SetNillableMessage sets the "message" field if the given value is not nil.
+func (nuo *NotificationUpdateOne) SetNillableMessage(s *string) *NotificationUpdateOne {
+	if s != nil {
+		nuo.SetMessage(*s)
+	}
+	return nuo
+}
+
+// SetStatus sets the "status" field.
+func (nuo *NotificationUpdateOne) SetStatus(s string) *NotificationUpdateOne {
+	nuo.mutation.SetStatus(s)
+	return nuo
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (nuo *NotificationUpdateOne) SetNillableStatus(s *string) *NotificationUpdateOne {
+	if s != nil {
+		nuo.SetStatus(*s)
+	}
+	return nuo
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (nuo *NotificationUpdateOne) SetCreatedAt(t time.Time) *NotificationUpdateOne {
+	nuo.mutation.SetCreatedAt(t)
+	return nuo
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (nuo *NotificationUpdateOne) SetNillableCreatedAt(t *time.Time) *NotificationUpdateOne {
+	if t != nil {
+		nuo.SetCreatedAt(*t)
+	}
+	return nuo
+}
+
+// AddRecipientIDs adds the "recipient" edge to the Users entity by IDs.
+func (nuo *NotificationUpdateOne) AddRecipientIDs(ids ...int) *NotificationUpdateOne {
+	nuo.mutation.AddRecipientIDs(ids...)
+	return nuo
+}
+
+// AddRecipient adds the "recipient" edges to the Users entity.
+func (nuo *NotificationUpdateOne) AddRecipient(u ...*Users) *NotificationUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return nuo.AddRecipientIDs(ids...)
+}
+
 // Mutation returns the NotificationMutation object of the builder.
 func (nuo *NotificationUpdateOne) Mutation() *NotificationMutation {
 	return nuo.mutation
+}
+
+// ClearRecipient clears all "recipient" edges to the Users entity.
+func (nuo *NotificationUpdateOne) ClearRecipient() *NotificationUpdateOne {
+	nuo.mutation.ClearRecipient()
+	return nuo
+}
+
+// RemoveRecipientIDs removes the "recipient" edge to Users entities by IDs.
+func (nuo *NotificationUpdateOne) RemoveRecipientIDs(ids ...int) *NotificationUpdateOne {
+	nuo.mutation.RemoveRecipientIDs(ids...)
+	return nuo
+}
+
+// RemoveRecipient removes "recipient" edges to Users entities.
+func (nuo *NotificationUpdateOne) RemoveRecipient(u ...*Users) *NotificationUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return nuo.RemoveRecipientIDs(ids...)
 }
 
 // Where appends a list predicates to the NotificationUpdate builder.
@@ -133,7 +394,25 @@ func (nuo *NotificationUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (nuo *NotificationUpdateOne) check() error {
+	if v, ok := nuo.mutation.Title(); ok {
+		if err := notification.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Notification.title": %w`, err)}
+		}
+	}
+	if v, ok := nuo.mutation.Message(); ok {
+		if err := notification.MessageValidator(v); err != nil {
+			return &ValidationError{Name: "message", err: fmt.Errorf(`ent: validator failed for field "Notification.message": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (nuo *NotificationUpdateOne) sqlSave(ctx context.Context) (_node *Notification, err error) {
+	if err := nuo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(notification.Table, notification.Columns, sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt))
 	id, ok := nuo.mutation.ID()
 	if !ok {
@@ -158,6 +437,63 @@ func (nuo *NotificationUpdateOne) sqlSave(ctx context.Context) (_node *Notificat
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := nuo.mutation.Title(); ok {
+		_spec.SetField(notification.FieldTitle, field.TypeString, value)
+	}
+	if value, ok := nuo.mutation.Message(); ok {
+		_spec.SetField(notification.FieldMessage, field.TypeString, value)
+	}
+	if value, ok := nuo.mutation.Status(); ok {
+		_spec.SetField(notification.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := nuo.mutation.CreatedAt(); ok {
+		_spec.SetField(notification.FieldCreatedAt, field.TypeTime, value)
+	}
+	if nuo.mutation.RecipientCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   notification.RecipientTable,
+			Columns: notification.RecipientPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nuo.mutation.RemovedRecipientIDs(); len(nodes) > 0 && !nuo.mutation.RecipientCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   notification.RecipientTable,
+			Columns: notification.RecipientPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nuo.mutation.RecipientIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   notification.RecipientTable,
+			Columns: notification.RecipientPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Notification{config: nuo.config}
 	_spec.Assign = _node.assignValues

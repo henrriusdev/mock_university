@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mocku/backend/ent/careers"
+	"mocku/backend/ent/note"
 	"mocku/backend/ent/predicate"
 	"mocku/backend/ent/professor"
 	"mocku/backend/ent/subject"
@@ -223,6 +225,36 @@ func (su *SubjectUpdate) AddProfessor(p ...*Professor) *SubjectUpdate {
 	return su.AddProfessorIDs(ids...)
 }
 
+// AddCareerIDs adds the "career" edge to the Careers entity by IDs.
+func (su *SubjectUpdate) AddCareerIDs(ids ...int) *SubjectUpdate {
+	su.mutation.AddCareerIDs(ids...)
+	return su
+}
+
+// AddCareer adds the "career" edges to the Careers entity.
+func (su *SubjectUpdate) AddCareer(c ...*Careers) *SubjectUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return su.AddCareerIDs(ids...)
+}
+
+// AddNoteIDs adds the "notes" edge to the Note entity by IDs.
+func (su *SubjectUpdate) AddNoteIDs(ids ...int) *SubjectUpdate {
+	su.mutation.AddNoteIDs(ids...)
+	return su
+}
+
+// AddNotes adds the "notes" edges to the Note entity.
+func (su *SubjectUpdate) AddNotes(n ...*Note) *SubjectUpdate {
+	ids := make([]int, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return su.AddNoteIDs(ids...)
+}
+
 // Mutation returns the SubjectMutation object of the builder.
 func (su *SubjectUpdate) Mutation() *SubjectMutation {
 	return su.mutation
@@ -247,6 +279,48 @@ func (su *SubjectUpdate) RemoveProfessor(p ...*Professor) *SubjectUpdate {
 		ids[i] = p[i].ID
 	}
 	return su.RemoveProfessorIDs(ids...)
+}
+
+// ClearCareer clears all "career" edges to the Careers entity.
+func (su *SubjectUpdate) ClearCareer() *SubjectUpdate {
+	su.mutation.ClearCareer()
+	return su
+}
+
+// RemoveCareerIDs removes the "career" edge to Careers entities by IDs.
+func (su *SubjectUpdate) RemoveCareerIDs(ids ...int) *SubjectUpdate {
+	su.mutation.RemoveCareerIDs(ids...)
+	return su
+}
+
+// RemoveCareer removes "career" edges to Careers entities.
+func (su *SubjectUpdate) RemoveCareer(c ...*Careers) *SubjectUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return su.RemoveCareerIDs(ids...)
+}
+
+// ClearNotes clears all "notes" edges to the Note entity.
+func (su *SubjectUpdate) ClearNotes() *SubjectUpdate {
+	su.mutation.ClearNotes()
+	return su
+}
+
+// RemoveNoteIDs removes the "notes" edge to Note entities by IDs.
+func (su *SubjectUpdate) RemoveNoteIDs(ids ...int) *SubjectUpdate {
+	su.mutation.RemoveNoteIDs(ids...)
+	return su
+}
+
+// RemoveNotes removes "notes" edges to Note entities.
+func (su *SubjectUpdate) RemoveNotes(n ...*Note) *SubjectUpdate {
+	ids := make([]int, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return su.RemoveNoteIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -427,6 +501,96 @@ func (su *SubjectUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if su.mutation.CareerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   subject.CareerTable,
+			Columns: []string{subject.CareerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedCareerIDs(); len(nodes) > 0 && !su.mutation.CareerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   subject.CareerTable,
+			Columns: []string{subject.CareerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.CareerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   subject.CareerTable,
+			Columns: []string{subject.CareerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if su.mutation.NotesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NotesTable,
+			Columns: subject.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedNotesIDs(); len(nodes) > 0 && !su.mutation.NotesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NotesTable,
+			Columns: subject.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.NotesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NotesTable,
+			Columns: subject.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -649,6 +813,36 @@ func (suo *SubjectUpdateOne) AddProfessor(p ...*Professor) *SubjectUpdateOne {
 	return suo.AddProfessorIDs(ids...)
 }
 
+// AddCareerIDs adds the "career" edge to the Careers entity by IDs.
+func (suo *SubjectUpdateOne) AddCareerIDs(ids ...int) *SubjectUpdateOne {
+	suo.mutation.AddCareerIDs(ids...)
+	return suo
+}
+
+// AddCareer adds the "career" edges to the Careers entity.
+func (suo *SubjectUpdateOne) AddCareer(c ...*Careers) *SubjectUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return suo.AddCareerIDs(ids...)
+}
+
+// AddNoteIDs adds the "notes" edge to the Note entity by IDs.
+func (suo *SubjectUpdateOne) AddNoteIDs(ids ...int) *SubjectUpdateOne {
+	suo.mutation.AddNoteIDs(ids...)
+	return suo
+}
+
+// AddNotes adds the "notes" edges to the Note entity.
+func (suo *SubjectUpdateOne) AddNotes(n ...*Note) *SubjectUpdateOne {
+	ids := make([]int, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return suo.AddNoteIDs(ids...)
+}
+
 // Mutation returns the SubjectMutation object of the builder.
 func (suo *SubjectUpdateOne) Mutation() *SubjectMutation {
 	return suo.mutation
@@ -673,6 +867,48 @@ func (suo *SubjectUpdateOne) RemoveProfessor(p ...*Professor) *SubjectUpdateOne 
 		ids[i] = p[i].ID
 	}
 	return suo.RemoveProfessorIDs(ids...)
+}
+
+// ClearCareer clears all "career" edges to the Careers entity.
+func (suo *SubjectUpdateOne) ClearCareer() *SubjectUpdateOne {
+	suo.mutation.ClearCareer()
+	return suo
+}
+
+// RemoveCareerIDs removes the "career" edge to Careers entities by IDs.
+func (suo *SubjectUpdateOne) RemoveCareerIDs(ids ...int) *SubjectUpdateOne {
+	suo.mutation.RemoveCareerIDs(ids...)
+	return suo
+}
+
+// RemoveCareer removes "career" edges to Careers entities.
+func (suo *SubjectUpdateOne) RemoveCareer(c ...*Careers) *SubjectUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return suo.RemoveCareerIDs(ids...)
+}
+
+// ClearNotes clears all "notes" edges to the Note entity.
+func (suo *SubjectUpdateOne) ClearNotes() *SubjectUpdateOne {
+	suo.mutation.ClearNotes()
+	return suo
+}
+
+// RemoveNoteIDs removes the "notes" edge to Note entities by IDs.
+func (suo *SubjectUpdateOne) RemoveNoteIDs(ids ...int) *SubjectUpdateOne {
+	suo.mutation.RemoveNoteIDs(ids...)
+	return suo
+}
+
+// RemoveNotes removes "notes" edges to Note entities.
+func (suo *SubjectUpdateOne) RemoveNotes(n ...*Note) *SubjectUpdateOne {
+	ids := make([]int, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return suo.RemoveNoteIDs(ids...)
 }
 
 // Where appends a list predicates to the SubjectUpdate builder.
@@ -883,6 +1119,96 @@ func (suo *SubjectUpdateOne) sqlSave(ctx context.Context) (_node *Subject, err e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suo.mutation.CareerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   subject.CareerTable,
+			Columns: []string{subject.CareerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedCareerIDs(); len(nodes) > 0 && !suo.mutation.CareerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   subject.CareerTable,
+			Columns: []string{subject.CareerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.CareerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   subject.CareerTable,
+			Columns: []string{subject.CareerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suo.mutation.NotesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NotesTable,
+			Columns: subject.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedNotesIDs(); len(nodes) > 0 && !suo.mutation.NotesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NotesTable,
+			Columns: subject.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.NotesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NotesTable,
+			Columns: subject.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

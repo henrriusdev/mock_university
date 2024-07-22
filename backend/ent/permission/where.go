@@ -254,21 +254,21 @@ func DeleteNEQ(v bool) predicate.Permission {
 	return predicate.Permission(sql.FieldNEQ(FieldDelete, v))
 }
 
-// HasRole applies the HasEdge predicate on the "role" edge.
-func HasRole() predicate.Permission {
+// HasRoles applies the HasEdge predicate on the "roles" edge.
+func HasRoles() predicate.Permission {
 	return predicate.Permission(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, RoleTable, RoleColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasRoleWith applies the HasEdge predicate on the "role" edge with a given conditions (other predicates).
-func HasRoleWith(preds ...predicate.Role) predicate.Permission {
+// HasRolesWith applies the HasEdge predicate on the "roles" edge with a given conditions (other predicates).
+func HasRolesWith(preds ...predicate.Role) predicate.Permission {
 	return predicate.Permission(func(s *sql.Selector) {
-		step := newRoleStep()
+		step := newRolesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

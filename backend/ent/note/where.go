@@ -124,7 +124,7 @@ func HasStudent() predicate.Note {
 	return predicate.Note(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, StudentTable, StudentColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, StudentTable, StudentPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -142,35 +142,12 @@ func HasStudentWith(preds ...predicate.Student) predicate.Note {
 	})
 }
 
-// HasProfessor applies the HasEdge predicate on the "professor" edge.
-func HasProfessor() predicate.Note {
-	return predicate.Note(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ProfessorTable, ProfessorColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasProfessorWith applies the HasEdge predicate on the "professor" edge with a given conditions (other predicates).
-func HasProfessorWith(preds ...predicate.Professor) predicate.Note {
-	return predicate.Note(func(s *sql.Selector) {
-		step := newProfessorStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasSubject applies the HasEdge predicate on the "subject" edge.
 func HasSubject() predicate.Note {
 	return predicate.Note(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SubjectTable, SubjectColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, SubjectTable, SubjectPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

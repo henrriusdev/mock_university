@@ -81,26 +81,34 @@ func (rc *RequestCreate) SetNillableUpdatedAt(t *time.Time) *RequestCreate {
 	return rc
 }
 
-// SetRequesterID sets the "requester" edge to the Users entity by ID.
-func (rc *RequestCreate) SetRequesterID(id int) *RequestCreate {
-	rc.mutation.SetRequesterID(id)
+// AddRequesterIDs adds the "requester" edge to the Users entity by IDs.
+func (rc *RequestCreate) AddRequesterIDs(ids ...int) *RequestCreate {
+	rc.mutation.AddRequesterIDs(ids...)
 	return rc
 }
 
-// SetRequester sets the "requester" edge to the Users entity.
-func (rc *RequestCreate) SetRequester(u *Users) *RequestCreate {
-	return rc.SetRequesterID(u.ID)
+// AddRequester adds the "requester" edges to the Users entity.
+func (rc *RequestCreate) AddRequester(u ...*Users) *RequestCreate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return rc.AddRequesterIDs(ids...)
 }
 
-// SetReceiverID sets the "receiver" edge to the Users entity by ID.
-func (rc *RequestCreate) SetReceiverID(id int) *RequestCreate {
-	rc.mutation.SetReceiverID(id)
+// AddReceiverIDs adds the "receiver" edge to the Users entity by IDs.
+func (rc *RequestCreate) AddReceiverIDs(ids ...int) *RequestCreate {
+	rc.mutation.AddReceiverIDs(ids...)
 	return rc
 }
 
-// SetReceiver sets the "receiver" edge to the Users entity.
-func (rc *RequestCreate) SetReceiver(u *Users) *RequestCreate {
-	return rc.SetReceiverID(u.ID)
+// AddReceiver adds the "receiver" edges to the Users entity.
+func (rc *RequestCreate) AddReceiver(u ...*Users) *RequestCreate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return rc.AddReceiverIDs(ids...)
 }
 
 // Mutation returns the RequestMutation object of the builder.
@@ -187,12 +195,6 @@ func (rc *RequestCreate) check() error {
 	if _, ok := rc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Request.updated_at"`)}
 	}
-	if _, ok := rc.mutation.RequesterID(); !ok {
-		return &ValidationError{Name: "requester", err: errors.New(`ent: missing required edge "Request.requester"`)}
-	}
-	if _, ok := rc.mutation.ReceiverID(); !ok {
-		return &ValidationError{Name: "receiver", err: errors.New(`ent: missing required edge "Request.receiver"`)}
-	}
 	return nil
 }
 
@@ -245,10 +247,10 @@ func (rc *RequestCreate) createSpec() (*Request, *sqlgraph.CreateSpec) {
 	}
 	if nodes := rc.mutation.RequesterIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
 			Table:   request.RequesterTable,
-			Columns: []string{request.RequesterColumn},
+			Columns: request.RequesterPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
@@ -257,15 +259,14 @@ func (rc *RequestCreate) createSpec() (*Request, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.users_requests_made = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := rc.mutation.ReceiverIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
 			Table:   request.ReceiverTable,
-			Columns: []string{request.ReceiverColumn},
+			Columns: request.ReceiverPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
@@ -274,7 +275,6 @@ func (rc *RequestCreate) createSpec() (*Request, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.users_requests_received = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

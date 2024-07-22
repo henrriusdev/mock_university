@@ -7,10 +7,14 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"math"
-	"mocku/backend/ent/careers"
+	"mocku/backend/ent/activity"
+	"mocku/backend/ent/blog"
+	"mocku/backend/ent/notification"
 	"mocku/backend/ent/predicate"
+	"mocku/backend/ent/professor"
 	"mocku/backend/ent/request"
 	"mocku/backend/ent/role"
+	"mocku/backend/ent/student"
 	"mocku/backend/ent/users"
 
 	"entgo.io/ent/dialect/sql"
@@ -25,10 +29,14 @@ type UsersQuery struct {
 	order                []users.OrderOption
 	inters               []Interceptor
 	predicates           []predicate.Users
-	withCareers          *CareersQuery
 	withRole             *RoleQuery
 	withRequestsMade     *RequestQuery
 	withRequestsReceived *RequestQuery
+	withBlog             *BlogQuery
+	withNotifications    *NotificationQuery
+	withActivity         *ActivityQuery
+	withStudents         *StudentQuery
+	withProfessor        *ProfessorQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -63,28 +71,6 @@ func (uq *UsersQuery) Unique(unique bool) *UsersQuery {
 func (uq *UsersQuery) Order(o ...users.OrderOption) *UsersQuery {
 	uq.order = append(uq.order, o...)
 	return uq
-}
-
-// QueryCareers chains the current query on the "careers" edge.
-func (uq *UsersQuery) QueryCareers() *CareersQuery {
-	query := (&CareersClient{config: uq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := uq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := uq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(users.Table, users.FieldID, selector),
-			sqlgraph.To(careers.Table, careers.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, users.CareersTable, users.CareersColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
 }
 
 // QueryRole chains the current query on the "role" edge.
@@ -123,7 +109,7 @@ func (uq *UsersQuery) QueryRequestsMade() *RequestQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, selector),
 			sqlgraph.To(request.Table, request.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, users.RequestsMadeTable, users.RequestsMadeColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, users.RequestsMadeTable, users.RequestsMadePrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -145,7 +131,117 @@ func (uq *UsersQuery) QueryRequestsReceived() *RequestQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, selector),
 			sqlgraph.To(request.Table, request.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, users.RequestsReceivedTable, users.RequestsReceivedColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, users.RequestsReceivedTable, users.RequestsReceivedPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBlog chains the current query on the "blog" edge.
+func (uq *UsersQuery) QueryBlog() *BlogQuery {
+	query := (&BlogClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, selector),
+			sqlgraph.To(blog.Table, blog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.BlogTable, users.BlogColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryNotifications chains the current query on the "notifications" edge.
+func (uq *UsersQuery) QueryNotifications() *NotificationQuery {
+	query := (&NotificationClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, selector),
+			sqlgraph.To(notification.Table, notification.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, users.NotificationsTable, users.NotificationsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryActivity chains the current query on the "activity" edge.
+func (uq *UsersQuery) QueryActivity() *ActivityQuery {
+	query := (&ActivityClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, selector),
+			sqlgraph.To(activity.Table, activity.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, users.ActivityTable, users.ActivityPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryStudents chains the current query on the "students" edge.
+func (uq *UsersQuery) QueryStudents() *StudentQuery {
+	query := (&StudentClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, selector),
+			sqlgraph.To(student.Table, student.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.StudentsTable, users.StudentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryProfessor chains the current query on the "professor" edge.
+func (uq *UsersQuery) QueryProfessor() *ProfessorQuery {
+	query := (&ProfessorClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(users.Table, users.FieldID, selector),
+			sqlgraph.To(professor.Table, professor.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.ProfessorTable, users.ProfessorColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -345,25 +441,18 @@ func (uq *UsersQuery) Clone() *UsersQuery {
 		order:                append([]users.OrderOption{}, uq.order...),
 		inters:               append([]Interceptor{}, uq.inters...),
 		predicates:           append([]predicate.Users{}, uq.predicates...),
-		withCareers:          uq.withCareers.Clone(),
 		withRole:             uq.withRole.Clone(),
 		withRequestsMade:     uq.withRequestsMade.Clone(),
 		withRequestsReceived: uq.withRequestsReceived.Clone(),
+		withBlog:             uq.withBlog.Clone(),
+		withNotifications:    uq.withNotifications.Clone(),
+		withActivity:         uq.withActivity.Clone(),
+		withStudents:         uq.withStudents.Clone(),
+		withProfessor:        uq.withProfessor.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
 	}
-}
-
-// WithCareers tells the query-builder to eager-load the nodes that are connected to
-// the "careers" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UsersQuery) WithCareers(opts ...func(*CareersQuery)) *UsersQuery {
-	query := (&CareersClient{config: uq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	uq.withCareers = query
-	return uq
 }
 
 // WithRole tells the query-builder to eager-load the nodes that are connected to
@@ -396,6 +485,61 @@ func (uq *UsersQuery) WithRequestsReceived(opts ...func(*RequestQuery)) *UsersQu
 		opt(query)
 	}
 	uq.withRequestsReceived = query
+	return uq
+}
+
+// WithBlog tells the query-builder to eager-load the nodes that are connected to
+// the "blog" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UsersQuery) WithBlog(opts ...func(*BlogQuery)) *UsersQuery {
+	query := (&BlogClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withBlog = query
+	return uq
+}
+
+// WithNotifications tells the query-builder to eager-load the nodes that are connected to
+// the "notifications" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UsersQuery) WithNotifications(opts ...func(*NotificationQuery)) *UsersQuery {
+	query := (&NotificationClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withNotifications = query
+	return uq
+}
+
+// WithActivity tells the query-builder to eager-load the nodes that are connected to
+// the "activity" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UsersQuery) WithActivity(opts ...func(*ActivityQuery)) *UsersQuery {
+	query := (&ActivityClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withActivity = query
+	return uq
+}
+
+// WithStudents tells the query-builder to eager-load the nodes that are connected to
+// the "students" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UsersQuery) WithStudents(opts ...func(*StudentQuery)) *UsersQuery {
+	query := (&StudentClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withStudents = query
+	return uq
+}
+
+// WithProfessor tells the query-builder to eager-load the nodes that are connected to
+// the "professor" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UsersQuery) WithProfessor(opts ...func(*ProfessorQuery)) *UsersQuery {
+	query := (&ProfessorClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withProfessor = query
 	return uq
 }
 
@@ -477,11 +621,15 @@ func (uq *UsersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Users,
 	var (
 		nodes       = []*Users{}
 		_spec       = uq.querySpec()
-		loadedTypes = [4]bool{
-			uq.withCareers != nil,
+		loadedTypes = [8]bool{
 			uq.withRole != nil,
 			uq.withRequestsMade != nil,
 			uq.withRequestsReceived != nil,
+			uq.withBlog != nil,
+			uq.withNotifications != nil,
+			uq.withActivity != nil,
+			uq.withStudents != nil,
+			uq.withProfessor != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -501,13 +649,6 @@ func (uq *UsersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Users,
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
-	}
-	if query := uq.withCareers; query != nil {
-		if err := uq.loadCareers(ctx, query, nodes,
-			func(n *Users) { n.Edges.Careers = []*Careers{} },
-			func(n *Users, e *Careers) { n.Edges.Careers = append(n.Edges.Careers, e) }); err != nil {
-			return nil, err
-		}
 	}
 	if query := uq.withRole; query != nil {
 		if err := uq.loadRole(ctx, query, nodes,
@@ -530,40 +671,44 @@ func (uq *UsersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Users,
 			return nil, err
 		}
 	}
+	if query := uq.withBlog; query != nil {
+		if err := uq.loadBlog(ctx, query, nodes,
+			func(n *Users) { n.Edges.Blog = []*Blog{} },
+			func(n *Users, e *Blog) { n.Edges.Blog = append(n.Edges.Blog, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withNotifications; query != nil {
+		if err := uq.loadNotifications(ctx, query, nodes,
+			func(n *Users) { n.Edges.Notifications = []*Notification{} },
+			func(n *Users, e *Notification) { n.Edges.Notifications = append(n.Edges.Notifications, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withActivity; query != nil {
+		if err := uq.loadActivity(ctx, query, nodes,
+			func(n *Users) { n.Edges.Activity = []*Activity{} },
+			func(n *Users, e *Activity) { n.Edges.Activity = append(n.Edges.Activity, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withStudents; query != nil {
+		if err := uq.loadStudents(ctx, query, nodes,
+			func(n *Users) { n.Edges.Students = []*Student{} },
+			func(n *Users, e *Student) { n.Edges.Students = append(n.Edges.Students, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withProfessor; query != nil {
+		if err := uq.loadProfessor(ctx, query, nodes,
+			func(n *Users) { n.Edges.Professor = []*Professor{} },
+			func(n *Users, e *Professor) { n.Edges.Professor = append(n.Edges.Professor, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
-func (uq *UsersQuery) loadCareers(ctx context.Context, query *CareersQuery, nodes []*Users, init func(*Users), assign func(*Users, *Careers)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Users)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.Careers(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(users.CareersColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.users_careers
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "users_careers" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "users_careers" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
 func (uq *UsersQuery) loadRole(ctx context.Context, query *RoleQuery, nodes []*Users, init func(*Users), assign func(*Users, *Role)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[int]*Users)
@@ -626,6 +771,128 @@ func (uq *UsersQuery) loadRole(ctx context.Context, query *RoleQuery, nodes []*U
 	return nil
 }
 func (uq *UsersQuery) loadRequestsMade(ctx context.Context, query *RequestQuery, nodes []*Users, init func(*Users), assign func(*Users, *Request)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Users)
+	nids := make(map[int]map[*Users]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(users.RequestsMadeTable)
+		s.Join(joinT).On(s.C(request.FieldID), joinT.C(users.RequestsMadePrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(users.RequestsMadePrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(users.RequestsMadePrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Users]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Request](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "requests_made" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (uq *UsersQuery) loadRequestsReceived(ctx context.Context, query *RequestQuery, nodes []*Users, init func(*Users), assign func(*Users, *Request)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Users)
+	nids := make(map[int]map[*Users]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(users.RequestsReceivedTable)
+		s.Join(joinT).On(s.C(request.FieldID), joinT.C(users.RequestsReceivedPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(users.RequestsReceivedPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(users.RequestsReceivedPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Users]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Request](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "requests_received" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (uq *UsersQuery) loadBlog(ctx context.Context, query *BlogQuery, nodes []*Users, init func(*Users), assign func(*Users, *Blog)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Users)
 	for i := range nodes {
@@ -636,27 +903,149 @@ func (uq *UsersQuery) loadRequestsMade(ctx context.Context, query *RequestQuery,
 		}
 	}
 	query.withFKs = true
-	query.Where(predicate.Request(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(users.RequestsMadeColumn), fks...))
+	query.Where(predicate.Blog(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(users.BlogColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.users_requests_made
+		fk := n.blog_owner
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "users_requests_made" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "blog_owner" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "users_requests_made" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "blog_owner" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
 	return nil
 }
-func (uq *UsersQuery) loadRequestsReceived(ctx context.Context, query *RequestQuery, nodes []*Users, init func(*Users), assign func(*Users, *Request)) error {
+func (uq *UsersQuery) loadNotifications(ctx context.Context, query *NotificationQuery, nodes []*Users, init func(*Users), assign func(*Users, *Notification)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Users)
+	nids := make(map[int]map[*Users]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(users.NotificationsTable)
+		s.Join(joinT).On(s.C(notification.FieldID), joinT.C(users.NotificationsPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(users.NotificationsPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(users.NotificationsPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Users]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Notification](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "notifications" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (uq *UsersQuery) loadActivity(ctx context.Context, query *ActivityQuery, nodes []*Users, init func(*Users), assign func(*Users, *Activity)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Users)
+	nids := make(map[int]map[*Users]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(users.ActivityTable)
+		s.Join(joinT).On(s.C(activity.FieldID), joinT.C(users.ActivityPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(users.ActivityPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(users.ActivityPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Users]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Activity](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "activity" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (uq *UsersQuery) loadStudents(ctx context.Context, query *StudentQuery, nodes []*Users, init func(*Users), assign func(*Users, *Student)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Users)
 	for i := range nodes {
@@ -667,21 +1056,52 @@ func (uq *UsersQuery) loadRequestsReceived(ctx context.Context, query *RequestQu
 		}
 	}
 	query.withFKs = true
-	query.Where(predicate.Request(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(users.RequestsReceivedColumn), fks...))
+	query.Where(predicate.Student(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(users.StudentsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.users_requests_received
+		fk := n.student_user
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "users_requests_received" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "student_user" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "users_requests_received" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "student_user" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UsersQuery) loadProfessor(ctx context.Context, query *ProfessorQuery, nodes []*Users, init func(*Users), assign func(*Users, *Professor)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Users)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Professor(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(users.ProfessorColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.professor_user
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "professor_user" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "professor_user" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

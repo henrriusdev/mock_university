@@ -28,5 +28,6 @@ func (Professor) Edges() []ent.Edge {
 		edge.From("boss", Professor.Type).Ref("subordinates").Unique(),
 		edge.To("subordinates", Professor.Type),
 		edge.From("subjects", Subject.Type).Ref("professor"),
+		edge.From("careers", Careers.Type).Ref("leader").Unique(),
 	}
 }

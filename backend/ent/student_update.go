@@ -6,6 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mocku/backend/ent/careers"
+	"mocku/backend/ent/note"
+	"mocku/backend/ent/payment"
 	"mocku/backend/ent/predicate"
 	"mocku/backend/ent/student"
 	"mocku/backend/ent/users"
@@ -82,27 +85,6 @@ func (su *StudentUpdate) SetNillableAddress(s *string) *StudentUpdate {
 	if s != nil {
 		su.SetAddress(*s)
 	}
-	return su
-}
-
-// SetNumber sets the "number" field.
-func (su *StudentUpdate) SetNumber(i int) *StudentUpdate {
-	su.mutation.ResetNumber()
-	su.mutation.SetNumber(i)
-	return su
-}
-
-// SetNillableNumber sets the "number" field if the given value is not nil.
-func (su *StudentUpdate) SetNillableNumber(i *int) *StudentUpdate {
-	if i != nil {
-		su.SetNumber(*i)
-	}
-	return su
-}
-
-// AddNumber adds i to the "number" field.
-func (su *StudentUpdate) AddNumber(i int) *StudentUpdate {
-	su.mutation.AddNumber(i)
 	return su
 }
 
@@ -216,6 +198,51 @@ func (su *StudentUpdate) SetUser(u *Users) *StudentUpdate {
 	return su.SetUserID(u.ID)
 }
 
+// AddNoteIDs adds the "notes" edge to the Note entity by IDs.
+func (su *StudentUpdate) AddNoteIDs(ids ...int) *StudentUpdate {
+	su.mutation.AddNoteIDs(ids...)
+	return su
+}
+
+// AddNotes adds the "notes" edges to the Note entity.
+func (su *StudentUpdate) AddNotes(n ...*Note) *StudentUpdate {
+	ids := make([]int, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return su.AddNoteIDs(ids...)
+}
+
+// AddPaymentIDs adds the "payments" edge to the Payment entity by IDs.
+func (su *StudentUpdate) AddPaymentIDs(ids ...int) *StudentUpdate {
+	su.mutation.AddPaymentIDs(ids...)
+	return su
+}
+
+// AddPayments adds the "payments" edges to the Payment entity.
+func (su *StudentUpdate) AddPayments(p ...*Payment) *StudentUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return su.AddPaymentIDs(ids...)
+}
+
+// AddCareerIDs adds the "career" edge to the Careers entity by IDs.
+func (su *StudentUpdate) AddCareerIDs(ids ...int) *StudentUpdate {
+	su.mutation.AddCareerIDs(ids...)
+	return su
+}
+
+// AddCareer adds the "career" edges to the Careers entity.
+func (su *StudentUpdate) AddCareer(c ...*Careers) *StudentUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return su.AddCareerIDs(ids...)
+}
+
 // Mutation returns the StudentMutation object of the builder.
 func (su *StudentUpdate) Mutation() *StudentMutation {
 	return su.mutation
@@ -225,6 +252,69 @@ func (su *StudentUpdate) Mutation() *StudentMutation {
 func (su *StudentUpdate) ClearUser() *StudentUpdate {
 	su.mutation.ClearUser()
 	return su
+}
+
+// ClearNotes clears all "notes" edges to the Note entity.
+func (su *StudentUpdate) ClearNotes() *StudentUpdate {
+	su.mutation.ClearNotes()
+	return su
+}
+
+// RemoveNoteIDs removes the "notes" edge to Note entities by IDs.
+func (su *StudentUpdate) RemoveNoteIDs(ids ...int) *StudentUpdate {
+	su.mutation.RemoveNoteIDs(ids...)
+	return su
+}
+
+// RemoveNotes removes "notes" edges to Note entities.
+func (su *StudentUpdate) RemoveNotes(n ...*Note) *StudentUpdate {
+	ids := make([]int, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return su.RemoveNoteIDs(ids...)
+}
+
+// ClearPayments clears all "payments" edges to the Payment entity.
+func (su *StudentUpdate) ClearPayments() *StudentUpdate {
+	su.mutation.ClearPayments()
+	return su
+}
+
+// RemovePaymentIDs removes the "payments" edge to Payment entities by IDs.
+func (su *StudentUpdate) RemovePaymentIDs(ids ...int) *StudentUpdate {
+	su.mutation.RemovePaymentIDs(ids...)
+	return su
+}
+
+// RemovePayments removes "payments" edges to Payment entities.
+func (su *StudentUpdate) RemovePayments(p ...*Payment) *StudentUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return su.RemovePaymentIDs(ids...)
+}
+
+// ClearCareer clears all "career" edges to the Careers entity.
+func (su *StudentUpdate) ClearCareer() *StudentUpdate {
+	su.mutation.ClearCareer()
+	return su
+}
+
+// RemoveCareerIDs removes the "career" edge to Careers entities by IDs.
+func (su *StudentUpdate) RemoveCareerIDs(ids ...int) *StudentUpdate {
+	su.mutation.RemoveCareerIDs(ids...)
+	return su
+}
+
+// RemoveCareer removes "career" edges to Careers entities.
+func (su *StudentUpdate) RemoveCareer(c ...*Careers) *StudentUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return su.RemoveCareerIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -269,11 +359,6 @@ func (su *StudentUpdate) check() error {
 	if v, ok := su.mutation.Address(); ok {
 		if err := student.AddressValidator(v); err != nil {
 			return &ValidationError{Name: "address", err: fmt.Errorf(`ent: validator failed for field "Student.address": %w`, err)}
-		}
-	}
-	if v, ok := su.mutation.Number(); ok {
-		if err := student.NumberValidator(v); err != nil {
-			return &ValidationError{Name: "number", err: fmt.Errorf(`ent: validator failed for field "Student.number": %w`, err)}
 		}
 	}
 	if v, ok := su.mutation.District(); ok {
@@ -328,12 +413,6 @@ func (su *StudentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := su.mutation.Address(); ok {
 		_spec.SetField(student.FieldAddress, field.TypeString, value)
 	}
-	if value, ok := su.mutation.Number(); ok {
-		_spec.SetField(student.FieldNumber, field.TypeInt, value)
-	}
-	if value, ok := su.mutation.AddedNumber(); ok {
-		_spec.AddField(student.FieldNumber, field.TypeInt, value)
-	}
 	if value, ok := su.mutation.District(); ok {
 		_spec.SetField(student.FieldDistrict, field.TypeString, value)
 	}
@@ -380,6 +459,141 @@ func (su *StudentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if su.mutation.NotesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.NotesTable,
+			Columns: student.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedNotesIDs(); len(nodes) > 0 && !su.mutation.NotesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.NotesTable,
+			Columns: student.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.NotesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.NotesTable,
+			Columns: student.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if su.mutation.PaymentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.PaymentsTable,
+			Columns: student.PaymentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(payment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedPaymentsIDs(); len(nodes) > 0 && !su.mutation.PaymentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.PaymentsTable,
+			Columns: student.PaymentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(payment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.PaymentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.PaymentsTable,
+			Columns: student.PaymentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(payment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if su.mutation.CareerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   student.CareerTable,
+			Columns: student.CareerPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedCareerIDs(); len(nodes) > 0 && !su.mutation.CareerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   student.CareerTable,
+			Columns: student.CareerPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.CareerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   student.CareerTable,
+			Columns: student.CareerPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -460,27 +674,6 @@ func (suo *StudentUpdateOne) SetNillableAddress(s *string) *StudentUpdateOne {
 	if s != nil {
 		suo.SetAddress(*s)
 	}
-	return suo
-}
-
-// SetNumber sets the "number" field.
-func (suo *StudentUpdateOne) SetNumber(i int) *StudentUpdateOne {
-	suo.mutation.ResetNumber()
-	suo.mutation.SetNumber(i)
-	return suo
-}
-
-// SetNillableNumber sets the "number" field if the given value is not nil.
-func (suo *StudentUpdateOne) SetNillableNumber(i *int) *StudentUpdateOne {
-	if i != nil {
-		suo.SetNumber(*i)
-	}
-	return suo
-}
-
-// AddNumber adds i to the "number" field.
-func (suo *StudentUpdateOne) AddNumber(i int) *StudentUpdateOne {
-	suo.mutation.AddNumber(i)
 	return suo
 }
 
@@ -594,6 +787,51 @@ func (suo *StudentUpdateOne) SetUser(u *Users) *StudentUpdateOne {
 	return suo.SetUserID(u.ID)
 }
 
+// AddNoteIDs adds the "notes" edge to the Note entity by IDs.
+func (suo *StudentUpdateOne) AddNoteIDs(ids ...int) *StudentUpdateOne {
+	suo.mutation.AddNoteIDs(ids...)
+	return suo
+}
+
+// AddNotes adds the "notes" edges to the Note entity.
+func (suo *StudentUpdateOne) AddNotes(n ...*Note) *StudentUpdateOne {
+	ids := make([]int, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return suo.AddNoteIDs(ids...)
+}
+
+// AddPaymentIDs adds the "payments" edge to the Payment entity by IDs.
+func (suo *StudentUpdateOne) AddPaymentIDs(ids ...int) *StudentUpdateOne {
+	suo.mutation.AddPaymentIDs(ids...)
+	return suo
+}
+
+// AddPayments adds the "payments" edges to the Payment entity.
+func (suo *StudentUpdateOne) AddPayments(p ...*Payment) *StudentUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return suo.AddPaymentIDs(ids...)
+}
+
+// AddCareerIDs adds the "career" edge to the Careers entity by IDs.
+func (suo *StudentUpdateOne) AddCareerIDs(ids ...int) *StudentUpdateOne {
+	suo.mutation.AddCareerIDs(ids...)
+	return suo
+}
+
+// AddCareer adds the "career" edges to the Careers entity.
+func (suo *StudentUpdateOne) AddCareer(c ...*Careers) *StudentUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return suo.AddCareerIDs(ids...)
+}
+
 // Mutation returns the StudentMutation object of the builder.
 func (suo *StudentUpdateOne) Mutation() *StudentMutation {
 	return suo.mutation
@@ -603,6 +841,69 @@ func (suo *StudentUpdateOne) Mutation() *StudentMutation {
 func (suo *StudentUpdateOne) ClearUser() *StudentUpdateOne {
 	suo.mutation.ClearUser()
 	return suo
+}
+
+// ClearNotes clears all "notes" edges to the Note entity.
+func (suo *StudentUpdateOne) ClearNotes() *StudentUpdateOne {
+	suo.mutation.ClearNotes()
+	return suo
+}
+
+// RemoveNoteIDs removes the "notes" edge to Note entities by IDs.
+func (suo *StudentUpdateOne) RemoveNoteIDs(ids ...int) *StudentUpdateOne {
+	suo.mutation.RemoveNoteIDs(ids...)
+	return suo
+}
+
+// RemoveNotes removes "notes" edges to Note entities.
+func (suo *StudentUpdateOne) RemoveNotes(n ...*Note) *StudentUpdateOne {
+	ids := make([]int, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return suo.RemoveNoteIDs(ids...)
+}
+
+// ClearPayments clears all "payments" edges to the Payment entity.
+func (suo *StudentUpdateOne) ClearPayments() *StudentUpdateOne {
+	suo.mutation.ClearPayments()
+	return suo
+}
+
+// RemovePaymentIDs removes the "payments" edge to Payment entities by IDs.
+func (suo *StudentUpdateOne) RemovePaymentIDs(ids ...int) *StudentUpdateOne {
+	suo.mutation.RemovePaymentIDs(ids...)
+	return suo
+}
+
+// RemovePayments removes "payments" edges to Payment entities.
+func (suo *StudentUpdateOne) RemovePayments(p ...*Payment) *StudentUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return suo.RemovePaymentIDs(ids...)
+}
+
+// ClearCareer clears all "career" edges to the Careers entity.
+func (suo *StudentUpdateOne) ClearCareer() *StudentUpdateOne {
+	suo.mutation.ClearCareer()
+	return suo
+}
+
+// RemoveCareerIDs removes the "career" edge to Careers entities by IDs.
+func (suo *StudentUpdateOne) RemoveCareerIDs(ids ...int) *StudentUpdateOne {
+	suo.mutation.RemoveCareerIDs(ids...)
+	return suo
+}
+
+// RemoveCareer removes "career" edges to Careers entities.
+func (suo *StudentUpdateOne) RemoveCareer(c ...*Careers) *StudentUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return suo.RemoveCareerIDs(ids...)
 }
 
 // Where appends a list predicates to the StudentUpdate builder.
@@ -660,11 +961,6 @@ func (suo *StudentUpdateOne) check() error {
 	if v, ok := suo.mutation.Address(); ok {
 		if err := student.AddressValidator(v); err != nil {
 			return &ValidationError{Name: "address", err: fmt.Errorf(`ent: validator failed for field "Student.address": %w`, err)}
-		}
-	}
-	if v, ok := suo.mutation.Number(); ok {
-		if err := student.NumberValidator(v); err != nil {
-			return &ValidationError{Name: "number", err: fmt.Errorf(`ent: validator failed for field "Student.number": %w`, err)}
 		}
 	}
 	if v, ok := suo.mutation.District(); ok {
@@ -736,12 +1032,6 @@ func (suo *StudentUpdateOne) sqlSave(ctx context.Context) (_node *Student, err e
 	if value, ok := suo.mutation.Address(); ok {
 		_spec.SetField(student.FieldAddress, field.TypeString, value)
 	}
-	if value, ok := suo.mutation.Number(); ok {
-		_spec.SetField(student.FieldNumber, field.TypeInt, value)
-	}
-	if value, ok := suo.mutation.AddedNumber(); ok {
-		_spec.AddField(student.FieldNumber, field.TypeInt, value)
-	}
 	if value, ok := suo.mutation.District(); ok {
 		_spec.SetField(student.FieldDistrict, field.TypeString, value)
 	}
@@ -788,6 +1078,141 @@ func (suo *StudentUpdateOne) sqlSave(ctx context.Context) (_node *Student, err e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suo.mutation.NotesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.NotesTable,
+			Columns: student.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedNotesIDs(); len(nodes) > 0 && !suo.mutation.NotesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.NotesTable,
+			Columns: student.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.NotesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.NotesTable,
+			Columns: student.NotesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suo.mutation.PaymentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.PaymentsTable,
+			Columns: student.PaymentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(payment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedPaymentsIDs(); len(nodes) > 0 && !suo.mutation.PaymentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.PaymentsTable,
+			Columns: student.PaymentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(payment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.PaymentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.PaymentsTable,
+			Columns: student.PaymentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(payment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suo.mutation.CareerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   student.CareerTable,
+			Columns: student.CareerPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedCareerIDs(); len(nodes) > 0 && !suo.mutation.CareerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   student.CareerTable,
+			Columns: student.CareerPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.CareerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   student.CareerTable,
+			Columns: student.CareerPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -402,6 +402,29 @@ func HasSubjectsWith(preds ...predicate.Subject) predicate.Professor {
 	})
 }
 
+// HasCareers applies the HasEdge predicate on the "careers" edge.
+func HasCareers() predicate.Professor {
+	return predicate.Professor(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, CareersTable, CareersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCareersWith applies the HasEdge predicate on the "careers" edge with a given conditions (other predicates).
+func HasCareersWith(preds ...predicate.Careers) predicate.Professor {
+	return predicate.Professor(func(s *sql.Selector) {
+		step := newCareersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Professor) predicate.Professor {
 	return predicate.Professor(sql.AndPredicates(predicates...))

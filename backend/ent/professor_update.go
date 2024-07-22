@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mocku/backend/ent/careers"
 	"mocku/backend/ent/predicate"
 	"mocku/backend/ent/professor"
 	"mocku/backend/ent/subject"
@@ -154,6 +155,25 @@ func (pu *ProfessorUpdate) AddSubjects(s ...*Subject) *ProfessorUpdate {
 	return pu.AddSubjectIDs(ids...)
 }
 
+// SetCareersID sets the "careers" edge to the Careers entity by ID.
+func (pu *ProfessorUpdate) SetCareersID(id int) *ProfessorUpdate {
+	pu.mutation.SetCareersID(id)
+	return pu
+}
+
+// SetNillableCareersID sets the "careers" edge to the Careers entity by ID if the given value is not nil.
+func (pu *ProfessorUpdate) SetNillableCareersID(id *int) *ProfessorUpdate {
+	if id != nil {
+		pu = pu.SetCareersID(*id)
+	}
+	return pu
+}
+
+// SetCareers sets the "careers" edge to the Careers entity.
+func (pu *ProfessorUpdate) SetCareers(c *Careers) *ProfessorUpdate {
+	return pu.SetCareersID(c.ID)
+}
+
 // Mutation returns the ProfessorMutation object of the builder.
 func (pu *ProfessorUpdate) Mutation() *ProfessorMutation {
 	return pu.mutation
@@ -211,6 +231,12 @@ func (pu *ProfessorUpdate) RemoveSubjects(s ...*Subject) *ProfessorUpdate {
 		ids[i] = s[i].ID
 	}
 	return pu.RemoveSubjectIDs(ids...)
+}
+
+// ClearCareers clears the "careers" edge to the Careers entity.
+func (pu *ProfessorUpdate) ClearCareers() *ProfessorUpdate {
+	pu.mutation.ClearCareers()
+	return pu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -432,6 +458,35 @@ func (pu *ProfessorUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if pu.mutation.CareersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   professor.CareersTable,
+			Columns: []string{professor.CareersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.CareersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   professor.CareersTable,
+			Columns: []string{professor.CareersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{professor.Label}
@@ -576,6 +631,25 @@ func (puo *ProfessorUpdateOne) AddSubjects(s ...*Subject) *ProfessorUpdateOne {
 	return puo.AddSubjectIDs(ids...)
 }
 
+// SetCareersID sets the "careers" edge to the Careers entity by ID.
+func (puo *ProfessorUpdateOne) SetCareersID(id int) *ProfessorUpdateOne {
+	puo.mutation.SetCareersID(id)
+	return puo
+}
+
+// SetNillableCareersID sets the "careers" edge to the Careers entity by ID if the given value is not nil.
+func (puo *ProfessorUpdateOne) SetNillableCareersID(id *int) *ProfessorUpdateOne {
+	if id != nil {
+		puo = puo.SetCareersID(*id)
+	}
+	return puo
+}
+
+// SetCareers sets the "careers" edge to the Careers entity.
+func (puo *ProfessorUpdateOne) SetCareers(c *Careers) *ProfessorUpdateOne {
+	return puo.SetCareersID(c.ID)
+}
+
 // Mutation returns the ProfessorMutation object of the builder.
 func (puo *ProfessorUpdateOne) Mutation() *ProfessorMutation {
 	return puo.mutation
@@ -633,6 +707,12 @@ func (puo *ProfessorUpdateOne) RemoveSubjects(s ...*Subject) *ProfessorUpdateOne
 		ids[i] = s[i].ID
 	}
 	return puo.RemoveSubjectIDs(ids...)
+}
+
+// ClearCareers clears the "careers" edge to the Careers entity.
+func (puo *ProfessorUpdateOne) ClearCareers() *ProfessorUpdateOne {
+	puo.mutation.ClearCareers()
+	return puo
 }
 
 // Where appends a list predicates to the ProfessorUpdate builder.
@@ -877,6 +957,35 @@ func (puo *ProfessorUpdateOne) sqlSave(ctx context.Context) (_node *Professor, e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if puo.mutation.CareersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   professor.CareersTable,
+			Columns: []string{professor.CareersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.CareersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   professor.CareersTable,
+			Columns: []string{professor.CareersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

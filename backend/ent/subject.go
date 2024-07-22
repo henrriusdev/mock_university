@@ -40,7 +40,6 @@ type Subject struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SubjectQuery when eager-loading is set.
 	Edges        SubjectEdges `json:"edges"`
-	note_subject *int
 	selectValues sql.SelectValues
 }
 
@@ -48,9 +47,13 @@ type Subject struct {
 type SubjectEdges struct {
 	// Professor holds the value of the professor edge.
 	Professor []*Professor `json:"professor,omitempty"`
+	// Career holds the value of the career edge.
+	Career []*Careers `json:"career,omitempty"`
+	// Notes holds the value of the notes edge.
+	Notes []*Note `json:"notes,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // ProfessorOrErr returns the Professor value or an error if the edge
@@ -60,6 +63,24 @@ func (e SubjectEdges) ProfessorOrErr() ([]*Professor, error) {
 		return e.Professor, nil
 	}
 	return nil, &NotLoadedError{edge: "professor"}
+}
+
+// CareerOrErr returns the Career value or an error if the edge
+// was not loaded in eager-loading.
+func (e SubjectEdges) CareerOrErr() ([]*Careers, error) {
+	if e.loadedTypes[1] {
+		return e.Career, nil
+	}
+	return nil, &NotLoadedError{edge: "career"}
+}
+
+// NotesOrErr returns the Notes value or an error if the edge
+// was not loaded in eager-loading.
+func (e SubjectEdges) NotesOrErr() ([]*Note, error) {
+	if e.loadedTypes[2] {
+		return e.Notes, nil
+	}
+	return nil, &NotLoadedError{edge: "notes"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -73,8 +94,6 @@ func (*Subject) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case subject.FieldName, subject.FieldDescription, subject.FieldCode:
 			values[i] = new(sql.NullString)
-		case subject.ForeignKeys[0]: // note_subject
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -158,13 +177,6 @@ func (s *Subject) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field class_schedule: %w", err)
 				}
 			}
-		case subject.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field note_subject", value)
-			} else if value.Valid {
-				s.note_subject = new(int)
-				*s.note_subject = int(value.Int64)
-			}
 		default:
 			s.selectValues.Set(columns[i], values[i])
 		}
@@ -181,6 +193,16 @@ func (s *Subject) Value(name string) (ent.Value, error) {
 // QueryProfessor queries the "professor" edge of the Subject entity.
 func (s *Subject) QueryProfessor() *ProfessorQuery {
 	return NewSubjectClient(s.config).QueryProfessor(s)
+}
+
+// QueryCareer queries the "career" edge of the Subject entity.
+func (s *Subject) QueryCareer() *CareersQuery {
+	return NewSubjectClient(s.config).QueryCareer(s)
+}
+
+// QueryNotes queries the "notes" edge of the Subject entity.
+func (s *Subject) QueryNotes() *NoteQuery {
+	return NewSubjectClient(s.config).QueryNotes(s)
 }
 
 // Update returns a builder for updating this Subject.

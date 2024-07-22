@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"math"
+	"mocku/backend/ent/careers"
 	"mocku/backend/ent/predicate"
 	"mocku/backend/ent/professor"
 	"mocku/backend/ent/subject"
@@ -28,6 +29,7 @@ type ProfessorQuery struct {
 	withBoss         *ProfessorQuery
 	withSubordinates *ProfessorQuery
 	withSubjects     *SubjectQuery
+	withCareers      *CareersQuery
 	withFKs          bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -146,6 +148,28 @@ func (pq *ProfessorQuery) QuerySubjects() *SubjectQuery {
 			sqlgraph.From(professor.Table, professor.FieldID, selector),
 			sqlgraph.To(subject.Table, subject.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, professor.SubjectsTable, professor.SubjectsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCareers chains the current query on the "careers" edge.
+func (pq *ProfessorQuery) QueryCareers() *CareersQuery {
+	query := (&CareersClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(professor.Table, professor.FieldID, selector),
+			sqlgraph.To(careers.Table, careers.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, professor.CareersTable, professor.CareersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -349,6 +373,7 @@ func (pq *ProfessorQuery) Clone() *ProfessorQuery {
 		withBoss:         pq.withBoss.Clone(),
 		withSubordinates: pq.withSubordinates.Clone(),
 		withSubjects:     pq.withSubjects.Clone(),
+		withCareers:      pq.withCareers.Clone(),
 		// clone intermediate query.
 		sql:  pq.sql.Clone(),
 		path: pq.path,
@@ -396,6 +421,17 @@ func (pq *ProfessorQuery) WithSubjects(opts ...func(*SubjectQuery)) *ProfessorQu
 		opt(query)
 	}
 	pq.withSubjects = query
+	return pq
+}
+
+// WithCareers tells the query-builder to eager-load the nodes that are connected to
+// the "careers" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *ProfessorQuery) WithCareers(opts ...func(*CareersQuery)) *ProfessorQuery {
+	query := (&CareersClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withCareers = query
 	return pq
 }
 
@@ -478,14 +514,15 @@ func (pq *ProfessorQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pr
 		nodes       = []*Professor{}
 		withFKs     = pq.withFKs
 		_spec       = pq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			pq.withUser != nil,
 			pq.withBoss != nil,
 			pq.withSubordinates != nil,
 			pq.withSubjects != nil,
+			pq.withCareers != nil,
 		}
 	)
-	if pq.withUser != nil || pq.withBoss != nil {
+	if pq.withUser != nil || pq.withBoss != nil || pq.withCareers != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -532,6 +569,12 @@ func (pq *ProfessorQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pr
 		if err := pq.loadSubjects(ctx, query, nodes,
 			func(n *Professor) { n.Edges.Subjects = []*Subject{} },
 			func(n *Professor, e *Subject) { n.Edges.Subjects = append(n.Edges.Subjects, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := pq.withCareers; query != nil {
+		if err := pq.loadCareers(ctx, query, nodes, nil,
+			func(n *Professor, e *Careers) { n.Edges.Careers = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -690,6 +733,38 @@ func (pq *ProfessorQuery) loadSubjects(ctx context.Context, query *SubjectQuery,
 		}
 		for kn := range nodes {
 			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (pq *ProfessorQuery) loadCareers(ctx context.Context, query *CareersQuery, nodes []*Professor, init func(*Professor), assign func(*Professor, *Careers)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Professor)
+	for i := range nodes {
+		if nodes[i].careers_leader == nil {
+			continue
+		}
+		fk := *nodes[i].careers_leader
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(careers.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "careers_leader" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil

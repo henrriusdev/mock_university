@@ -26,7 +26,7 @@ func (Permission) Fields() []ent.Field {
 // Edges of the Permissions.
 func (Permission) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("role", Role.Type),
+		edge.To("roles", Role.Type),
 		edge.To("module", Module.Type),
 	}
 }

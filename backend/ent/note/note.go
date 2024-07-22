@@ -18,35 +18,22 @@ const (
 	FieldAverage = "average"
 	// EdgeStudent holds the string denoting the student edge name in mutations.
 	EdgeStudent = "student"
-	// EdgeProfessor holds the string denoting the professor edge name in mutations.
-	EdgeProfessor = "professor"
 	// EdgeSubject holds the string denoting the subject edge name in mutations.
 	EdgeSubject = "subject"
 	// EdgeCycle holds the string denoting the cycle edge name in mutations.
 	EdgeCycle = "cycle"
 	// Table holds the table name of the note in the database.
 	Table = "notes"
-	// StudentTable is the table that holds the student relation/edge.
-	StudentTable = "students"
+	// StudentTable is the table that holds the student relation/edge. The primary key declared below.
+	StudentTable = "note_student"
 	// StudentInverseTable is the table name for the Student entity.
 	// It exists in this package in order to avoid circular dependency with the "student" package.
 	StudentInverseTable = "students"
-	// StudentColumn is the table column denoting the student relation/edge.
-	StudentColumn = "note_student"
-	// ProfessorTable is the table that holds the professor relation/edge.
-	ProfessorTable = "professors"
-	// ProfessorInverseTable is the table name for the Professor entity.
-	// It exists in this package in order to avoid circular dependency with the "professor" package.
-	ProfessorInverseTable = "professors"
-	// ProfessorColumn is the table column denoting the professor relation/edge.
-	ProfessorColumn = "note_professor"
-	// SubjectTable is the table that holds the subject relation/edge.
-	SubjectTable = "subjects"
+	// SubjectTable is the table that holds the subject relation/edge. The primary key declared below.
+	SubjectTable = "note_subject"
 	// SubjectInverseTable is the table name for the Subject entity.
 	// It exists in this package in order to avoid circular dependency with the "subject" package.
 	SubjectInverseTable = "subjects"
-	// SubjectColumn is the table column denoting the subject relation/edge.
-	SubjectColumn = "note_subject"
 	// CycleTable is the table that holds the cycle relation/edge.
 	CycleTable = "cycles"
 	// CycleInverseTable is the table name for the Cycle entity.
@@ -62,6 +49,15 @@ var Columns = []string{
 	FieldNotes,
 	FieldAverage,
 }
+
+var (
+	// StudentPrimaryKey and StudentColumn2 are the table columns denoting the
+	// primary key for the student relation (M2M).
+	StudentPrimaryKey = []string{"note_id", "student_id"}
+	// SubjectPrimaryKey and SubjectColumn2 are the table columns denoting the
+	// primary key for the subject relation (M2M).
+	SubjectPrimaryKey = []string{"note_id", "subject_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -100,20 +96,6 @@ func ByStudent(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByProfessorCount orders the results by professor count.
-func ByProfessorCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newProfessorStep(), opts...)
-	}
-}
-
-// ByProfessor orders the results by professor terms.
-func ByProfessor(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newProfessorStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // BySubjectCount orders the results by subject count.
 func BySubjectCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -145,21 +127,14 @@ func newStudentStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(StudentInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, StudentTable, StudentColumn),
-	)
-}
-func newProfessorStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ProfessorInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ProfessorTable, ProfessorColumn),
+		sqlgraph.Edge(sqlgraph.M2M, false, StudentTable, StudentPrimaryKey...),
 	)
 }
 func newSubjectStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SubjectInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SubjectTable, SubjectColumn),
+		sqlgraph.Edge(sqlgraph.M2M, false, SubjectTable, SubjectPrimaryKey...),
 	)
 }
 func newCycleStep() *sqlgraph.Step {

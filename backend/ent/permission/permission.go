@@ -24,19 +24,17 @@ const (
 	FieldUpdate = "update"
 	// FieldDelete holds the string denoting the delete field in the database.
 	FieldDelete = "delete"
-	// EdgeRole holds the string denoting the role edge name in mutations.
-	EdgeRole = "role"
+	// EdgeRoles holds the string denoting the roles edge name in mutations.
+	EdgeRoles = "roles"
 	// EdgeModule holds the string denoting the module edge name in mutations.
 	EdgeModule = "module"
 	// Table holds the table name of the permission in the database.
 	Table = "permissions"
-	// RoleTable is the table that holds the role relation/edge.
-	RoleTable = "roles"
-	// RoleInverseTable is the table name for the Role entity.
+	// RolesTable is the table that holds the roles relation/edge. The primary key declared below.
+	RolesTable = "permission_roles"
+	// RolesInverseTable is the table name for the Role entity.
 	// It exists in this package in order to avoid circular dependency with the "role" package.
-	RoleInverseTable = "roles"
-	// RoleColumn is the table column denoting the role relation/edge.
-	RoleColumn = "permission_role"
+	RolesInverseTable = "roles"
 	// ModuleTable is the table that holds the module relation/edge.
 	ModuleTable = "modules"
 	// ModuleInverseTable is the table name for the Module entity.
@@ -56,6 +54,12 @@ var Columns = []string{
 	FieldUpdate,
 	FieldDelete,
 }
+
+var (
+	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
+	// primary key for the roles relation (M2M).
+	RolesPrimaryKey = []string{"permission_id", "role_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -120,17 +124,17 @@ func ByDelete(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDelete, opts...).ToFunc()
 }
 
-// ByRoleCount orders the results by role count.
-func ByRoleCount(opts ...sql.OrderTermOption) OrderOption {
+// ByRolesCount orders the results by roles count.
+func ByRolesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newRoleStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newRolesStep(), opts...)
 	}
 }
 
-// ByRole orders the results by role terms.
-func ByRole(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByRoles orders the results by roles terms.
+func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRoleStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -147,11 +151,11 @@ func ByModule(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newModuleStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newRoleStep() *sqlgraph.Step {
+func newRolesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RoleInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, RoleTable, RoleColumn),
+		sqlgraph.To(RolesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
 	)
 }
 func newModuleStep() *sqlgraph.Step {

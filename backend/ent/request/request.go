@@ -32,20 +32,16 @@ const (
 	EdgeReceiver = "receiver"
 	// Table holds the table name of the request in the database.
 	Table = "requests"
-	// RequesterTable is the table that holds the requester relation/edge.
-	RequesterTable = "requests"
+	// RequesterTable is the table that holds the requester relation/edge. The primary key declared below.
+	RequesterTable = "request_requester"
 	// RequesterInverseTable is the table name for the Users entity.
 	// It exists in this package in order to avoid circular dependency with the "users" package.
 	RequesterInverseTable = "users"
-	// RequesterColumn is the table column denoting the requester relation/edge.
-	RequesterColumn = "users_requests_made"
-	// ReceiverTable is the table that holds the receiver relation/edge.
-	ReceiverTable = "requests"
+	// ReceiverTable is the table that holds the receiver relation/edge. The primary key declared below.
+	ReceiverTable = "request_receiver"
 	// ReceiverInverseTable is the table name for the Users entity.
 	// It exists in this package in order to avoid circular dependency with the "users" package.
 	ReceiverInverseTable = "users"
-	// ReceiverColumn is the table column denoting the receiver relation/edge.
-	ReceiverColumn = "users_requests_received"
 )
 
 // Columns holds all SQL columns for request fields.
@@ -59,22 +55,19 @@ var Columns = []string{
 	FieldUpdatedAt,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "requests"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"users_requests_made",
-	"users_requests_received",
-}
+var (
+	// RequesterPrimaryKey and RequesterColumn2 are the table columns denoting the
+	// primary key for the requester relation (M2M).
+	RequesterPrimaryKey = []string{"request_id", "users_id"}
+	// ReceiverPrimaryKey and ReceiverColumn2 are the table columns denoting the
+	// primary key for the receiver relation (M2M).
+	ReceiverPrimaryKey = []string{"request_id", "users_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -136,30 +129,44 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
-// ByRequesterField orders the results by requester field.
-func ByRequesterField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByRequesterCount orders the results by requester count.
+func ByRequesterCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRequesterStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborsCount(s, newRequesterStep(), opts...)
 	}
 }
 
-// ByReceiverField orders the results by receiver field.
-func ByReceiverField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByRequester orders the results by requester terms.
+func ByRequester(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newReceiverStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newRequesterStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByReceiverCount orders the results by receiver count.
+func ByReceiverCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReceiverStep(), opts...)
+	}
+}
+
+// ByReceiver orders the results by receiver terms.
+func ByReceiver(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReceiverStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newRequesterStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RequesterInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, RequesterTable, RequesterColumn),
+		sqlgraph.Edge(sqlgraph.M2M, false, RequesterTable, RequesterPrimaryKey...),
 	)
 }
 func newReceiverStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ReceiverInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, ReceiverTable, ReceiverColumn),
+		sqlgraph.Edge(sqlgraph.M2M, false, ReceiverTable, ReceiverPrimaryKey...),
 	)
 }

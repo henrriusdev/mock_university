@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mocku/backend/ent/permission"
 	"mocku/backend/ent/role"
 	"mocku/backend/ent/users"
 
@@ -45,6 +46,21 @@ func (rc *RoleCreate) AddUsers(u ...*Users) *RoleCreate {
 		ids[i] = u[i].ID
 	}
 	return rc.AddUserIDs(ids...)
+}
+
+// AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
+func (rc *RoleCreate) AddPermissionIDs(ids ...int) *RoleCreate {
+	rc.mutation.AddPermissionIDs(ids...)
+	return rc
+}
+
+// AddPermissions adds the "permissions" edges to the Permission entity.
+func (rc *RoleCreate) AddPermissions(p ...*Permission) *RoleCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return rc.AddPermissionIDs(ids...)
 }
 
 // Mutation returns the RoleMutation object of the builder.
@@ -140,6 +156,22 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.PermissionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   role.PermissionsTable,
+			Columns: role.PermissionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(permission.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

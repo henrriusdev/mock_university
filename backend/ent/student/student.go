@@ -20,8 +20,6 @@ const (
 	FieldPhone = "phone"
 	// FieldAddress holds the string denoting the address field in the database.
 	FieldAddress = "address"
-	// FieldNumber holds the string denoting the number field in the database.
-	FieldNumber = "number"
 	// FieldDistrict holds the string denoting the district field in the database.
 	FieldDistrict = "district"
 	// FieldCity holds the string denoting the city field in the database.
@@ -34,6 +32,12 @@ const (
 	FieldTotalAverage = "total_average"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
+	// EdgeNotes holds the string denoting the notes edge name in mutations.
+	EdgeNotes = "notes"
+	// EdgePayments holds the string denoting the payments edge name in mutations.
+	EdgePayments = "payments"
+	// EdgeCareer holds the string denoting the career edge name in mutations.
+	EdgeCareer = "career"
 	// Table holds the table name of the student in the database.
 	Table = "students"
 	// UserTable is the table that holds the user relation/edge.
@@ -43,6 +47,21 @@ const (
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "student_user"
+	// NotesTable is the table that holds the notes relation/edge. The primary key declared below.
+	NotesTable = "note_student"
+	// NotesInverseTable is the table name for the Note entity.
+	// It exists in this package in order to avoid circular dependency with the "note" package.
+	NotesInverseTable = "notes"
+	// PaymentsTable is the table that holds the payments relation/edge. The primary key declared below.
+	PaymentsTable = "payment_student"
+	// PaymentsInverseTable is the table name for the Payment entity.
+	// It exists in this package in order to avoid circular dependency with the "payment" package.
+	PaymentsInverseTable = "payments"
+	// CareerTable is the table that holds the career relation/edge. The primary key declared below.
+	CareerTable = "student_career"
+	// CareerInverseTable is the table name for the Careers entity.
+	// It exists in this package in order to avoid circular dependency with the "careers" package.
+	CareerInverseTable = "careers"
 )
 
 // Columns holds all SQL columns for student fields.
@@ -52,7 +71,6 @@ var Columns = []string{
 	FieldBirthDate,
 	FieldPhone,
 	FieldAddress,
-	FieldNumber,
 	FieldDistrict,
 	FieldCity,
 	FieldPostalCode,
@@ -63,10 +81,20 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "students"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"note_student",
-	"payment_student",
 	"student_user",
 }
+
+var (
+	// NotesPrimaryKey and NotesColumn2 are the table columns denoting the
+	// primary key for the notes relation (M2M).
+	NotesPrimaryKey = []string{"note_id", "student_id"}
+	// PaymentsPrimaryKey and PaymentsColumn2 are the table columns denoting the
+	// primary key for the payments relation (M2M).
+	PaymentsPrimaryKey = []string{"payment_id", "student_id"}
+	// CareerPrimaryKey and CareerColumn2 are the table columns denoting the
+	// primary key for the career relation (M2M).
+	CareerPrimaryKey = []string{"student_id", "careers_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -90,8 +118,6 @@ var (
 	PhoneValidator func(string) error
 	// AddressValidator is a validator for the "address" field. It is called by the builders before save.
 	AddressValidator func(string) error
-	// NumberValidator is a validator for the "number" field. It is called by the builders before save.
-	NumberValidator func(int) error
 	// DistrictValidator is a validator for the "district" field. It is called by the builders before save.
 	DistrictValidator func(string) error
 	// CityValidator is a validator for the "city" field. It is called by the builders before save.
@@ -132,11 +158,6 @@ func ByAddress(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAddress, opts...).ToFunc()
 }
 
-// ByNumber orders the results by the number field.
-func ByNumber(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldNumber, opts...).ToFunc()
-}
-
 // ByDistrict orders the results by the district field.
 func ByDistrict(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDistrict, opts...).ToFunc()
@@ -168,10 +189,73 @@ func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByNotesCount orders the results by notes count.
+func ByNotesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newNotesStep(), opts...)
+	}
+}
+
+// ByNotes orders the results by notes terms.
+func ByNotes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newNotesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByPaymentsCount orders the results by payments count.
+func ByPaymentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPaymentsStep(), opts...)
+	}
+}
+
+// ByPayments orders the results by payments terms.
+func ByPayments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPaymentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCareerCount orders the results by career count.
+func ByCareerCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCareerStep(), opts...)
+	}
+}
+
+// ByCareer orders the results by career terms.
+func ByCareer(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCareerStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
+	)
+}
+func newNotesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(NotesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, NotesTable, NotesPrimaryKey...),
+	)
+}
+func newPaymentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PaymentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, PaymentsTable, PaymentsPrimaryKey...),
+	)
+}
+func newCareerStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CareerInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, CareerTable, CareerPrimaryKey...),
 	)
 }

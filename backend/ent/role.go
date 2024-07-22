@@ -22,18 +22,19 @@ type Role struct {
 	Description string `json:"description,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RoleQuery when eager-loading is set.
-	Edges           RoleEdges `json:"edges"`
-	permission_role *int
-	selectValues    sql.SelectValues
+	Edges        RoleEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // RoleEdges holds the relations/edges for other nodes in the graph.
 type RoleEdges struct {
 	// Users holds the value of the users edge.
 	Users []*Users `json:"users,omitempty"`
+	// Permissions holds the value of the permissions edge.
+	Permissions []*Permission `json:"permissions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -45,6 +46,15 @@ func (e RoleEdges) UsersOrErr() ([]*Users, error) {
 	return nil, &NotLoadedError{edge: "users"}
 }
 
+// PermissionsOrErr returns the Permissions value or an error if the edge
+// was not loaded in eager-loading.
+func (e RoleEdges) PermissionsOrErr() ([]*Permission, error) {
+	if e.loadedTypes[1] {
+		return e.Permissions, nil
+	}
+	return nil, &NotLoadedError{edge: "permissions"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Role) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -54,8 +64,6 @@ func (*Role) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case role.FieldName, role.FieldDescription:
 			values[i] = new(sql.NullString)
-		case role.ForeignKeys[0]: // permission_role
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -89,13 +97,6 @@ func (r *Role) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.Description = value.String
 			}
-		case role.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field permission_role", value)
-			} else if value.Valid {
-				r.permission_role = new(int)
-				*r.permission_role = int(value.Int64)
-			}
 		default:
 			r.selectValues.Set(columns[i], values[i])
 		}
@@ -112,6 +113,11 @@ func (r *Role) Value(name string) (ent.Value, error) {
 // QueryUsers queries the "users" edge of the Role entity.
 func (r *Role) QueryUsers() *UsersQuery {
 	return NewRoleClient(r.config).QueryUsers(r)
+}
+
+// QueryPermissions queries the "permissions" edge of the Role entity.
+func (r *Role) QueryPermissions() *PermissionQuery {
+	return NewRoleClient(r.config).QueryPermissions(r)
 }
 
 // Update returns a builder for updating this Role.

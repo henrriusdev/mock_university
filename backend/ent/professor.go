@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	"mocku/backend/ent/careers"
 	"mocku/backend/ent/professor"
 	"mocku/backend/ent/users"
 	"strings"
@@ -30,7 +31,6 @@ type Professor struct {
 	// The values are being populated by the ProfessorQuery when eager-loading is set.
 	Edges                  ProfessorEdges `json:"edges"`
 	careers_leader         *int
-	note_professor         *int
 	professor_user         *int
 	professor_subordinates *int
 	selectValues           sql.SelectValues
@@ -46,9 +46,11 @@ type ProfessorEdges struct {
 	Subordinates []*Professor `json:"subordinates,omitempty"`
 	// Subjects holds the value of the subjects edge.
 	Subjects []*Subject `json:"subjects,omitempty"`
+	// Careers holds the value of the careers edge.
+	Careers *Careers `json:"careers,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -91,6 +93,17 @@ func (e ProfessorEdges) SubjectsOrErr() ([]*Subject, error) {
 	return nil, &NotLoadedError{edge: "subjects"}
 }
 
+// CareersOrErr returns the Careers value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ProfessorEdges) CareersOrErr() (*Careers, error) {
+	if e.Careers != nil {
+		return e.Careers, nil
+	} else if e.loadedTypes[4] {
+		return nil, &NotFoundError{label: careers.Label}
+	}
+	return nil, &NotLoadedError{edge: "careers"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Professor) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -104,11 +117,9 @@ func (*Professor) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case professor.ForeignKeys[0]: // careers_leader
 			values[i] = new(sql.NullInt64)
-		case professor.ForeignKeys[1]: // note_professor
+		case professor.ForeignKeys[1]: // professor_user
 			values[i] = new(sql.NullInt64)
-		case professor.ForeignKeys[2]: // professor_user
-			values[i] = new(sql.NullInt64)
-		case professor.ForeignKeys[3]: // professor_subordinates
+		case professor.ForeignKeys[2]: // professor_subordinates
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -164,19 +175,12 @@ func (pr *Professor) assignValues(columns []string, values []any) error {
 			}
 		case professor.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field note_professor", value)
-			} else if value.Valid {
-				pr.note_professor = new(int)
-				*pr.note_professor = int(value.Int64)
-			}
-		case professor.ForeignKeys[2]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field professor_user", value)
 			} else if value.Valid {
 				pr.professor_user = new(int)
 				*pr.professor_user = int(value.Int64)
 			}
-		case professor.ForeignKeys[3]:
+		case professor.ForeignKeys[2]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field professor_subordinates", value)
 			} else if value.Valid {
@@ -214,6 +218,11 @@ func (pr *Professor) QuerySubordinates() *ProfessorQuery {
 // QuerySubjects queries the "subjects" edge of the Professor entity.
 func (pr *Professor) QuerySubjects() *SubjectQuery {
 	return NewProfessorClient(pr.config).QuerySubjects(pr)
+}
+
+// QueryCareers queries the "careers" edge of the Professor entity.
+func (pr *Professor) QueryCareers() *CareersQuery {
+	return NewProfessorClient(pr.config).QueryCareers(pr)
 }
 
 // Update returns a builder for updating this Professor.

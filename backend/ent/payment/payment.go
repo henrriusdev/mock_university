@@ -30,13 +30,11 @@ const (
 	EdgePaymentMethod = "payment_method"
 	// Table holds the table name of the payment in the database.
 	Table = "payments"
-	// StudentTable is the table that holds the student relation/edge.
-	StudentTable = "students"
+	// StudentTable is the table that holds the student relation/edge. The primary key declared below.
+	StudentTable = "payment_student"
 	// StudentInverseTable is the table name for the Student entity.
 	// It exists in this package in order to avoid circular dependency with the "student" package.
 	StudentInverseTable = "students"
-	// StudentColumn is the table column denoting the student relation/edge.
-	StudentColumn = "payment_student"
 	// CycleTable is the table that holds the cycle relation/edge.
 	CycleTable = "cycles"
 	// CycleInverseTable is the table name for the Cycle entity.
@@ -62,6 +60,12 @@ var Columns = []string{
 	FieldDescription,
 	FieldFeeNumber,
 }
+
+var (
+	// StudentPrimaryKey and StudentColumn2 are the table columns denoting the
+	// primary key for the student relation (M2M).
+	StudentPrimaryKey = []string{"payment_id", "student_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -162,7 +166,7 @@ func newStudentStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(StudentInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, StudentTable, StudentColumn),
+		sqlgraph.Edge(sqlgraph.M2M, false, StudentTable, StudentPrimaryKey...),
 	)
 }
 func newCycleStep() *sqlgraph.Step {

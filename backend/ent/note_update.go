@@ -9,7 +9,6 @@ import (
 	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/note"
 	"mocku/backend/ent/predicate"
-	"mocku/backend/ent/professor"
 	"mocku/backend/ent/student"
 	"mocku/backend/ent/subject"
 
@@ -92,21 +91,6 @@ func (nu *NoteUpdate) AddStudent(s ...*Student) *NoteUpdate {
 	return nu.AddStudentIDs(ids...)
 }
 
-// AddProfessorIDs adds the "professor" edge to the Professor entity by IDs.
-func (nu *NoteUpdate) AddProfessorIDs(ids ...int) *NoteUpdate {
-	nu.mutation.AddProfessorIDs(ids...)
-	return nu
-}
-
-// AddProfessor adds the "professor" edges to the Professor entity.
-func (nu *NoteUpdate) AddProfessor(p ...*Professor) *NoteUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return nu.AddProfessorIDs(ids...)
-}
-
 // AddSubjectIDs adds the "subject" edge to the Subject entity by IDs.
 func (nu *NoteUpdate) AddSubjectIDs(ids ...int) *NoteUpdate {
 	nu.mutation.AddSubjectIDs(ids...)
@@ -161,27 +145,6 @@ func (nu *NoteUpdate) RemoveStudent(s ...*Student) *NoteUpdate {
 		ids[i] = s[i].ID
 	}
 	return nu.RemoveStudentIDs(ids...)
-}
-
-// ClearProfessor clears all "professor" edges to the Professor entity.
-func (nu *NoteUpdate) ClearProfessor() *NoteUpdate {
-	nu.mutation.ClearProfessor()
-	return nu
-}
-
-// RemoveProfessorIDs removes the "professor" edge to Professor entities by IDs.
-func (nu *NoteUpdate) RemoveProfessorIDs(ids ...int) *NoteUpdate {
-	nu.mutation.RemoveProfessorIDs(ids...)
-	return nu
-}
-
-// RemoveProfessor removes "professor" edges to Professor entities.
-func (nu *NoteUpdate) RemoveProfessor(p ...*Professor) *NoteUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return nu.RemoveProfessorIDs(ids...)
 }
 
 // ClearSubject clears all "subject" edges to the Subject entity.
@@ -284,10 +247,10 @@ func (nu *NoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nu.mutation.StudentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: []string{note.StudentColumn},
+			Columns: note.StudentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -297,10 +260,10 @@ func (nu *NoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := nu.mutation.RemovedStudentIDs(); len(nodes) > 0 && !nu.mutation.StudentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: []string{note.StudentColumn},
+			Columns: note.StudentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -313,10 +276,10 @@ func (nu *NoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := nu.mutation.StudentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: []string{note.StudentColumn},
+			Columns: note.StudentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -327,57 +290,12 @@ func (nu *NoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if nu.mutation.ProfessorCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   note.ProfessorTable,
-			Columns: []string{note.ProfessorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nu.mutation.RemovedProfessorIDs(); len(nodes) > 0 && !nu.mutation.ProfessorCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   note.ProfessorTable,
-			Columns: []string{note.ProfessorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nu.mutation.ProfessorIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   note.ProfessorTable,
-			Columns: []string{note.ProfessorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if nu.mutation.SubjectCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: []string{note.SubjectColumn},
+			Columns: note.SubjectPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -387,10 +305,10 @@ func (nu *NoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := nu.mutation.RemovedSubjectIDs(); len(nodes) > 0 && !nu.mutation.SubjectCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: []string{note.SubjectColumn},
+			Columns: note.SubjectPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -403,10 +321,10 @@ func (nu *NoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := nu.mutation.SubjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: []string{note.SubjectColumn},
+			Columns: note.SubjectPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -542,21 +460,6 @@ func (nuo *NoteUpdateOne) AddStudent(s ...*Student) *NoteUpdateOne {
 	return nuo.AddStudentIDs(ids...)
 }
 
-// AddProfessorIDs adds the "professor" edge to the Professor entity by IDs.
-func (nuo *NoteUpdateOne) AddProfessorIDs(ids ...int) *NoteUpdateOne {
-	nuo.mutation.AddProfessorIDs(ids...)
-	return nuo
-}
-
-// AddProfessor adds the "professor" edges to the Professor entity.
-func (nuo *NoteUpdateOne) AddProfessor(p ...*Professor) *NoteUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return nuo.AddProfessorIDs(ids...)
-}
-
 // AddSubjectIDs adds the "subject" edge to the Subject entity by IDs.
 func (nuo *NoteUpdateOne) AddSubjectIDs(ids ...int) *NoteUpdateOne {
 	nuo.mutation.AddSubjectIDs(ids...)
@@ -611,27 +514,6 @@ func (nuo *NoteUpdateOne) RemoveStudent(s ...*Student) *NoteUpdateOne {
 		ids[i] = s[i].ID
 	}
 	return nuo.RemoveStudentIDs(ids...)
-}
-
-// ClearProfessor clears all "professor" edges to the Professor entity.
-func (nuo *NoteUpdateOne) ClearProfessor() *NoteUpdateOne {
-	nuo.mutation.ClearProfessor()
-	return nuo
-}
-
-// RemoveProfessorIDs removes the "professor" edge to Professor entities by IDs.
-func (nuo *NoteUpdateOne) RemoveProfessorIDs(ids ...int) *NoteUpdateOne {
-	nuo.mutation.RemoveProfessorIDs(ids...)
-	return nuo
-}
-
-// RemoveProfessor removes "professor" edges to Professor entities.
-func (nuo *NoteUpdateOne) RemoveProfessor(p ...*Professor) *NoteUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return nuo.RemoveProfessorIDs(ids...)
 }
 
 // ClearSubject clears all "subject" edges to the Subject entity.
@@ -764,10 +646,10 @@ func (nuo *NoteUpdateOne) sqlSave(ctx context.Context) (_node *Note, err error) 
 	}
 	if nuo.mutation.StudentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: []string{note.StudentColumn},
+			Columns: note.StudentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -777,10 +659,10 @@ func (nuo *NoteUpdateOne) sqlSave(ctx context.Context) (_node *Note, err error) 
 	}
 	if nodes := nuo.mutation.RemovedStudentIDs(); len(nodes) > 0 && !nuo.mutation.StudentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: []string{note.StudentColumn},
+			Columns: note.StudentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -793,10 +675,10 @@ func (nuo *NoteUpdateOne) sqlSave(ctx context.Context) (_node *Note, err error) 
 	}
 	if nodes := nuo.mutation.StudentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: []string{note.StudentColumn},
+			Columns: note.StudentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -807,57 +689,12 @@ func (nuo *NoteUpdateOne) sqlSave(ctx context.Context) (_node *Note, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if nuo.mutation.ProfessorCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   note.ProfessorTable,
-			Columns: []string{note.ProfessorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nuo.mutation.RemovedProfessorIDs(); len(nodes) > 0 && !nuo.mutation.ProfessorCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   note.ProfessorTable,
-			Columns: []string{note.ProfessorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nuo.mutation.ProfessorIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   note.ProfessorTable,
-			Columns: []string{note.ProfessorColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if nuo.mutation.SubjectCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: []string{note.SubjectColumn},
+			Columns: note.SubjectPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -867,10 +704,10 @@ func (nuo *NoteUpdateOne) sqlSave(ctx context.Context) (_node *Note, err error) 
 	}
 	if nodes := nuo.mutation.RemovedSubjectIDs(); len(nodes) > 0 && !nuo.mutation.SubjectCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: []string{note.SubjectColumn},
+			Columns: note.SubjectPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -883,10 +720,10 @@ func (nuo *NoteUpdateOne) sqlSave(ctx context.Context) (_node *Note, err error) 
 	}
 	if nodes := nuo.mutation.SubjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: []string{note.SubjectColumn},
+			Columns: note.SubjectPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
