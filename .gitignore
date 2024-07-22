@@ -3,3 +3,7 @@
 /public/
 /.idea/
 /.env
+/.pnp.loader.mjs
+/.yarn/
+/.pnp.cjs
+/tmp/
