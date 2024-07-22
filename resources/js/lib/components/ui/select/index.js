@@ -9,16 +9,6 @@ const Group = SelectPrimitive.Group;
 const Input = SelectPrimitive.Input;
 const Value = SelectPrimitive.Value;
 export {
-	Root,
-	Group,
-	Input,
-	Label,
-	Item,
-	Value,
-	Content,
-	Trigger,
-	Separator,
-	//
 	Root as Select,
 	Group as SelectGroup,
 	Input as SelectInput,

@@ -1,5 +1,5 @@
 <script>
-    import {Menubar, Trigger, Content, Menu, Item, Separator, Sub, SubContent, SubTrigger} from '$lib/components/ui/menubar/index.js';
+    import {Menubar, MenubarTrigger, MenubarContent, MenubarMenu, MenubarItem, MenubarSeparator, MenubarSub, MenubarSubContent, MenubarSubTrigger} from '$lib/components/ui/menubar/index.js';
     import LightSwitch from "$lib/components/LightSwitch.svelte";
     import {ChevronRight} from "lucide-svelte";
     export let careers = [];
@@ -11,59 +11,59 @@
         <a href="/" class="">Mock University</a>
     </h1>
     <Menubar>
-        <Menu>
-            <Trigger>Careers</Trigger>
-            <Content>
+        <MenubarMenu>
+            <MenubarTrigger>Careers</MenubarTrigger>
+            <MenubarContent>
                 {#if careers.length === 0}
-                    <Item>No careers available</Item>
+                    <MenubarItem>No careers available</MenubarItem>
                 {:else}
                     {#each careers as career}
-                        <Item>{career.name}</Item>
+                        <MenubarItem>{career.name}</MenubarItem>
                     {/each}
                 {/if}
-            </Content>
-        </Menu>
-        <Menu>
-            <Trigger>About</Trigger>
-            <Content>
-                <Item>
+            </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+            <MenubarTrigger>About</MenubarTrigger>
+            <MenubarContent>
+                <MenubarItem>
                     About <span class="text-bold">MockU</span>
-                </Item>
-                <Item>
+                </MenubarItem>
+                <MenubarItem>
                     Mission & Vision
-                </Item>
-                <Separator/>
-                <Sub>
-                    <SubTrigger>More about us</SubTrigger>
-                    <SubContent>
-                        <Item>Our campuses</Item>
-                        <Separator/>
-                        <Item>The Student Community</Item>
-                        <Item>The Teacher Community</Item>
-                        <Item>Admissions</Item>
-                    </SubContent>
-                </Sub>
-            </Content>
-        </Menu>
-        <Menu>
-            <Trigger>Contact</Trigger>
-            <Content>
-                <Item inset>WhatsApp</Item>
-                <Separator/>
-                <Item inset>Facebook</Item>
-                <Item inset>Twitter</Item>
-                <Item inset>Instagram</Item>
-                <Separator/>
-                <Item inset>Contact page</Item>
-            </Content>
-        </Menu>
-        <Menu>
-            <Trigger class="bg-default">
+                </MenubarItem>
+                <MenubarSeparator/>
+                <MenubarSub>
+                    <MenubarSubTrigger>More about us</MenubarSubTrigger>
+                    <MenubarSubContent>
+                        <MenubarItem>Our campuses</MenubarItem>
+                        <MenubarSeparator/>
+                        <MenubarItem>The Student Community</MenubarItem>
+                        <MenubarItem>The Teacher Community</MenubarItem>
+                        <MenubarItem>Admissions</MenubarItem>
+                    </MenubarSubContent>
+                </MenubarSub>
+            </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+            <MenubarTrigger>Contact</MenubarTrigger>
+            <MenubarContent>
+                <MenubarItem inset>WhatsApp</MenubarItem>
+                <MenubarSeparator/>
+                <MenubarItem inset>Facebook</MenubarItem>
+                <MenubarItem inset>Twitter</MenubarItem>
+                <MenubarItem inset>Instagram</MenubarItem>
+                <MenubarSeparator/>
+                <MenubarItem inset>Contact page</MenubarItem>
+            </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+            <MenubarTrigger class="bg-default">
                 <a href="/login" class="text-white flex justify-center gap-x-2 items-center">
                     Login <ChevronRight class="w-4 h-4"/>
                 </a>
-            </Trigger>
-        </Menu>
+            </MenubarTrigger>
+        </MenubarMenu>
         <LightSwitch/>
     </Menubar>
 </div>

@@ -15,22 +15,6 @@ const Group = MenubarPrimitive.Group;
 const Sub = MenubarPrimitive.Sub;
 const RadioGroup = MenubarPrimitive.RadioGroup;
 export {
-	Root,
-	CheckboxItem,
-	Content,
-	Item,
-	Label,
-	RadioItem,
-	Separator,
-	Shortcut,
-	SubContent,
-	SubTrigger,
-	Trigger,
-	Menu,
-	Group,
-	Sub,
-	RadioGroup,
-	//
 	Root as Menubar,
 	CheckboxItem as MenubarCheckboxItem,
 	Content as MenubarContent,

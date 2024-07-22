@@ -10,17 +10,6 @@ const Root = DialogPrimitive.Root;
 const Trigger = DialogPrimitive.Trigger;
 const Close = DialogPrimitive.Close;
 export {
-	Root,
-	Title,
-	Portal,
-	Footer,
-	Header,
-	Trigger,
-	Overlay,
-	Content,
-	Description,
-	Close,
-	//
 	Root as Dialog,
 	Title as DialogTitle,
 	Portal as DialogPortal,

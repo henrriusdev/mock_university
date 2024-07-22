@@ -10,17 +10,6 @@ import Separator from "./command-separator.svelte";
 import Shortcut from "./command-shortcut.svelte";
 const Loading = CommandPrimitive.Loading;
 export {
-	Root,
-	Dialog,
-	Empty,
-	Group,
-	Item,
-	Input,
-	List,
-	Separator,
-	Shortcut,
-	Loading,
-	//
 	Root as Command,
 	Dialog as CommandDialog,
 	Empty as CommandEmpty,
