@@ -16,7 +16,7 @@ type Users struct {
 func (Users) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("username").NotEmpty().MaxLen(30).Unique(),
-		field.String("password").Sensitive().NotEmpty().MaxLen(30),
+		field.String("password").Sensitive().NotEmpty().MaxLen(200),
 		field.String("email").NotEmpty().MaxLen(100).Unique(),
 		field.String("name").NotEmpty().MaxLen(100),
 		field.String("avatar").MaxLen(255),

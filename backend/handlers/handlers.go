@@ -65,14 +65,24 @@ func (h *Handler) LoginPostHandler(i *inertia.Inertia) http.Handler {
 			return
 		}
 
+		var view string
 		if utils.CheckPassword(user.Password, formData.Password) {
 			role := user.Edges.Role.ID
-			if role == 1 {
-				http.Redirect(w, r, "/admin", http.StatusSeeOther)
-			} else {
-				http.Redirect(w, r, "/home", http.StatusSeeOther)
+			switch role {
+			case 1:
+				view = "Admin/Index"
+			case 2:
+				view = "Payments/Index"
+			case 3:
+				view = "Control/Index"
+			case 4, 5:
+				view = "Professor/Index"
+			case 6:
+				view = "Student/Index"
 			}
 		}
+
+		println(view)
 
 		careers, err := h.DB.Careers.Query().All(r.Context())
 		err = i.Render(w, r, "Auth/Login", inertia.Props{

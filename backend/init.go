@@ -5,6 +5,7 @@ import (
 	"fmt"
 	inertia "github.com/romsar/gonertia"
 	"log"
+	"mocku/backend/database"
 	"mocku/backend/ent"
 	"mocku/backend/handlers"
 	"mocku/backend/utils"
@@ -40,6 +41,15 @@ func initDatabase() *ent.Client {
 
 	if err := client.Schema.Create(context.Background()); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)
+	}
+
+	if err := database.InsertDefaultRoles(context.Background(), client); err != nil {
+		log.Fatalf("failed inserting default roles: %v", err)
+	}
+
+	// Insert default users if they don't exist.
+	if err := database.InsertDefaultUsers(context.Background(), client); err != nil {
+		log.Fatalf("failed inserting default users: %v", err)
 	}
 
 	return client
