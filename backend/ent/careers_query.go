@@ -77,7 +77,7 @@ func (cq *CareersQuery) QueryLeader() *ProfessorQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(careers.Table, careers.FieldID, selector),
 			sqlgraph.To(professor.Table, professor.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, careers.LeaderTable, careers.LeaderColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, careers.LeaderTable, careers.LeaderColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
 		return fromU, nil
@@ -99,7 +99,7 @@ func (cq *CareersQuery) QueryStudents() *StudentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(careers.Table, careers.FieldID, selector),
 			sqlgraph.To(student.Table, student.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, careers.StudentsTable, careers.StudentsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, careers.StudentsTable, careers.StudentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
 		return fromU, nil
@@ -413,6 +413,9 @@ func (cq *CareersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Care
 			cq.withStudents != nil,
 		}
 	)
+	if cq.withLeader != nil {
+		withFKs = true
+	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, careers.ForeignKeys...)
 	}
@@ -435,9 +438,8 @@ func (cq *CareersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Care
 		return nodes, nil
 	}
 	if query := cq.withLeader; query != nil {
-		if err := cq.loadLeader(ctx, query, nodes,
-			func(n *Careers) { n.Edges.Leader = []*Professor{} },
-			func(n *Careers, e *Professor) { n.Edges.Leader = append(n.Edges.Leader, e) }); err != nil {
+		if err := cq.loadLeader(ctx, query, nodes, nil,
+			func(n *Careers, e *Professor) { n.Edges.Leader = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -452,6 +454,38 @@ func (cq *CareersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Care
 }
 
 func (cq *CareersQuery) loadLeader(ctx context.Context, query *ProfessorQuery, nodes []*Careers, init func(*Careers), assign func(*Careers, *Professor)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Careers)
+	for i := range nodes {
+		if nodes[i].careers_leader == nil {
+			continue
+		}
+		fk := *nodes[i].careers_leader
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(professor.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "careers_leader" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (cq *CareersQuery) loadStudents(ctx context.Context, query *StudentQuery, nodes []*Careers, init func(*Careers), assign func(*Careers, *Student)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Careers)
 	for i := range nodes {
@@ -462,84 +496,23 @@ func (cq *CareersQuery) loadLeader(ctx context.Context, query *ProfessorQuery, n
 		}
 	}
 	query.withFKs = true
-	query.Where(predicate.Professor(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(careers.LeaderColumn), fks...))
+	query.Where(predicate.Student(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(careers.StudentsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.careers_leader
+		fk := n.student_career
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "careers_leader" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "student_career" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "careers_leader" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "student_career" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
-	}
-	return nil
-}
-func (cq *CareersQuery) loadStudents(ctx context.Context, query *StudentQuery, nodes []*Careers, init func(*Careers), assign func(*Careers, *Student)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Careers)
-	nids := make(map[int]map[*Careers]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(careers.StudentsTable)
-		s.Join(joinT).On(s.C(student.FieldID), joinT.C(careers.StudentsPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(careers.StudentsPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(careers.StudentsPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Careers]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Student](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "students" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
 	}
 	return nil
 }

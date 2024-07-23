@@ -199,7 +199,7 @@ func HasLeader() predicate.Careers {
 	return predicate.Careers(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, LeaderTable, LeaderColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, LeaderTable, LeaderColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -222,7 +222,7 @@ func HasStudents() predicate.Careers {
 	return predicate.Careers(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, StudentsTable, StudentsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, StudentsTable, StudentsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

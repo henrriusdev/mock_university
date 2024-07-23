@@ -470,7 +470,7 @@ func HasRole() predicate.Users {
 	return predicate.Users(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, RoleTable, RolePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, RoleTable, RoleColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -493,7 +493,7 @@ func HasRequestsMade() predicate.Users {
 	return predicate.Users(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, RequestsMadeTable, RequestsMadePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, RequestsMadeTable, RequestsMadeColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -516,7 +516,7 @@ func HasRequestsReceived() predicate.Users {
 	return predicate.Users(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, RequestsReceivedTable, RequestsReceivedPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, RequestsReceivedTable, RequestsReceivedColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -562,7 +562,7 @@ func HasNotifications() predicate.Users {
 	return predicate.Users(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, NotificationsTable, NotificationsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, NotificationsTable, NotificationsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -585,7 +585,7 @@ func HasActivity() predicate.Users {
 	return predicate.Users(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ActivityTable, ActivityPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, ActivityTable, ActivityColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

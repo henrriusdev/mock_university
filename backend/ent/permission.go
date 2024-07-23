@@ -24,7 +24,7 @@ type Permission struct {
 	Read bool `json:"read,omitempty"`
 	// Create holds the value of the "create" field.
 	Create bool `json:"create,omitempty"`
-	// Updated holds the value of the "update" field.
+	// Update holds the value of the "update" field.
 	Updated bool `json:"update,omitempty"`
 	// Delete holds the value of the "delete" field.
 	Delete bool `json:"delete,omitempty"`

@@ -105,34 +105,42 @@ func (ru *RequestUpdate) SetUpdatedAt(t time.Time) *RequestUpdate {
 	return ru
 }
 
-// AddRequesterIDs adds the "requester" edge to the Users entity by IDs.
-func (ru *RequestUpdate) AddRequesterIDs(ids ...int) *RequestUpdate {
-	ru.mutation.AddRequesterIDs(ids...)
+// SetRequesterID sets the "requester" edge to the Users entity by ID.
+func (ru *RequestUpdate) SetRequesterID(id int) *RequestUpdate {
+	ru.mutation.SetRequesterID(id)
 	return ru
 }
 
-// AddRequester adds the "requester" edges to the Users entity.
-func (ru *RequestUpdate) AddRequester(u ...*Users) *RequestUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetNillableRequesterID sets the "requester" edge to the Users entity by ID if the given value is not nil.
+func (ru *RequestUpdate) SetNillableRequesterID(id *int) *RequestUpdate {
+	if id != nil {
+		ru = ru.SetRequesterID(*id)
 	}
-	return ru.AddRequesterIDs(ids...)
-}
-
-// AddReceiverIDs adds the "receiver" edge to the Users entity by IDs.
-func (ru *RequestUpdate) AddReceiverIDs(ids ...int) *RequestUpdate {
-	ru.mutation.AddReceiverIDs(ids...)
 	return ru
 }
 
-// AddReceiver adds the "receiver" edges to the Users entity.
-func (ru *RequestUpdate) AddReceiver(u ...*Users) *RequestUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetRequester sets the "requester" edge to the Users entity.
+func (ru *RequestUpdate) SetRequester(u *Users) *RequestUpdate {
+	return ru.SetRequesterID(u.ID)
+}
+
+// SetReceiverID sets the "receiver" edge to the Users entity by ID.
+func (ru *RequestUpdate) SetReceiverID(id int) *RequestUpdate {
+	ru.mutation.SetReceiverID(id)
+	return ru
+}
+
+// SetNillableReceiverID sets the "receiver" edge to the Users entity by ID if the given value is not nil.
+func (ru *RequestUpdate) SetNillableReceiverID(id *int) *RequestUpdate {
+	if id != nil {
+		ru = ru.SetReceiverID(*id)
 	}
-	return ru.AddReceiverIDs(ids...)
+	return ru
+}
+
+// SetReceiver sets the "receiver" edge to the Users entity.
+func (ru *RequestUpdate) SetReceiver(u *Users) *RequestUpdate {
+	return ru.SetReceiverID(u.ID)
 }
 
 // Mutation returns the RequestMutation object of the builder.
@@ -140,46 +148,16 @@ func (ru *RequestUpdate) Mutation() *RequestMutation {
 	return ru.mutation
 }
 
-// ClearRequester clears all "requester" edges to the Users entity.
+// ClearRequester clears the "requester" edge to the Users entity.
 func (ru *RequestUpdate) ClearRequester() *RequestUpdate {
 	ru.mutation.ClearRequester()
 	return ru
 }
 
-// RemoveRequesterIDs removes the "requester" edge to Users entities by IDs.
-func (ru *RequestUpdate) RemoveRequesterIDs(ids ...int) *RequestUpdate {
-	ru.mutation.RemoveRequesterIDs(ids...)
-	return ru
-}
-
-// RemoveRequester removes "requester" edges to Users entities.
-func (ru *RequestUpdate) RemoveRequester(u ...*Users) *RequestUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return ru.RemoveRequesterIDs(ids...)
-}
-
-// ClearReceiver clears all "receiver" edges to the Users entity.
+// ClearReceiver clears the "receiver" edge to the Users entity.
 func (ru *RequestUpdate) ClearReceiver() *RequestUpdate {
 	ru.mutation.ClearReceiver()
 	return ru
-}
-
-// RemoveReceiverIDs removes the "receiver" edge to Users entities by IDs.
-func (ru *RequestUpdate) RemoveReceiverIDs(ids ...int) *RequestUpdate {
-	ru.mutation.RemoveReceiverIDs(ids...)
-	return ru
-}
-
-// RemoveReceiver removes "receiver" edges to Users entities.
-func (ru *RequestUpdate) RemoveReceiver(u ...*Users) *RequestUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return ru.RemoveReceiverIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -270,39 +248,23 @@ func (ru *RequestUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if ru.mutation.RequesterCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   request.RequesterTable,
-			Columns: request.RequesterPrimaryKey,
+			Columns: []string{request.RequesterColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.RemovedRequesterIDs(); len(nodes) > 0 && !ru.mutation.RequesterCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   request.RequesterTable,
-			Columns: request.RequesterPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ru.mutation.RequesterIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   request.RequesterTable,
-			Columns: request.RequesterPrimaryKey,
+			Columns: []string{request.RequesterColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
@@ -315,39 +277,23 @@ func (ru *RequestUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if ru.mutation.ReceiverCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   request.ReceiverTable,
-			Columns: request.ReceiverPrimaryKey,
+			Columns: []string{request.ReceiverColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.RemovedReceiverIDs(); len(nodes) > 0 && !ru.mutation.ReceiverCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   request.ReceiverTable,
-			Columns: request.ReceiverPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ru.mutation.ReceiverIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   request.ReceiverTable,
-			Columns: request.ReceiverPrimaryKey,
+			Columns: []string{request.ReceiverColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
@@ -454,34 +400,42 @@ func (ruo *RequestUpdateOne) SetUpdatedAt(t time.Time) *RequestUpdateOne {
 	return ruo
 }
 
-// AddRequesterIDs adds the "requester" edge to the Users entity by IDs.
-func (ruo *RequestUpdateOne) AddRequesterIDs(ids ...int) *RequestUpdateOne {
-	ruo.mutation.AddRequesterIDs(ids...)
+// SetRequesterID sets the "requester" edge to the Users entity by ID.
+func (ruo *RequestUpdateOne) SetRequesterID(id int) *RequestUpdateOne {
+	ruo.mutation.SetRequesterID(id)
 	return ruo
 }
 
-// AddRequester adds the "requester" edges to the Users entity.
-func (ruo *RequestUpdateOne) AddRequester(u ...*Users) *RequestUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetNillableRequesterID sets the "requester" edge to the Users entity by ID if the given value is not nil.
+func (ruo *RequestUpdateOne) SetNillableRequesterID(id *int) *RequestUpdateOne {
+	if id != nil {
+		ruo = ruo.SetRequesterID(*id)
 	}
-	return ruo.AddRequesterIDs(ids...)
-}
-
-// AddReceiverIDs adds the "receiver" edge to the Users entity by IDs.
-func (ruo *RequestUpdateOne) AddReceiverIDs(ids ...int) *RequestUpdateOne {
-	ruo.mutation.AddReceiverIDs(ids...)
 	return ruo
 }
 
-// AddReceiver adds the "receiver" edges to the Users entity.
-func (ruo *RequestUpdateOne) AddReceiver(u ...*Users) *RequestUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetRequester sets the "requester" edge to the Users entity.
+func (ruo *RequestUpdateOne) SetRequester(u *Users) *RequestUpdateOne {
+	return ruo.SetRequesterID(u.ID)
+}
+
+// SetReceiverID sets the "receiver" edge to the Users entity by ID.
+func (ruo *RequestUpdateOne) SetReceiverID(id int) *RequestUpdateOne {
+	ruo.mutation.SetReceiverID(id)
+	return ruo
+}
+
+// SetNillableReceiverID sets the "receiver" edge to the Users entity by ID if the given value is not nil.
+func (ruo *RequestUpdateOne) SetNillableReceiverID(id *int) *RequestUpdateOne {
+	if id != nil {
+		ruo = ruo.SetReceiverID(*id)
 	}
-	return ruo.AddReceiverIDs(ids...)
+	return ruo
+}
+
+// SetReceiver sets the "receiver" edge to the Users entity.
+func (ruo *RequestUpdateOne) SetReceiver(u *Users) *RequestUpdateOne {
+	return ruo.SetReceiverID(u.ID)
 }
 
 // Mutation returns the RequestMutation object of the builder.
@@ -489,46 +443,16 @@ func (ruo *RequestUpdateOne) Mutation() *RequestMutation {
 	return ruo.mutation
 }
 
-// ClearRequester clears all "requester" edges to the Users entity.
+// ClearRequester clears the "requester" edge to the Users entity.
 func (ruo *RequestUpdateOne) ClearRequester() *RequestUpdateOne {
 	ruo.mutation.ClearRequester()
 	return ruo
 }
 
-// RemoveRequesterIDs removes the "requester" edge to Users entities by IDs.
-func (ruo *RequestUpdateOne) RemoveRequesterIDs(ids ...int) *RequestUpdateOne {
-	ruo.mutation.RemoveRequesterIDs(ids...)
-	return ruo
-}
-
-// RemoveRequester removes "requester" edges to Users entities.
-func (ruo *RequestUpdateOne) RemoveRequester(u ...*Users) *RequestUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return ruo.RemoveRequesterIDs(ids...)
-}
-
-// ClearReceiver clears all "receiver" edges to the Users entity.
+// ClearReceiver clears the "receiver" edge to the Users entity.
 func (ruo *RequestUpdateOne) ClearReceiver() *RequestUpdateOne {
 	ruo.mutation.ClearReceiver()
 	return ruo
-}
-
-// RemoveReceiverIDs removes the "receiver" edge to Users entities by IDs.
-func (ruo *RequestUpdateOne) RemoveReceiverIDs(ids ...int) *RequestUpdateOne {
-	ruo.mutation.RemoveReceiverIDs(ids...)
-	return ruo
-}
-
-// RemoveReceiver removes "receiver" edges to Users entities.
-func (ruo *RequestUpdateOne) RemoveReceiver(u ...*Users) *RequestUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return ruo.RemoveReceiverIDs(ids...)
 }
 
 // Where appends a list predicates to the RequestUpdate builder.
@@ -649,39 +573,23 @@ func (ruo *RequestUpdateOne) sqlSave(ctx context.Context) (_node *Request, err e
 	}
 	if ruo.mutation.RequesterCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   request.RequesterTable,
-			Columns: request.RequesterPrimaryKey,
+			Columns: []string{request.RequesterColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.RemovedRequesterIDs(); len(nodes) > 0 && !ruo.mutation.RequesterCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   request.RequesterTable,
-			Columns: request.RequesterPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ruo.mutation.RequesterIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   request.RequesterTable,
-			Columns: request.RequesterPrimaryKey,
+			Columns: []string{request.RequesterColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
@@ -694,39 +602,23 @@ func (ruo *RequestUpdateOne) sqlSave(ctx context.Context) (_node *Request, err e
 	}
 	if ruo.mutation.ReceiverCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   request.ReceiverTable,
-			Columns: request.ReceiverPrimaryKey,
+			Columns: []string{request.ReceiverColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.RemovedReceiverIDs(); len(nodes) > 0 && !ruo.mutation.ReceiverCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   request.ReceiverTable,
-			Columns: request.ReceiverPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ruo.mutation.ReceiverIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   request.ReceiverTable,
-			Columns: request.ReceiverPrimaryKey,
+			Columns: []string{request.ReceiverColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),

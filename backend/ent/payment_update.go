@@ -115,49 +115,61 @@ func (pu *PaymentUpdate) AddFeeNumber(i int) *PaymentUpdate {
 	return pu
 }
 
-// AddStudentIDs adds the "student" edge to the Student entity by IDs.
-func (pu *PaymentUpdate) AddStudentIDs(ids ...int) *PaymentUpdate {
-	pu.mutation.AddStudentIDs(ids...)
+// SetStudentID sets the "student" edge to the Student entity by ID.
+func (pu *PaymentUpdate) SetStudentID(id int) *PaymentUpdate {
+	pu.mutation.SetStudentID(id)
 	return pu
 }
 
-// AddStudent adds the "student" edges to the Student entity.
-func (pu *PaymentUpdate) AddStudent(s ...*Student) *PaymentUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// SetNillableStudentID sets the "student" edge to the Student entity by ID if the given value is not nil.
+func (pu *PaymentUpdate) SetNillableStudentID(id *int) *PaymentUpdate {
+	if id != nil {
+		pu = pu.SetStudentID(*id)
 	}
-	return pu.AddStudentIDs(ids...)
-}
-
-// AddCycleIDs adds the "cycle" edge to the Cycle entity by IDs.
-func (pu *PaymentUpdate) AddCycleIDs(ids ...int) *PaymentUpdate {
-	pu.mutation.AddCycleIDs(ids...)
 	return pu
 }
 
-// AddCycle adds the "cycle" edges to the Cycle entity.
-func (pu *PaymentUpdate) AddCycle(c ...*Cycle) *PaymentUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return pu.AddCycleIDs(ids...)
+// SetStudent sets the "student" edge to the Student entity.
+func (pu *PaymentUpdate) SetStudent(s *Student) *PaymentUpdate {
+	return pu.SetStudentID(s.ID)
 }
 
-// AddPaymentMethodIDs adds the "payment_method" edge to the PaymentMethod entity by IDs.
-func (pu *PaymentUpdate) AddPaymentMethodIDs(ids ...int) *PaymentUpdate {
-	pu.mutation.AddPaymentMethodIDs(ids...)
+// SetCycleID sets the "cycle" edge to the Cycle entity by ID.
+func (pu *PaymentUpdate) SetCycleID(id int) *PaymentUpdate {
+	pu.mutation.SetCycleID(id)
 	return pu
 }
 
-// AddPaymentMethod adds the "payment_method" edges to the PaymentMethod entity.
-func (pu *PaymentUpdate) AddPaymentMethod(p ...*PaymentMethod) *PaymentUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetNillableCycleID sets the "cycle" edge to the Cycle entity by ID if the given value is not nil.
+func (pu *PaymentUpdate) SetNillableCycleID(id *int) *PaymentUpdate {
+	if id != nil {
+		pu = pu.SetCycleID(*id)
 	}
-	return pu.AddPaymentMethodIDs(ids...)
+	return pu
+}
+
+// SetCycle sets the "cycle" edge to the Cycle entity.
+func (pu *PaymentUpdate) SetCycle(c *Cycle) *PaymentUpdate {
+	return pu.SetCycleID(c.ID)
+}
+
+// SetPaymentMethodID sets the "payment_method" edge to the PaymentMethod entity by ID.
+func (pu *PaymentUpdate) SetPaymentMethodID(id int) *PaymentUpdate {
+	pu.mutation.SetPaymentMethodID(id)
+	return pu
+}
+
+// SetNillablePaymentMethodID sets the "payment_method" edge to the PaymentMethod entity by ID if the given value is not nil.
+func (pu *PaymentUpdate) SetNillablePaymentMethodID(id *int) *PaymentUpdate {
+	if id != nil {
+		pu = pu.SetPaymentMethodID(*id)
+	}
+	return pu
+}
+
+// SetPaymentMethod sets the "payment_method" edge to the PaymentMethod entity.
+func (pu *PaymentUpdate) SetPaymentMethod(p *PaymentMethod) *PaymentUpdate {
+	return pu.SetPaymentMethodID(p.ID)
 }
 
 // Mutation returns the PaymentMutation object of the builder.
@@ -165,67 +177,22 @@ func (pu *PaymentUpdate) Mutation() *PaymentMutation {
 	return pu.mutation
 }
 
-// ClearStudent clears all "student" edges to the Student entity.
+// ClearStudent clears the "student" edge to the Student entity.
 func (pu *PaymentUpdate) ClearStudent() *PaymentUpdate {
 	pu.mutation.ClearStudent()
 	return pu
 }
 
-// RemoveStudentIDs removes the "student" edge to Student entities by IDs.
-func (pu *PaymentUpdate) RemoveStudentIDs(ids ...int) *PaymentUpdate {
-	pu.mutation.RemoveStudentIDs(ids...)
-	return pu
-}
-
-// RemoveStudent removes "student" edges to Student entities.
-func (pu *PaymentUpdate) RemoveStudent(s ...*Student) *PaymentUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return pu.RemoveStudentIDs(ids...)
-}
-
-// ClearCycle clears all "cycle" edges to the Cycle entity.
+// ClearCycle clears the "cycle" edge to the Cycle entity.
 func (pu *PaymentUpdate) ClearCycle() *PaymentUpdate {
 	pu.mutation.ClearCycle()
 	return pu
 }
 
-// RemoveCycleIDs removes the "cycle" edge to Cycle entities by IDs.
-func (pu *PaymentUpdate) RemoveCycleIDs(ids ...int) *PaymentUpdate {
-	pu.mutation.RemoveCycleIDs(ids...)
-	return pu
-}
-
-// RemoveCycle removes "cycle" edges to Cycle entities.
-func (pu *PaymentUpdate) RemoveCycle(c ...*Cycle) *PaymentUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return pu.RemoveCycleIDs(ids...)
-}
-
-// ClearPaymentMethod clears all "payment_method" edges to the PaymentMethod entity.
+// ClearPaymentMethod clears the "payment_method" edge to the PaymentMethod entity.
 func (pu *PaymentUpdate) ClearPaymentMethod() *PaymentUpdate {
 	pu.mutation.ClearPaymentMethod()
 	return pu
-}
-
-// RemovePaymentMethodIDs removes the "payment_method" edge to PaymentMethod entities by IDs.
-func (pu *PaymentUpdate) RemovePaymentMethodIDs(ids ...int) *PaymentUpdate {
-	pu.mutation.RemovePaymentMethodIDs(ids...)
-	return pu
-}
-
-// RemovePaymentMethod removes "payment_method" edges to PaymentMethod entities.
-func (pu *PaymentUpdate) RemovePaymentMethod(p ...*PaymentMethod) *PaymentUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return pu.RemovePaymentMethodIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -315,39 +282,23 @@ func (pu *PaymentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.StudentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.StudentTable,
-			Columns: payment.StudentPrimaryKey,
+			Columns: []string{payment.StudentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pu.mutation.RemovedStudentIDs(); len(nodes) > 0 && !pu.mutation.StudentCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   payment.StudentTable,
-			Columns: payment.StudentPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := pu.mutation.StudentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.StudentTable,
-			Columns: payment.StudentPrimaryKey,
+			Columns: []string{payment.StudentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -360,7 +311,7 @@ func (pu *PaymentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.CycleCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.CycleTable,
 			Columns: []string{payment.CycleColumn},
@@ -368,28 +319,12 @@ func (pu *PaymentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cycle.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pu.mutation.RemovedCycleIDs(); len(nodes) > 0 && !pu.mutation.CycleCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   payment.CycleTable,
-			Columns: []string{payment.CycleColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cycle.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := pu.mutation.CycleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.CycleTable,
 			Columns: []string{payment.CycleColumn},
@@ -405,7 +340,7 @@ func (pu *PaymentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.PaymentMethodCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.PaymentMethodTable,
 			Columns: []string{payment.PaymentMethodColumn},
@@ -413,28 +348,12 @@ func (pu *PaymentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paymentmethod.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pu.mutation.RemovedPaymentMethodIDs(); len(nodes) > 0 && !pu.mutation.PaymentMethodCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   payment.PaymentMethodTable,
-			Columns: []string{payment.PaymentMethodColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(paymentmethod.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := pu.mutation.PaymentMethodIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.PaymentMethodTable,
 			Columns: []string{payment.PaymentMethodColumn},
@@ -552,49 +471,61 @@ func (puo *PaymentUpdateOne) AddFeeNumber(i int) *PaymentUpdateOne {
 	return puo
 }
 
-// AddStudentIDs adds the "student" edge to the Student entity by IDs.
-func (puo *PaymentUpdateOne) AddStudentIDs(ids ...int) *PaymentUpdateOne {
-	puo.mutation.AddStudentIDs(ids...)
+// SetStudentID sets the "student" edge to the Student entity by ID.
+func (puo *PaymentUpdateOne) SetStudentID(id int) *PaymentUpdateOne {
+	puo.mutation.SetStudentID(id)
 	return puo
 }
 
-// AddStudent adds the "student" edges to the Student entity.
-func (puo *PaymentUpdateOne) AddStudent(s ...*Student) *PaymentUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// SetNillableStudentID sets the "student" edge to the Student entity by ID if the given value is not nil.
+func (puo *PaymentUpdateOne) SetNillableStudentID(id *int) *PaymentUpdateOne {
+	if id != nil {
+		puo = puo.SetStudentID(*id)
 	}
-	return puo.AddStudentIDs(ids...)
-}
-
-// AddCycleIDs adds the "cycle" edge to the Cycle entity by IDs.
-func (puo *PaymentUpdateOne) AddCycleIDs(ids ...int) *PaymentUpdateOne {
-	puo.mutation.AddCycleIDs(ids...)
 	return puo
 }
 
-// AddCycle adds the "cycle" edges to the Cycle entity.
-func (puo *PaymentUpdateOne) AddCycle(c ...*Cycle) *PaymentUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return puo.AddCycleIDs(ids...)
+// SetStudent sets the "student" edge to the Student entity.
+func (puo *PaymentUpdateOne) SetStudent(s *Student) *PaymentUpdateOne {
+	return puo.SetStudentID(s.ID)
 }
 
-// AddPaymentMethodIDs adds the "payment_method" edge to the PaymentMethod entity by IDs.
-func (puo *PaymentUpdateOne) AddPaymentMethodIDs(ids ...int) *PaymentUpdateOne {
-	puo.mutation.AddPaymentMethodIDs(ids...)
+// SetCycleID sets the "cycle" edge to the Cycle entity by ID.
+func (puo *PaymentUpdateOne) SetCycleID(id int) *PaymentUpdateOne {
+	puo.mutation.SetCycleID(id)
 	return puo
 }
 
-// AddPaymentMethod adds the "payment_method" edges to the PaymentMethod entity.
-func (puo *PaymentUpdateOne) AddPaymentMethod(p ...*PaymentMethod) *PaymentUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetNillableCycleID sets the "cycle" edge to the Cycle entity by ID if the given value is not nil.
+func (puo *PaymentUpdateOne) SetNillableCycleID(id *int) *PaymentUpdateOne {
+	if id != nil {
+		puo = puo.SetCycleID(*id)
 	}
-	return puo.AddPaymentMethodIDs(ids...)
+	return puo
+}
+
+// SetCycle sets the "cycle" edge to the Cycle entity.
+func (puo *PaymentUpdateOne) SetCycle(c *Cycle) *PaymentUpdateOne {
+	return puo.SetCycleID(c.ID)
+}
+
+// SetPaymentMethodID sets the "payment_method" edge to the PaymentMethod entity by ID.
+func (puo *PaymentUpdateOne) SetPaymentMethodID(id int) *PaymentUpdateOne {
+	puo.mutation.SetPaymentMethodID(id)
+	return puo
+}
+
+// SetNillablePaymentMethodID sets the "payment_method" edge to the PaymentMethod entity by ID if the given value is not nil.
+func (puo *PaymentUpdateOne) SetNillablePaymentMethodID(id *int) *PaymentUpdateOne {
+	if id != nil {
+		puo = puo.SetPaymentMethodID(*id)
+	}
+	return puo
+}
+
+// SetPaymentMethod sets the "payment_method" edge to the PaymentMethod entity.
+func (puo *PaymentUpdateOne) SetPaymentMethod(p *PaymentMethod) *PaymentUpdateOne {
+	return puo.SetPaymentMethodID(p.ID)
 }
 
 // Mutation returns the PaymentMutation object of the builder.
@@ -602,67 +533,22 @@ func (puo *PaymentUpdateOne) Mutation() *PaymentMutation {
 	return puo.mutation
 }
 
-// ClearStudent clears all "student" edges to the Student entity.
+// ClearStudent clears the "student" edge to the Student entity.
 func (puo *PaymentUpdateOne) ClearStudent() *PaymentUpdateOne {
 	puo.mutation.ClearStudent()
 	return puo
 }
 
-// RemoveStudentIDs removes the "student" edge to Student entities by IDs.
-func (puo *PaymentUpdateOne) RemoveStudentIDs(ids ...int) *PaymentUpdateOne {
-	puo.mutation.RemoveStudentIDs(ids...)
-	return puo
-}
-
-// RemoveStudent removes "student" edges to Student entities.
-func (puo *PaymentUpdateOne) RemoveStudent(s ...*Student) *PaymentUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return puo.RemoveStudentIDs(ids...)
-}
-
-// ClearCycle clears all "cycle" edges to the Cycle entity.
+// ClearCycle clears the "cycle" edge to the Cycle entity.
 func (puo *PaymentUpdateOne) ClearCycle() *PaymentUpdateOne {
 	puo.mutation.ClearCycle()
 	return puo
 }
 
-// RemoveCycleIDs removes the "cycle" edge to Cycle entities by IDs.
-func (puo *PaymentUpdateOne) RemoveCycleIDs(ids ...int) *PaymentUpdateOne {
-	puo.mutation.RemoveCycleIDs(ids...)
-	return puo
-}
-
-// RemoveCycle removes "cycle" edges to Cycle entities.
-func (puo *PaymentUpdateOne) RemoveCycle(c ...*Cycle) *PaymentUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return puo.RemoveCycleIDs(ids...)
-}
-
-// ClearPaymentMethod clears all "payment_method" edges to the PaymentMethod entity.
+// ClearPaymentMethod clears the "payment_method" edge to the PaymentMethod entity.
 func (puo *PaymentUpdateOne) ClearPaymentMethod() *PaymentUpdateOne {
 	puo.mutation.ClearPaymentMethod()
 	return puo
-}
-
-// RemovePaymentMethodIDs removes the "payment_method" edge to PaymentMethod entities by IDs.
-func (puo *PaymentUpdateOne) RemovePaymentMethodIDs(ids ...int) *PaymentUpdateOne {
-	puo.mutation.RemovePaymentMethodIDs(ids...)
-	return puo
-}
-
-// RemovePaymentMethod removes "payment_method" edges to PaymentMethod entities.
-func (puo *PaymentUpdateOne) RemovePaymentMethod(p ...*PaymentMethod) *PaymentUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return puo.RemovePaymentMethodIDs(ids...)
 }
 
 // Where appends a list predicates to the PaymentUpdate builder.
@@ -782,39 +668,23 @@ func (puo *PaymentUpdateOne) sqlSave(ctx context.Context) (_node *Payment, err e
 	}
 	if puo.mutation.StudentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.StudentTable,
-			Columns: payment.StudentPrimaryKey,
+			Columns: []string{payment.StudentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := puo.mutation.RemovedStudentIDs(); len(nodes) > 0 && !puo.mutation.StudentCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   payment.StudentTable,
-			Columns: payment.StudentPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := puo.mutation.StudentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.StudentTable,
-			Columns: payment.StudentPrimaryKey,
+			Columns: []string{payment.StudentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -827,7 +697,7 @@ func (puo *PaymentUpdateOne) sqlSave(ctx context.Context) (_node *Payment, err e
 	}
 	if puo.mutation.CycleCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.CycleTable,
 			Columns: []string{payment.CycleColumn},
@@ -835,28 +705,12 @@ func (puo *PaymentUpdateOne) sqlSave(ctx context.Context) (_node *Payment, err e
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cycle.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := puo.mutation.RemovedCycleIDs(); len(nodes) > 0 && !puo.mutation.CycleCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   payment.CycleTable,
-			Columns: []string{payment.CycleColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cycle.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := puo.mutation.CycleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.CycleTable,
 			Columns: []string{payment.CycleColumn},
@@ -872,7 +726,7 @@ func (puo *PaymentUpdateOne) sqlSave(ctx context.Context) (_node *Payment, err e
 	}
 	if puo.mutation.PaymentMethodCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.PaymentMethodTable,
 			Columns: []string{payment.PaymentMethodColumn},
@@ -880,28 +734,12 @@ func (puo *PaymentUpdateOne) sqlSave(ctx context.Context) (_node *Payment, err e
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paymentmethod.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := puo.mutation.RemovedPaymentMethodIDs(); len(nodes) > 0 && !puo.mutation.PaymentMethodCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   payment.PaymentMethodTable,
-			Columns: []string{payment.PaymentMethodColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(paymentmethod.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := puo.mutation.PaymentMethodIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.PaymentMethodTable,
 			Columns: []string{payment.PaymentMethodColumn},

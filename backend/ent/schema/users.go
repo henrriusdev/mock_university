@@ -28,7 +28,7 @@ func (Users) Fields() []ent.Field {
 // Edges of the Users.
 func (Users) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("role", Role.Type),
+		edge.To("role", Role.Type).Unique(),
 		edge.From("requests_made", Request.Type).Ref("requester"),
 		edge.From("requests_received", Request.Type).Ref("receiver"),
 		edge.From("blog", Blog.Type).Ref("owner"),

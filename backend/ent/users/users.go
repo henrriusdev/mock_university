@@ -46,21 +46,27 @@ const (
 	EdgeProfessor = "professor"
 	// Table holds the table name of the users in the database.
 	Table = "users"
-	// RoleTable is the table that holds the role relation/edge. The primary key declared below.
-	RoleTable = "users_role"
+	// RoleTable is the table that holds the role relation/edge.
+	RoleTable = "users"
 	// RoleInverseTable is the table name for the Role entity.
 	// It exists in this package in order to avoid circular dependency with the "role" package.
 	RoleInverseTable = "roles"
-	// RequestsMadeTable is the table that holds the requests_made relation/edge. The primary key declared below.
-	RequestsMadeTable = "request_requester"
+	// RoleColumn is the table column denoting the role relation/edge.
+	RoleColumn = "users_role"
+	// RequestsMadeTable is the table that holds the requests_made relation/edge.
+	RequestsMadeTable = "requests"
 	// RequestsMadeInverseTable is the table name for the Request entity.
 	// It exists in this package in order to avoid circular dependency with the "request" package.
 	RequestsMadeInverseTable = "requests"
-	// RequestsReceivedTable is the table that holds the requests_received relation/edge. The primary key declared below.
-	RequestsReceivedTable = "request_receiver"
+	// RequestsMadeColumn is the table column denoting the requests_made relation/edge.
+	RequestsMadeColumn = "request_requester"
+	// RequestsReceivedTable is the table that holds the requests_received relation/edge.
+	RequestsReceivedTable = "requests"
 	// RequestsReceivedInverseTable is the table name for the Request entity.
 	// It exists in this package in order to avoid circular dependency with the "request" package.
 	RequestsReceivedInverseTable = "requests"
+	// RequestsReceivedColumn is the table column denoting the requests_received relation/edge.
+	RequestsReceivedColumn = "request_receiver"
 	// BlogTable is the table that holds the blog relation/edge.
 	BlogTable = "blogs"
 	// BlogInverseTable is the table name for the Blog entity.
@@ -68,16 +74,20 @@ const (
 	BlogInverseTable = "blogs"
 	// BlogColumn is the table column denoting the blog relation/edge.
 	BlogColumn = "blog_owner"
-	// NotificationsTable is the table that holds the notifications relation/edge. The primary key declared below.
-	NotificationsTable = "notification_recipient"
+	// NotificationsTable is the table that holds the notifications relation/edge.
+	NotificationsTable = "notifications"
 	// NotificationsInverseTable is the table name for the Notification entity.
 	// It exists in this package in order to avoid circular dependency with the "notification" package.
 	NotificationsInverseTable = "notifications"
-	// ActivityTable is the table that holds the activity relation/edge. The primary key declared below.
-	ActivityTable = "activity_user"
+	// NotificationsColumn is the table column denoting the notifications relation/edge.
+	NotificationsColumn = "notification_recipient"
+	// ActivityTable is the table that holds the activity relation/edge.
+	ActivityTable = "activities"
 	// ActivityInverseTable is the table name for the Activity entity.
 	// It exists in this package in order to avoid circular dependency with the "activity" package.
 	ActivityInverseTable = "activities"
+	// ActivityColumn is the table column denoting the activity relation/edge.
+	ActivityColumn = "activity_user"
 	// StudentsTable is the table that holds the students relation/edge.
 	StudentsTable = "students"
 	// StudentsInverseTable is the table name for the Student entity.
@@ -106,28 +116,21 @@ var Columns = []string{
 	FieldCreatedAt,
 }
 
-var (
-	// RolePrimaryKey and RoleColumn2 are the table columns denoting the
-	// primary key for the role relation (M2M).
-	RolePrimaryKey = []string{"users_id", "role_id"}
-	// RequestsMadePrimaryKey and RequestsMadeColumn2 are the table columns denoting the
-	// primary key for the requests_made relation (M2M).
-	RequestsMadePrimaryKey = []string{"request_id", "users_id"}
-	// RequestsReceivedPrimaryKey and RequestsReceivedColumn2 are the table columns denoting the
-	// primary key for the requests_received relation (M2M).
-	RequestsReceivedPrimaryKey = []string{"request_id", "users_id"}
-	// NotificationsPrimaryKey and NotificationsColumn2 are the table columns denoting the
-	// primary key for the notifications relation (M2M).
-	NotificationsPrimaryKey = []string{"notification_id", "users_id"}
-	// ActivityPrimaryKey and ActivityColumn2 are the table columns denoting the
-	// primary key for the activity relation (M2M).
-	ActivityPrimaryKey = []string{"activity_id", "users_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "users"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"users_role",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -194,17 +197,10 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// ByRoleCount orders the results by role count.
-func ByRoleCount(opts ...sql.OrderTermOption) OrderOption {
+// ByRoleField orders the results by role field.
+func ByRoleField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newRoleStep(), opts...)
-	}
-}
-
-// ByRole orders the results by role terms.
-func ByRole(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRoleStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newRoleStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -309,21 +305,21 @@ func newRoleStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RoleInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, RoleTable, RolePrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, false, RoleTable, RoleColumn),
 	)
 }
 func newRequestsMadeStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RequestsMadeInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, RequestsMadeTable, RequestsMadePrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, true, RequestsMadeTable, RequestsMadeColumn),
 	)
 }
 func newRequestsReceivedStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RequestsReceivedInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, RequestsReceivedTable, RequestsReceivedPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, true, RequestsReceivedTable, RequestsReceivedColumn),
 	)
 }
 func newBlogStep() *sqlgraph.Step {
@@ -337,14 +333,14 @@ func newNotificationsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(NotificationsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, NotificationsTable, NotificationsPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, true, NotificationsTable, NotificationsColumn),
 	)
 }
 func newActivityStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ActivityInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, ActivityTable, ActivityPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, true, ActivityTable, ActivityColumn),
 	)
 }
 func newStudentsStep() *sqlgraph.Step {

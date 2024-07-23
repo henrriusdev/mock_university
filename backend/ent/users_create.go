@@ -85,19 +85,23 @@ func (uc *UsersCreate) SetNillableCreatedAt(t *time.Time) *UsersCreate {
 	return uc
 }
 
-// AddRoleIDs adds the "role" edge to the Role entity by IDs.
-func (uc *UsersCreate) AddRoleIDs(ids ...int) *UsersCreate {
-	uc.mutation.AddRoleIDs(ids...)
+// SetRoleID sets the "role" edge to the Role entity by ID.
+func (uc *UsersCreate) SetRoleID(id int) *UsersCreate {
+	uc.mutation.SetRoleID(id)
 	return uc
 }
 
-// AddRole adds the "role" edges to the Role entity.
-func (uc *UsersCreate) AddRole(r ...*Role) *UsersCreate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// SetNillableRoleID sets the "role" edge to the Role entity by ID if the given value is not nil.
+func (uc *UsersCreate) SetNillableRoleID(id *int) *UsersCreate {
+	if id != nil {
+		uc = uc.SetRoleID(*id)
 	}
-	return uc.AddRoleIDs(ids...)
+	return uc
+}
+
+// SetRole sets the "role" edge to the Role entity.
+func (uc *UsersCreate) SetRole(r *Role) *UsersCreate {
+	return uc.SetRoleID(r.ID)
 }
 
 // AddRequestsMadeIDs adds the "requests_made" edge to the Request entity by IDs.
@@ -354,10 +358,10 @@ func (uc *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 	}
 	if nodes := uc.mutation.RoleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   users.RoleTable,
-			Columns: users.RolePrimaryKey,
+			Columns: []string{users.RoleColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
@@ -366,14 +370,15 @@ func (uc *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.users_role = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.RequestsMadeIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsMadeTable,
-			Columns: users.RequestsMadePrimaryKey,
+			Columns: []string{users.RequestsMadeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -386,10 +391,10 @@ func (uc *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 	}
 	if nodes := uc.mutation.RequestsReceivedIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsReceivedTable,
-			Columns: users.RequestsReceivedPrimaryKey,
+			Columns: []string{users.RequestsReceivedColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -418,10 +423,10 @@ func (uc *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 	}
 	if nodes := uc.mutation.NotificationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.NotificationsTable,
-			Columns: users.NotificationsPrimaryKey,
+			Columns: []string{users.NotificationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt),
@@ -434,10 +439,10 @@ func (uc *UsersCreate) createSpec() (*Users, *sqlgraph.CreateSpec) {
 	}
 	if nodes := uc.mutation.ActivityIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.ActivityTable,
-			Columns: users.ActivityPrimaryKey,
+			Columns: []string{users.ActivityColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeInt),

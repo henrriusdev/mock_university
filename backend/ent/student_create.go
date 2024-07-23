@@ -127,19 +127,23 @@ func (sc *StudentCreate) AddPayments(p ...*Payment) *StudentCreate {
 	return sc.AddPaymentIDs(ids...)
 }
 
-// AddCareerIDs adds the "career" edge to the Careers entity by IDs.
-func (sc *StudentCreate) AddCareerIDs(ids ...int) *StudentCreate {
-	sc.mutation.AddCareerIDs(ids...)
+// SetCareerID sets the "career" edge to the Careers entity by ID.
+func (sc *StudentCreate) SetCareerID(id int) *StudentCreate {
+	sc.mutation.SetCareerID(id)
 	return sc
 }
 
-// AddCareer adds the "career" edges to the Careers entity.
-func (sc *StudentCreate) AddCareer(c ...*Careers) *StudentCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+// SetNillableCareerID sets the "career" edge to the Careers entity by ID if the given value is not nil.
+func (sc *StudentCreate) SetNillableCareerID(id *int) *StudentCreate {
+	if id != nil {
+		sc = sc.SetCareerID(*id)
 	}
-	return sc.AddCareerIDs(ids...)
+	return sc
+}
+
+// SetCareer sets the "career" edge to the Careers entity.
+func (sc *StudentCreate) SetCareer(c *Careers) *StudentCreate {
+	return sc.SetCareerID(c.ID)
 }
 
 // Mutation returns the StudentMutation object of the builder.
@@ -324,10 +328,10 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 	}
 	if nodes := sc.mutation.NotesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   student.NotesTable,
-			Columns: student.NotesPrimaryKey,
+			Columns: []string{student.NotesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
@@ -340,10 +344,10 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 	}
 	if nodes := sc.mutation.PaymentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   student.PaymentsTable,
-			Columns: student.PaymentsPrimaryKey,
+			Columns: []string{student.PaymentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(payment.FieldID, field.TypeInt),
@@ -356,10 +360,10 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 	}
 	if nodes := sc.mutation.CareerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   student.CareerTable,
-			Columns: student.CareerPrimaryKey,
+			Columns: []string{student.CareerColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
@@ -368,6 +372,7 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.student_career = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

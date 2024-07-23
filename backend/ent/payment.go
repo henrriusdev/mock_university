@@ -4,7 +4,10 @@ package ent
 
 import (
 	"fmt"
+	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/payment"
+	"mocku/backend/ent/paymentmethod"
+	"mocku/backend/ent/student"
 	"strings"
 	"time"
 
@@ -29,46 +32,55 @@ type Payment struct {
 	FeeNumber int `json:"fee_number,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PaymentQuery when eager-loading is set.
-	Edges        PaymentEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                  PaymentEdges `json:"edges"`
+	payment_student        *int
+	payment_cycle          *int
+	payment_payment_method *int
+	selectValues           sql.SelectValues
 }
 
 // PaymentEdges holds the relations/edges for other nodes in the graph.
 type PaymentEdges struct {
 	// Student holds the value of the student edge.
-	Student []*Student `json:"student,omitempty"`
+	Student *Student `json:"student,omitempty"`
 	// Cycle holds the value of the cycle edge.
-	Cycle []*Cycle `json:"cycle,omitempty"`
+	Cycle *Cycle `json:"cycle,omitempty"`
 	// PaymentMethod holds the value of the payment_method edge.
-	PaymentMethod []*PaymentMethod `json:"payment_method,omitempty"`
+	PaymentMethod *PaymentMethod `json:"payment_method,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [3]bool
 }
 
 // StudentOrErr returns the Student value or an error if the edge
-// was not loaded in eager-loading.
-func (e PaymentEdges) StudentOrErr() ([]*Student, error) {
-	if e.loadedTypes[0] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e PaymentEdges) StudentOrErr() (*Student, error) {
+	if e.Student != nil {
 		return e.Student, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: student.Label}
 	}
 	return nil, &NotLoadedError{edge: "student"}
 }
 
 // CycleOrErr returns the Cycle value or an error if the edge
-// was not loaded in eager-loading.
-func (e PaymentEdges) CycleOrErr() ([]*Cycle, error) {
-	if e.loadedTypes[1] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e PaymentEdges) CycleOrErr() (*Cycle, error) {
+	if e.Cycle != nil {
 		return e.Cycle, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: cycle.Label}
 	}
 	return nil, &NotLoadedError{edge: "cycle"}
 }
 
 // PaymentMethodOrErr returns the PaymentMethod value or an error if the edge
-// was not loaded in eager-loading.
-func (e PaymentEdges) PaymentMethodOrErr() ([]*PaymentMethod, error) {
-	if e.loadedTypes[2] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e PaymentEdges) PaymentMethodOrErr() (*PaymentMethod, error) {
+	if e.PaymentMethod != nil {
 		return e.PaymentMethod, nil
+	} else if e.loadedTypes[2] {
+		return nil, &NotFoundError{label: paymentmethod.Label}
 	}
 	return nil, &NotLoadedError{edge: "payment_method"}
 }
@@ -86,6 +98,12 @@ func (*Payment) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case payment.FieldDate:
 			values[i] = new(sql.NullTime)
+		case payment.ForeignKeys[0]: // payment_student
+			values[i] = new(sql.NullInt64)
+		case payment.ForeignKeys[1]: // payment_cycle
+			values[i] = new(sql.NullInt64)
+		case payment.ForeignKeys[2]: // payment_payment_method
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -136,6 +154,27 @@ func (pa *Payment) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field fee_number", values[i])
 			} else if value.Valid {
 				pa.FeeNumber = int(value.Int64)
+			}
+		case payment.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field payment_student", value)
+			} else if value.Valid {
+				pa.payment_student = new(int)
+				*pa.payment_student = int(value.Int64)
+			}
+		case payment.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field payment_cycle", value)
+			} else if value.Valid {
+				pa.payment_cycle = new(int)
+				*pa.payment_cycle = int(value.Int64)
+			}
+		case payment.ForeignKeys[2]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field payment_payment_method", value)
+			} else if value.Valid {
+				pa.payment_payment_method = new(int)
+				*pa.payment_payment_method = int(value.Int64)
 			}
 		default:
 			pa.selectValues.Set(columns[i], values[i])

@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 	"mocku/backend/ent/cycle"
@@ -28,6 +27,7 @@ type PaymentQuery struct {
 	withStudent       *StudentQuery
 	withCycle         *CycleQuery
 	withPaymentMethod *PaymentMethodQuery
+	withFKs           bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -78,7 +78,7 @@ func (pq *PaymentQuery) QueryStudent() *StudentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(payment.Table, payment.FieldID, selector),
 			sqlgraph.To(student.Table, student.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, payment.StudentTable, payment.StudentPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, payment.StudentTable, payment.StudentColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -100,7 +100,7 @@ func (pq *PaymentQuery) QueryCycle() *CycleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(payment.Table, payment.FieldID, selector),
 			sqlgraph.To(cycle.Table, cycle.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, payment.CycleTable, payment.CycleColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, payment.CycleTable, payment.CycleColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -122,7 +122,7 @@ func (pq *PaymentQuery) QueryPaymentMethod() *PaymentMethodQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(payment.Table, payment.FieldID, selector),
 			sqlgraph.To(paymentmethod.Table, paymentmethod.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, payment.PaymentMethodTable, payment.PaymentMethodColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, payment.PaymentMethodTable, payment.PaymentMethodColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -441,6 +441,7 @@ func (pq *PaymentQuery) prepareQuery(ctx context.Context) error {
 func (pq *PaymentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Payment, error) {
 	var (
 		nodes       = []*Payment{}
+		withFKs     = pq.withFKs
 		_spec       = pq.querySpec()
 		loadedTypes = [3]bool{
 			pq.withStudent != nil,
@@ -448,6 +449,12 @@ func (pq *PaymentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Paym
 			pq.withPaymentMethod != nil,
 		}
 	)
+	if pq.withStudent != nil || pq.withCycle != nil || pq.withPaymentMethod != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, payment.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Payment).scanValues(nil, columns)
 	}
@@ -467,23 +474,20 @@ func (pq *PaymentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Paym
 		return nodes, nil
 	}
 	if query := pq.withStudent; query != nil {
-		if err := pq.loadStudent(ctx, query, nodes,
-			func(n *Payment) { n.Edges.Student = []*Student{} },
-			func(n *Payment, e *Student) { n.Edges.Student = append(n.Edges.Student, e) }); err != nil {
+		if err := pq.loadStudent(ctx, query, nodes, nil,
+			func(n *Payment, e *Student) { n.Edges.Student = e }); err != nil {
 			return nil, err
 		}
 	}
 	if query := pq.withCycle; query != nil {
-		if err := pq.loadCycle(ctx, query, nodes,
-			func(n *Payment) { n.Edges.Cycle = []*Cycle{} },
-			func(n *Payment, e *Cycle) { n.Edges.Cycle = append(n.Edges.Cycle, e) }); err != nil {
+		if err := pq.loadCycle(ctx, query, nodes, nil,
+			func(n *Payment, e *Cycle) { n.Edges.Cycle = e }); err != nil {
 			return nil, err
 		}
 	}
 	if query := pq.withPaymentMethod; query != nil {
-		if err := pq.loadPaymentMethod(ctx, query, nodes,
-			func(n *Payment) { n.Edges.PaymentMethod = []*PaymentMethod{} },
-			func(n *Payment, e *PaymentMethod) { n.Edges.PaymentMethod = append(n.Edges.PaymentMethod, e) }); err != nil {
+		if err := pq.loadPaymentMethod(ctx, query, nodes, nil,
+			func(n *Payment, e *PaymentMethod) { n.Edges.PaymentMethod = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -491,125 +495,98 @@ func (pq *PaymentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Paym
 }
 
 func (pq *PaymentQuery) loadStudent(ctx context.Context, query *StudentQuery, nodes []*Payment, init func(*Payment), assign func(*Payment, *Student)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Payment)
-	nids := make(map[int]map[*Payment]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Payment)
+	for i := range nodes {
+		if nodes[i].payment_student == nil {
+			continue
 		}
+		fk := *nodes[i].payment_student
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(payment.StudentTable)
-		s.Join(joinT).On(s.C(student.FieldID), joinT.C(payment.StudentPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(payment.StudentPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(payment.StudentPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
+	if len(ids) == 0 {
+		return nil
 	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Payment]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Student](ctx, query, qr, query.inters)
+	query.Where(student.IDIn(ids...))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "student" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "payment_student" returned %v`, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil
 }
 func (pq *PaymentQuery) loadCycle(ctx context.Context, query *CycleQuery, nodes []*Payment, init func(*Payment), assign func(*Payment, *Cycle)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Payment)
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Payment)
 	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		if nodes[i].payment_cycle == nil {
+			continue
 		}
+		fk := *nodes[i].payment_cycle
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.withFKs = true
-	query.Where(predicate.Cycle(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(payment.CycleColumn), fks...))
-	}))
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(cycle.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.payment_cycle
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "payment_cycle" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "payment_cycle" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "payment_cycle" returned %v`, n.ID)
 		}
-		assign(node, n)
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }
 func (pq *PaymentQuery) loadPaymentMethod(ctx context.Context, query *PaymentMethodQuery, nodes []*Payment, init func(*Payment), assign func(*Payment, *PaymentMethod)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Payment)
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Payment)
 	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		if nodes[i].payment_payment_method == nil {
+			continue
 		}
+		fk := *nodes[i].payment_payment_method
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.withFKs = true
-	query.Where(predicate.PaymentMethod(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(payment.PaymentMethodColumn), fks...))
-	}))
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(paymentmethod.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.payment_payment_method
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "payment_payment_method" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "payment_payment_method" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "payment_payment_method" returned %v`, n.ID)
 		}
-		assign(node, n)
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }

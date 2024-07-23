@@ -24,6 +24,6 @@ func (Activity) Fields() []ent.Field {
 // Edges of the Activity.
 func (Activity) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("user", Users.Type),
+		edge.To("user", Users.Type).Unique(),
 	}
 }

@@ -5,7 +5,10 @@ package ent
 import (
 	"encoding/json"
 	"fmt"
+	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/note"
+	"mocku/backend/ent/student"
+	"mocku/backend/ent/subject"
 	"strings"
 
 	"entgo.io/ent"
@@ -24,45 +27,54 @@ type Note struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the NoteQuery when eager-loading is set.
 	Edges        NoteEdges `json:"edges"`
+	note_student *int
+	note_subject *int
+	note_cycle   *int
 	selectValues sql.SelectValues
 }
 
 // NoteEdges holds the relations/edges for other nodes in the graph.
 type NoteEdges struct {
 	// Student holds the value of the student edge.
-	Student []*Student `json:"student,omitempty"`
+	Student *Student `json:"student,omitempty"`
 	// Subject holds the value of the subject edge.
-	Subject []*Subject `json:"subject,omitempty"`
+	Subject *Subject `json:"subject,omitempty"`
 	// Cycle holds the value of the cycle edge.
-	Cycle []*Cycle `json:"cycle,omitempty"`
+	Cycle *Cycle `json:"cycle,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [3]bool
 }
 
 // StudentOrErr returns the Student value or an error if the edge
-// was not loaded in eager-loading.
-func (e NoteEdges) StudentOrErr() ([]*Student, error) {
-	if e.loadedTypes[0] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e NoteEdges) StudentOrErr() (*Student, error) {
+	if e.Student != nil {
 		return e.Student, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: student.Label}
 	}
 	return nil, &NotLoadedError{edge: "student"}
 }
 
 // SubjectOrErr returns the Subject value or an error if the edge
-// was not loaded in eager-loading.
-func (e NoteEdges) SubjectOrErr() ([]*Subject, error) {
-	if e.loadedTypes[1] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e NoteEdges) SubjectOrErr() (*Subject, error) {
+	if e.Subject != nil {
 		return e.Subject, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: subject.Label}
 	}
 	return nil, &NotLoadedError{edge: "subject"}
 }
 
 // CycleOrErr returns the Cycle value or an error if the edge
-// was not loaded in eager-loading.
-func (e NoteEdges) CycleOrErr() ([]*Cycle, error) {
-	if e.loadedTypes[2] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e NoteEdges) CycleOrErr() (*Cycle, error) {
+	if e.Cycle != nil {
 		return e.Cycle, nil
+	} else if e.loadedTypes[2] {
+		return nil, &NotFoundError{label: cycle.Label}
 	}
 	return nil, &NotLoadedError{edge: "cycle"}
 }
@@ -77,6 +89,12 @@ func (*Note) scanValues(columns []string) ([]any, error) {
 		case note.FieldAverage:
 			values[i] = new(sql.NullFloat64)
 		case note.FieldID:
+			values[i] = new(sql.NullInt64)
+		case note.ForeignKeys[0]: // note_student
+			values[i] = new(sql.NullInt64)
+		case note.ForeignKeys[1]: // note_subject
+			values[i] = new(sql.NullInt64)
+		case note.ForeignKeys[2]: // note_cycle
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -112,6 +130,27 @@ func (n *Note) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field average", values[i])
 			} else if value.Valid {
 				n.Average = float32(value.Float64)
+			}
+		case note.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field note_student", value)
+			} else if value.Valid {
+				n.note_student = new(int)
+				*n.note_student = int(value.Int64)
+			}
+		case note.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field note_subject", value)
+			} else if value.Valid {
+				n.note_subject = new(int)
+				*n.note_subject = int(value.Int64)
+			}
+		case note.ForeignKeys[2]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field note_cycle", value)
+			} else if value.Valid {
+				n.note_cycle = new(int)
+				*n.note_cycle = int(value.Int64)
 			}
 		default:
 			n.selectValues.Set(columns[i], values[i])

@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"mocku/backend/ent/notification"
+	"mocku/backend/ent/users"
 	"strings"
 	"time"
 
@@ -27,24 +28,27 @@ type Notification struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the NotificationQuery when eager-loading is set.
-	Edges        NotificationEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                  NotificationEdges `json:"edges"`
+	notification_recipient *int
+	selectValues           sql.SelectValues
 }
 
 // NotificationEdges holds the relations/edges for other nodes in the graph.
 type NotificationEdges struct {
 	// Recipient holds the value of the recipient edge.
-	Recipient []*Users `json:"recipient,omitempty"`
+	Recipient *Users `json:"recipient,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
 // RecipientOrErr returns the Recipient value or an error if the edge
-// was not loaded in eager-loading.
-func (e NotificationEdges) RecipientOrErr() ([]*Users, error) {
-	if e.loadedTypes[0] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e NotificationEdges) RecipientOrErr() (*Users, error) {
+	if e.Recipient != nil {
 		return e.Recipient, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: users.Label}
 	}
 	return nil, &NotLoadedError{edge: "recipient"}
 }
@@ -60,6 +64,8 @@ func (*Notification) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case notification.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
+		case notification.ForeignKeys[0]: // notification_recipient
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -104,6 +110,13 @@ func (n *Notification) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				n.CreatedAt = value.Time
+			}
+		case notification.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field notification_recipient", value)
+			} else if value.Valid {
+				n.notification_recipient = new(int)
+				*n.notification_recipient = int(value.Int64)
 			}
 		default:
 			n.selectValues.Set(columns[i], values[i])

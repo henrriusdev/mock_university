@@ -155,23 +155,19 @@ func (pu *ProfessorUpdate) AddSubjects(s ...*Subject) *ProfessorUpdate {
 	return pu.AddSubjectIDs(ids...)
 }
 
-// SetCareersID sets the "careers" edge to the Careers entity by ID.
-func (pu *ProfessorUpdate) SetCareersID(id int) *ProfessorUpdate {
-	pu.mutation.SetCareersID(id)
+// AddCareerIDs adds the "careers" edge to the Careers entity by IDs.
+func (pu *ProfessorUpdate) AddCareerIDs(ids ...int) *ProfessorUpdate {
+	pu.mutation.AddCareerIDs(ids...)
 	return pu
 }
 
-// SetNillableCareersID sets the "careers" edge to the Careers entity by ID if the given value is not nil.
-func (pu *ProfessorUpdate) SetNillableCareersID(id *int) *ProfessorUpdate {
-	if id != nil {
-		pu = pu.SetCareersID(*id)
+// AddCareers adds the "careers" edges to the Careers entity.
+func (pu *ProfessorUpdate) AddCareers(c ...*Careers) *ProfessorUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
-	return pu
-}
-
-// SetCareers sets the "careers" edge to the Careers entity.
-func (pu *ProfessorUpdate) SetCareers(c *Careers) *ProfessorUpdate {
-	return pu.SetCareersID(c.ID)
+	return pu.AddCareerIDs(ids...)
 }
 
 // Mutation returns the ProfessorMutation object of the builder.
@@ -233,10 +229,25 @@ func (pu *ProfessorUpdate) RemoveSubjects(s ...*Subject) *ProfessorUpdate {
 	return pu.RemoveSubjectIDs(ids...)
 }
 
-// ClearCareers clears the "careers" edge to the Careers entity.
+// ClearCareers clears all "careers" edges to the Careers entity.
 func (pu *ProfessorUpdate) ClearCareers() *ProfessorUpdate {
 	pu.mutation.ClearCareers()
 	return pu
+}
+
+// RemoveCareerIDs removes the "careers" edge to Careers entities by IDs.
+func (pu *ProfessorUpdate) RemoveCareerIDs(ids ...int) *ProfessorUpdate {
+	pu.mutation.RemoveCareerIDs(ids...)
+	return pu
+}
+
+// RemoveCareers removes "careers" edges to Careers entities.
+func (pu *ProfessorUpdate) RemoveCareers(c ...*Careers) *ProfessorUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return pu.RemoveCareerIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -415,10 +426,10 @@ func (pu *ProfessorUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.SubjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.SubjectsTable,
-			Columns: professor.SubjectsPrimaryKey,
+			Columns: []string{professor.SubjectsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -428,10 +439,10 @@ func (pu *ProfessorUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := pu.mutation.RemovedSubjectsIDs(); len(nodes) > 0 && !pu.mutation.SubjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.SubjectsTable,
-			Columns: professor.SubjectsPrimaryKey,
+			Columns: []string{professor.SubjectsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -444,10 +455,10 @@ func (pu *ProfessorUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := pu.mutation.SubjectsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.SubjectsTable,
-			Columns: professor.SubjectsPrimaryKey,
+			Columns: []string{professor.SubjectsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -460,7 +471,7 @@ func (pu *ProfessorUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.CareersCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.CareersTable,
 			Columns: []string{professor.CareersColumn},
@@ -471,9 +482,25 @@ func (pu *ProfessorUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
+	if nodes := pu.mutation.RemovedCareersIDs(); len(nodes) > 0 && !pu.mutation.CareersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   professor.CareersTable,
+			Columns: []string{professor.CareersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
 	if nodes := pu.mutation.CareersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.CareersTable,
 			Columns: []string{professor.CareersColumn},
@@ -631,23 +658,19 @@ func (puo *ProfessorUpdateOne) AddSubjects(s ...*Subject) *ProfessorUpdateOne {
 	return puo.AddSubjectIDs(ids...)
 }
 
-// SetCareersID sets the "careers" edge to the Careers entity by ID.
-func (puo *ProfessorUpdateOne) SetCareersID(id int) *ProfessorUpdateOne {
-	puo.mutation.SetCareersID(id)
+// AddCareerIDs adds the "careers" edge to the Careers entity by IDs.
+func (puo *ProfessorUpdateOne) AddCareerIDs(ids ...int) *ProfessorUpdateOne {
+	puo.mutation.AddCareerIDs(ids...)
 	return puo
 }
 
-// SetNillableCareersID sets the "careers" edge to the Careers entity by ID if the given value is not nil.
-func (puo *ProfessorUpdateOne) SetNillableCareersID(id *int) *ProfessorUpdateOne {
-	if id != nil {
-		puo = puo.SetCareersID(*id)
+// AddCareers adds the "careers" edges to the Careers entity.
+func (puo *ProfessorUpdateOne) AddCareers(c ...*Careers) *ProfessorUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
-	return puo
-}
-
-// SetCareers sets the "careers" edge to the Careers entity.
-func (puo *ProfessorUpdateOne) SetCareers(c *Careers) *ProfessorUpdateOne {
-	return puo.SetCareersID(c.ID)
+	return puo.AddCareerIDs(ids...)
 }
 
 // Mutation returns the ProfessorMutation object of the builder.
@@ -709,10 +732,25 @@ func (puo *ProfessorUpdateOne) RemoveSubjects(s ...*Subject) *ProfessorUpdateOne
 	return puo.RemoveSubjectIDs(ids...)
 }
 
-// ClearCareers clears the "careers" edge to the Careers entity.
+// ClearCareers clears all "careers" edges to the Careers entity.
 func (puo *ProfessorUpdateOne) ClearCareers() *ProfessorUpdateOne {
 	puo.mutation.ClearCareers()
 	return puo
+}
+
+// RemoveCareerIDs removes the "careers" edge to Careers entities by IDs.
+func (puo *ProfessorUpdateOne) RemoveCareerIDs(ids ...int) *ProfessorUpdateOne {
+	puo.mutation.RemoveCareerIDs(ids...)
+	return puo
+}
+
+// RemoveCareers removes "careers" edges to Careers entities.
+func (puo *ProfessorUpdateOne) RemoveCareers(c ...*Careers) *ProfessorUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return puo.RemoveCareerIDs(ids...)
 }
 
 // Where appends a list predicates to the ProfessorUpdate builder.
@@ -921,10 +959,10 @@ func (puo *ProfessorUpdateOne) sqlSave(ctx context.Context) (_node *Professor, e
 	}
 	if puo.mutation.SubjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.SubjectsTable,
-			Columns: professor.SubjectsPrimaryKey,
+			Columns: []string{professor.SubjectsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -934,10 +972,10 @@ func (puo *ProfessorUpdateOne) sqlSave(ctx context.Context) (_node *Professor, e
 	}
 	if nodes := puo.mutation.RemovedSubjectsIDs(); len(nodes) > 0 && !puo.mutation.SubjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.SubjectsTable,
-			Columns: professor.SubjectsPrimaryKey,
+			Columns: []string{professor.SubjectsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -950,10 +988,10 @@ func (puo *ProfessorUpdateOne) sqlSave(ctx context.Context) (_node *Professor, e
 	}
 	if nodes := puo.mutation.SubjectsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.SubjectsTable,
-			Columns: professor.SubjectsPrimaryKey,
+			Columns: []string{professor.SubjectsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -966,7 +1004,7 @@ func (puo *ProfessorUpdateOne) sqlSave(ctx context.Context) (_node *Professor, e
 	}
 	if puo.mutation.CareersCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.CareersTable,
 			Columns: []string{professor.CareersColumn},
@@ -977,9 +1015,25 @@ func (puo *ProfessorUpdateOne) sqlSave(ctx context.Context) (_node *Professor, e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
+	if nodes := puo.mutation.RemovedCareersIDs(); len(nodes) > 0 && !puo.mutation.CareersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   professor.CareersTable,
+			Columns: []string{professor.CareersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(careers.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
 	if nodes := puo.mutation.CareersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.CareersTable,
 			Columns: []string{professor.CareersColumn},

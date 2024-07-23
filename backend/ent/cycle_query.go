@@ -21,7 +21,6 @@ type CycleQuery struct {
 	order      []cycle.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Cycle
-	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -332,13 +331,9 @@ func (cq *CycleQuery) prepareQuery(ctx context.Context) error {
 
 func (cq *CycleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Cycle, error) {
 	var (
-		nodes   = []*Cycle{}
-		withFKs = cq.withFKs
-		_spec   = cq.querySpec()
+		nodes = []*Cycle{}
+		_spec = cq.querySpec()
 	)
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, cycle.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Cycle).scanValues(nil, columns)
 	}

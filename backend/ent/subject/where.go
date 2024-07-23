@@ -549,7 +549,7 @@ func HasProfessor() predicate.Subject {
 	return predicate.Subject(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, ProfessorTable, ProfessorPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, ProfessorTable, ProfessorColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -595,7 +595,7 @@ func HasNotes() predicate.Subject {
 	return predicate.Subject(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, NotesTable, NotesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, NotesTable, NotesColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

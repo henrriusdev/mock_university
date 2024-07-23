@@ -40,11 +40,13 @@ const (
 	EdgeNotes = "notes"
 	// Table holds the table name of the subject in the database.
 	Table = "subjects"
-	// ProfessorTable is the table that holds the professor relation/edge. The primary key declared below.
-	ProfessorTable = "subject_professor"
+	// ProfessorTable is the table that holds the professor relation/edge.
+	ProfessorTable = "subjects"
 	// ProfessorInverseTable is the table name for the Professor entity.
 	// It exists in this package in order to avoid circular dependency with the "professor" package.
 	ProfessorInverseTable = "professors"
+	// ProfessorColumn is the table column denoting the professor relation/edge.
+	ProfessorColumn = "subject_professor"
 	// CareerTable is the table that holds the career relation/edge.
 	CareerTable = "careers"
 	// CareerInverseTable is the table name for the Careers entity.
@@ -52,11 +54,13 @@ const (
 	CareerInverseTable = "careers"
 	// CareerColumn is the table column denoting the career relation/edge.
 	CareerColumn = "subject_career"
-	// NotesTable is the table that holds the notes relation/edge. The primary key declared below.
-	NotesTable = "note_subject"
+	// NotesTable is the table that holds the notes relation/edge.
+	NotesTable = "notes"
 	// NotesInverseTable is the table name for the Note entity.
 	// It exists in this package in order to avoid circular dependency with the "note" package.
 	NotesInverseTable = "notes"
+	// NotesColumn is the table column denoting the notes relation/edge.
+	NotesColumn = "note_subject"
 )
 
 // Columns holds all SQL columns for subject fields.
@@ -74,19 +78,21 @@ var Columns = []string{
 	FieldClassSchedule,
 }
 
-var (
-	// ProfessorPrimaryKey and ProfessorColumn2 are the table columns denoting the
-	// primary key for the professor relation (M2M).
-	ProfessorPrimaryKey = []string{"subject_id", "professor_id"}
-	// NotesPrimaryKey and NotesColumn2 are the table columns denoting the
-	// primary key for the notes relation (M2M).
-	NotesPrimaryKey = []string{"note_id", "subject_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "subjects"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"subject_professor",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -167,17 +173,10 @@ func ByTotalHours(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTotalHours, opts...).ToFunc()
 }
 
-// ByProfessorCount orders the results by professor count.
-func ByProfessorCount(opts ...sql.OrderTermOption) OrderOption {
+// ByProfessorField orders the results by professor field.
+func ByProfessorField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newProfessorStep(), opts...)
-	}
-}
-
-// ByProfessor orders the results by professor terms.
-func ByProfessor(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newProfessorStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newProfessorStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -212,7 +211,7 @@ func newProfessorStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProfessorInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, ProfessorTable, ProfessorPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, false, ProfessorTable, ProfessorColumn),
 	)
 }
 func newCareerStep() *sqlgraph.Step {
@@ -226,6 +225,6 @@ func newNotesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(NotesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, NotesTable, NotesPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, true, NotesTable, NotesColumn),
 	)
 }

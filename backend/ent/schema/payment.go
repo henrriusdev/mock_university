@@ -25,8 +25,8 @@ func (Payment) Fields() []ent.Field {
 // Edges of the Payment.
 func (Payment) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("student", Student.Type),
-		edge.To("cycle", Cycle.Type),
-		edge.To("payment_method", PaymentMethod.Type),
+		edge.To("student", Student.Type).Unique(),
+		edge.To("cycle", Cycle.Type).Unique(),
+		edge.To("payment_method", PaymentMethod.Type).Unique(),
 	}
 }

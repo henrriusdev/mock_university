@@ -430,7 +430,7 @@ func HasRequester() predicate.Request {
 	return predicate.Request(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, RequesterTable, RequesterPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, RequesterTable, RequesterColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -453,7 +453,7 @@ func HasReceiver() predicate.Request {
 	return predicate.Request(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, ReceiverTable, ReceiverPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, ReceiverTable, ReceiverColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

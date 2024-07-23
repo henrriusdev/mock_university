@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"mocku/backend/ent/request"
+	"mocku/backend/ent/users"
 	"strings"
 	"time"
 
@@ -31,35 +32,41 @@ type Request struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RequestQuery when eager-loading is set.
-	Edges        RequestEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges             RequestEdges `json:"edges"`
+	request_requester *int
+	request_receiver  *int
+	selectValues      sql.SelectValues
 }
 
 // RequestEdges holds the relations/edges for other nodes in the graph.
 type RequestEdges struct {
 	// Requester holds the value of the requester edge.
-	Requester []*Users `json:"requester,omitempty"`
+	Requester *Users `json:"requester,omitempty"`
 	// Receiver holds the value of the receiver edge.
-	Receiver []*Users `json:"receiver,omitempty"`
+	Receiver *Users `json:"receiver,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
 }
 
 // RequesterOrErr returns the Requester value or an error if the edge
-// was not loaded in eager-loading.
-func (e RequestEdges) RequesterOrErr() ([]*Users, error) {
-	if e.loadedTypes[0] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RequestEdges) RequesterOrErr() (*Users, error) {
+	if e.Requester != nil {
 		return e.Requester, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: users.Label}
 	}
 	return nil, &NotLoadedError{edge: "requester"}
 }
 
 // ReceiverOrErr returns the Receiver value or an error if the edge
-// was not loaded in eager-loading.
-func (e RequestEdges) ReceiverOrErr() ([]*Users, error) {
-	if e.loadedTypes[1] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RequestEdges) ReceiverOrErr() (*Users, error) {
+	if e.Receiver != nil {
 		return e.Receiver, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: users.Label}
 	}
 	return nil, &NotLoadedError{edge: "receiver"}
 }
@@ -75,6 +82,10 @@ func (*Request) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case request.FieldCreatedAt, request.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case request.ForeignKeys[0]: // request_requester
+			values[i] = new(sql.NullInt64)
+		case request.ForeignKeys[1]: // request_receiver
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -131,6 +142,20 @@ func (r *Request) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				r.UpdatedAt = value.Time
+			}
+		case request.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field request_requester", value)
+			} else if value.Valid {
+				r.request_requester = new(int)
+				*r.request_requester = int(value.Int64)
+			}
+		case request.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field request_receiver", value)
+			} else if value.Valid {
+				r.request_receiver = new(int)
+				*r.request_receiver = int(value.Int64)
 			}
 		default:
 			r.selectValues.Set(columns[i], values[i])

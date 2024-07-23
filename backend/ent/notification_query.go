@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 	"mocku/backend/ent/notification"
@@ -24,6 +23,7 @@ type NotificationQuery struct {
 	inters        []Interceptor
 	predicates    []predicate.Notification
 	withRecipient *UsersQuery
+	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -74,7 +74,7 @@ func (nq *NotificationQuery) QueryRecipient() *UsersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(notification.Table, notification.FieldID, selector),
 			sqlgraph.To(users.Table, users.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, notification.RecipientTable, notification.RecipientPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, notification.RecipientTable, notification.RecipientColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(nq.driver.Dialect(), step)
 		return fromU, nil
@@ -369,11 +369,18 @@ func (nq *NotificationQuery) prepareQuery(ctx context.Context) error {
 func (nq *NotificationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Notification, error) {
 	var (
 		nodes       = []*Notification{}
+		withFKs     = nq.withFKs
 		_spec       = nq.querySpec()
 		loadedTypes = [1]bool{
 			nq.withRecipient != nil,
 		}
 	)
+	if nq.withRecipient != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, notification.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Notification).scanValues(nil, columns)
 	}
@@ -393,9 +400,8 @@ func (nq *NotificationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		return nodes, nil
 	}
 	if query := nq.withRecipient; query != nil {
-		if err := nq.loadRecipient(ctx, query, nodes,
-			func(n *Notification) { n.Edges.Recipient = []*Users{} },
-			func(n *Notification, e *Users) { n.Edges.Recipient = append(n.Edges.Recipient, e) }); err != nil {
+		if err := nq.loadRecipient(ctx, query, nodes, nil,
+			func(n *Notification, e *Users) { n.Edges.Recipient = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -403,62 +409,33 @@ func (nq *NotificationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 }
 
 func (nq *NotificationQuery) loadRecipient(ctx context.Context, query *UsersQuery, nodes []*Notification, init func(*Notification), assign func(*Notification, *Users)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Notification)
-	nids := make(map[int]map[*Notification]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Notification)
+	for i := range nodes {
+		if nodes[i].notification_recipient == nil {
+			continue
 		}
+		fk := *nodes[i].notification_recipient
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(notification.RecipientTable)
-		s.Join(joinT).On(s.C(users.FieldID), joinT.C(notification.RecipientPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(notification.RecipientPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(notification.RecipientPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
+	if len(ids) == 0 {
+		return nil
 	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Notification]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Users](ctx, query, qr, query.inters)
+	query.Where(users.IDIn(ids...))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "recipient" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "notification_recipient" returned %v`, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil

@@ -47,19 +47,23 @@ func (ac *ActivityCreate) SetNillableTimestamp(t *time.Time) *ActivityCreate {
 	return ac
 }
 
-// AddUserIDs adds the "user" edge to the Users entity by IDs.
-func (ac *ActivityCreate) AddUserIDs(ids ...int) *ActivityCreate {
-	ac.mutation.AddUserIDs(ids...)
+// SetUserID sets the "user" edge to the Users entity by ID.
+func (ac *ActivityCreate) SetUserID(id int) *ActivityCreate {
+	ac.mutation.SetUserID(id)
 	return ac
 }
 
-// AddUser adds the "user" edges to the Users entity.
-func (ac *ActivityCreate) AddUser(u ...*Users) *ActivityCreate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetNillableUserID sets the "user" edge to the Users entity by ID if the given value is not nil.
+func (ac *ActivityCreate) SetNillableUserID(id *int) *ActivityCreate {
+	if id != nil {
+		ac = ac.SetUserID(*id)
 	}
-	return ac.AddUserIDs(ids...)
+	return ac
+}
+
+// SetUser sets the "user" edge to the Users entity.
+func (ac *ActivityCreate) SetUser(u *Users) *ActivityCreate {
+	return ac.SetUserID(u.ID)
 }
 
 // Mutation returns the ActivityMutation object of the builder.
@@ -164,10 +168,10 @@ func (ac *ActivityCreate) createSpec() (*Activity, *sqlgraph.CreateSpec) {
 	}
 	if nodes := ac.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   activity.UserTable,
-			Columns: activity.UserPrimaryKey,
+			Columns: []string{activity.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
@@ -176,6 +180,7 @@ func (ac *ActivityCreate) createSpec() (*Activity, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.activity_user = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

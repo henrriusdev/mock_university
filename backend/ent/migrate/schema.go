@@ -14,12 +14,21 @@ var (
 		{Name: "action", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Size: 2147483647},
 		{Name: "timestamp", Type: field.TypeTime},
+		{Name: "activity_user", Type: field.TypeInt, Nullable: true},
 	}
 	// ActivitiesTable holds the schema information for the "activities" table.
 	ActivitiesTable = &schema.Table{
 		Name:       "activities",
 		Columns:    ActivitiesColumns,
 		PrimaryKey: []*schema.Column{ActivitiesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "activities_users_user",
+				Columns:    []*schema.Column{ActivitiesColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// BlogsColumns holds the columns for the "blogs" table.
 	BlogsColumns = []*schema.Column{
@@ -55,6 +64,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString, Size: 100},
 		{Name: "description", Type: field.TypeString, Size: 2147483647},
+		{Name: "careers_leader", Type: field.TypeInt, Nullable: true},
 		{Name: "subject_career", Type: field.TypeInt, Nullable: true},
 	}
 	// CareersTable holds the schema information for the "careers" table.
@@ -64,8 +74,14 @@ var (
 		PrimaryKey: []*schema.Column{CareersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "careers_subjects_career",
+				Symbol:     "careers_professors_leader",
 				Columns:    []*schema.Column{CareersColumns[3]},
+				RefColumns: []*schema.Column{ProfessorsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "careers_subjects_career",
+				Columns:    []*schema.Column{CareersColumns[4]},
 				RefColumns: []*schema.Column{SubjectsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -102,28 +118,12 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 100},
 		{Name: "start_date", Type: field.TypeTime},
 		{Name: "end_date", Type: field.TypeTime},
-		{Name: "note_cycle", Type: field.TypeInt, Nullable: true},
-		{Name: "payment_cycle", Type: field.TypeInt, Nullable: true},
 	}
 	// CyclesTable holds the schema information for the "cycles" table.
 	CyclesTable = &schema.Table{
 		Name:       "cycles",
 		Columns:    CyclesColumns,
 		PrimaryKey: []*schema.Column{CyclesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "cycles_notes_cycle",
-				Columns:    []*schema.Column{CyclesColumns[4]},
-				RefColumns: []*schema.Column{NotesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "cycles_payments_cycle",
-				Columns:    []*schema.Column{CyclesColumns[5]},
-				RefColumns: []*schema.Column{PaymentsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 	}
 	// ModulesColumns holds the columns for the "modules" table.
 	ModulesColumns = []*schema.Column{
@@ -150,12 +150,35 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "notes", Type: field.TypeJSON, Nullable: true},
 		{Name: "average", Type: field.TypeFloat32, Nullable: true},
+		{Name: "note_student", Type: field.TypeInt, Nullable: true},
+		{Name: "note_subject", Type: field.TypeInt, Nullable: true},
+		{Name: "note_cycle", Type: field.TypeInt, Nullable: true},
 	}
 	// NotesTable holds the schema information for the "notes" table.
 	NotesTable = &schema.Table{
 		Name:       "notes",
 		Columns:    NotesColumns,
 		PrimaryKey: []*schema.Column{NotesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "notes_students_student",
+				Columns:    []*schema.Column{NotesColumns[3]},
+				RefColumns: []*schema.Column{StudentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "notes_subjects_subject",
+				Columns:    []*schema.Column{NotesColumns[4]},
+				RefColumns: []*schema.Column{SubjectsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "notes_cycles_cycle",
+				Columns:    []*schema.Column{NotesColumns[5]},
+				RefColumns: []*schema.Column{CyclesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// NotificationsColumns holds the columns for the "notifications" table.
 	NotificationsColumns = []*schema.Column{
@@ -164,12 +187,21 @@ var (
 		{Name: "message", Type: field.TypeString, Size: 2147483647},
 		{Name: "status", Type: field.TypeString, Default: "unread"},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "notification_recipient", Type: field.TypeInt, Nullable: true},
 	}
 	// NotificationsTable holds the schema information for the "notifications" table.
 	NotificationsTable = &schema.Table{
 		Name:       "notifications",
 		Columns:    NotificationsColumns,
 		PrimaryKey: []*schema.Column{NotificationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "notifications_users_recipient",
+				Columns:    []*schema.Column{NotificationsColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// PaymentsColumns holds the columns for the "payments" table.
 	PaymentsColumns = []*schema.Column{
@@ -179,32 +211,46 @@ var (
 		{Name: "amount", Type: field.TypeFloat64},
 		{Name: "description", Type: field.TypeString, Size: 255},
 		{Name: "fee_number", Type: field.TypeInt},
+		{Name: "payment_student", Type: field.TypeInt, Nullable: true},
+		{Name: "payment_cycle", Type: field.TypeInt, Nullable: true},
+		{Name: "payment_payment_method", Type: field.TypeInt, Nullable: true},
 	}
 	// PaymentsTable holds the schema information for the "payments" table.
 	PaymentsTable = &schema.Table{
 		Name:       "payments",
 		Columns:    PaymentsColumns,
 		PrimaryKey: []*schema.Column{PaymentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "payments_students_student",
+				Columns:    []*schema.Column{PaymentsColumns[6]},
+				RefColumns: []*schema.Column{StudentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "payments_cycles_cycle",
+				Columns:    []*schema.Column{PaymentsColumns[7]},
+				RefColumns: []*schema.Column{CyclesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "payments_payment_methods_payment_method",
+				Columns:    []*schema.Column{PaymentsColumns[8]},
+				RefColumns: []*schema.Column{PaymentMethodsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// PaymentMethodsColumns holds the columns for the "payment_methods" table.
 	PaymentMethodsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString, Size: 100},
-		{Name: "payment_payment_method", Type: field.TypeInt, Nullable: true},
 	}
 	// PaymentMethodsTable holds the schema information for the "payment_methods" table.
 	PaymentMethodsTable = &schema.Table{
 		Name:       "payment_methods",
 		Columns:    PaymentMethodsColumns,
 		PrimaryKey: []*schema.Column{PaymentMethodsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "payment_methods_payments_payment_method",
-				Columns:    []*schema.Column{PaymentMethodsColumns[2]},
-				RefColumns: []*schema.Column{PaymentsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 	}
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
@@ -229,7 +275,6 @@ var (
 		{Name: "birth_date", Type: field.TypeTime},
 		{Name: "phone", Type: field.TypeString, Size: 20},
 		{Name: "address", Type: field.TypeString, Size: 255},
-		{Name: "careers_leader", Type: field.TypeInt, Nullable: true},
 		{Name: "professor_user", Type: field.TypeInt, Nullable: true},
 		{Name: "professor_subordinates", Type: field.TypeInt, Nullable: true},
 	}
@@ -240,20 +285,14 @@ var (
 		PrimaryKey: []*schema.Column{ProfessorsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "professors_careers_leader",
-				Columns:    []*schema.Column{ProfessorsColumns[5]},
-				RefColumns: []*schema.Column{CareersColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
 				Symbol:     "professors_users_user",
-				Columns:    []*schema.Column{ProfessorsColumns[6]},
+				Columns:    []*schema.Column{ProfessorsColumns[5]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "professors_professors_subordinates",
-				Columns:    []*schema.Column{ProfessorsColumns[7]},
+				Columns:    []*schema.Column{ProfessorsColumns[6]},
 				RefColumns: []*schema.Column{ProfessorsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -268,12 +307,28 @@ var (
 		{Name: "description", Type: field.TypeString, Size: 2147483647},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "request_requester", Type: field.TypeInt, Nullable: true},
+		{Name: "request_receiver", Type: field.TypeInt, Nullable: true},
 	}
 	// RequestsTable holds the schema information for the "requests" table.
 	RequestsTable = &schema.Table{
 		Name:       "requests",
 		Columns:    RequestsColumns,
 		PrimaryKey: []*schema.Column{RequestsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "requests_users_requester",
+				Columns:    []*schema.Column{RequestsColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "requests_users_receiver",
+				Columns:    []*schema.Column{RequestsColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
@@ -300,6 +355,7 @@ var (
 		{Name: "credit_units_accumulated", Type: field.TypeInt},
 		{Name: "total_average", Type: field.TypeFloat64},
 		{Name: "student_user", Type: field.TypeInt, Nullable: true},
+		{Name: "student_career", Type: field.TypeInt, Nullable: true},
 	}
 	// StudentsTable holds the schema information for the "students" table.
 	StudentsTable = &schema.Table{
@@ -311,6 +367,12 @@ var (
 				Symbol:     "students_users_user",
 				Columns:    []*schema.Column{StudentsColumns[10]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "students_careers_career",
+				Columns:    []*schema.Column{StudentsColumns[11]},
+				RefColumns: []*schema.Column{CareersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -328,12 +390,21 @@ var (
 		{Name: "lab_hours", Type: field.TypeInt},
 		{Name: "total_hours", Type: field.TypeInt},
 		{Name: "class_schedule", Type: field.TypeJSON, Nullable: true},
+		{Name: "subject_professor", Type: field.TypeInt, Nullable: true},
 	}
 	// SubjectsTable holds the schema information for the "subjects" table.
 	SubjectsTable = &schema.Table{
 		Name:       "subjects",
 		Columns:    SubjectsColumns,
 		PrimaryKey: []*schema.Column{SubjectsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "subjects_professors_professor",
+				Columns:    []*schema.Column{SubjectsColumns[11]},
+				RefColumns: []*schema.Column{ProfessorsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -345,135 +416,19 @@ var (
 		{Name: "avatar", Type: field.TypeString, Size: 255},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "users_role", Type: field.TypeInt, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
-	}
-	// ActivityUserColumns holds the columns for the "activity_user" table.
-	ActivityUserColumns = []*schema.Column{
-		{Name: "activity_id", Type: field.TypeInt},
-		{Name: "users_id", Type: field.TypeInt},
-	}
-	// ActivityUserTable holds the schema information for the "activity_user" table.
-	ActivityUserTable = &schema.Table{
-		Name:       "activity_user",
-		Columns:    ActivityUserColumns,
-		PrimaryKey: []*schema.Column{ActivityUserColumns[0], ActivityUserColumns[1]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "activity_user_activity_id",
-				Columns:    []*schema.Column{ActivityUserColumns[0]},
-				RefColumns: []*schema.Column{ActivitiesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "activity_user_users_id",
-				Columns:    []*schema.Column{ActivityUserColumns[1]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// NoteStudentColumns holds the columns for the "note_student" table.
-	NoteStudentColumns = []*schema.Column{
-		{Name: "note_id", Type: field.TypeInt},
-		{Name: "student_id", Type: field.TypeInt},
-	}
-	// NoteStudentTable holds the schema information for the "note_student" table.
-	NoteStudentTable = &schema.Table{
-		Name:       "note_student",
-		Columns:    NoteStudentColumns,
-		PrimaryKey: []*schema.Column{NoteStudentColumns[0], NoteStudentColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "note_student_note_id",
-				Columns:    []*schema.Column{NoteStudentColumns[0]},
-				RefColumns: []*schema.Column{NotesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "note_student_student_id",
-				Columns:    []*schema.Column{NoteStudentColumns[1]},
-				RefColumns: []*schema.Column{StudentsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// NoteSubjectColumns holds the columns for the "note_subject" table.
-	NoteSubjectColumns = []*schema.Column{
-		{Name: "note_id", Type: field.TypeInt},
-		{Name: "subject_id", Type: field.TypeInt},
-	}
-	// NoteSubjectTable holds the schema information for the "note_subject" table.
-	NoteSubjectTable = &schema.Table{
-		Name:       "note_subject",
-		Columns:    NoteSubjectColumns,
-		PrimaryKey: []*schema.Column{NoteSubjectColumns[0], NoteSubjectColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "note_subject_note_id",
-				Columns:    []*schema.Column{NoteSubjectColumns[0]},
-				RefColumns: []*schema.Column{NotesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "note_subject_subject_id",
-				Columns:    []*schema.Column{NoteSubjectColumns[1]},
-				RefColumns: []*schema.Column{SubjectsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// NotificationRecipientColumns holds the columns for the "notification_recipient" table.
-	NotificationRecipientColumns = []*schema.Column{
-		{Name: "notification_id", Type: field.TypeInt},
-		{Name: "users_id", Type: field.TypeInt},
-	}
-	// NotificationRecipientTable holds the schema information for the "notification_recipient" table.
-	NotificationRecipientTable = &schema.Table{
-		Name:       "notification_recipient",
-		Columns:    NotificationRecipientColumns,
-		PrimaryKey: []*schema.Column{NotificationRecipientColumns[0], NotificationRecipientColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "notification_recipient_notification_id",
-				Columns:    []*schema.Column{NotificationRecipientColumns[0]},
-				RefColumns: []*schema.Column{NotificationsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "notification_recipient_users_id",
-				Columns:    []*schema.Column{NotificationRecipientColumns[1]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// PaymentStudentColumns holds the columns for the "payment_student" table.
-	PaymentStudentColumns = []*schema.Column{
-		{Name: "payment_id", Type: field.TypeInt},
-		{Name: "student_id", Type: field.TypeInt},
-	}
-	// PaymentStudentTable holds the schema information for the "payment_student" table.
-	PaymentStudentTable = &schema.Table{
-		Name:       "payment_student",
-		Columns:    PaymentStudentColumns,
-		PrimaryKey: []*schema.Column{PaymentStudentColumns[0], PaymentStudentColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "payment_student_payment_id",
-				Columns:    []*schema.Column{PaymentStudentColumns[0]},
-				RefColumns: []*schema.Column{PaymentsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "payment_student_student_id",
-				Columns:    []*schema.Column{PaymentStudentColumns[1]},
-				RefColumns: []*schema.Column{StudentsColumns[0]},
-				OnDelete:   schema.Cascade,
+				Symbol:     "users_roles_role",
+				Columns:    []*schema.Column{UsersColumns[8]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 	}
@@ -502,131 +457,6 @@ var (
 			},
 		},
 	}
-	// RequestRequesterColumns holds the columns for the "request_requester" table.
-	RequestRequesterColumns = []*schema.Column{
-		{Name: "request_id", Type: field.TypeInt},
-		{Name: "users_id", Type: field.TypeInt},
-	}
-	// RequestRequesterTable holds the schema information for the "request_requester" table.
-	RequestRequesterTable = &schema.Table{
-		Name:       "request_requester",
-		Columns:    RequestRequesterColumns,
-		PrimaryKey: []*schema.Column{RequestRequesterColumns[0], RequestRequesterColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "request_requester_request_id",
-				Columns:    []*schema.Column{RequestRequesterColumns[0]},
-				RefColumns: []*schema.Column{RequestsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "request_requester_users_id",
-				Columns:    []*schema.Column{RequestRequesterColumns[1]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// RequestReceiverColumns holds the columns for the "request_receiver" table.
-	RequestReceiverColumns = []*schema.Column{
-		{Name: "request_id", Type: field.TypeInt},
-		{Name: "users_id", Type: field.TypeInt},
-	}
-	// RequestReceiverTable holds the schema information for the "request_receiver" table.
-	RequestReceiverTable = &schema.Table{
-		Name:       "request_receiver",
-		Columns:    RequestReceiverColumns,
-		PrimaryKey: []*schema.Column{RequestReceiverColumns[0], RequestReceiverColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "request_receiver_request_id",
-				Columns:    []*schema.Column{RequestReceiverColumns[0]},
-				RefColumns: []*schema.Column{RequestsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "request_receiver_users_id",
-				Columns:    []*schema.Column{RequestReceiverColumns[1]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// StudentCareerColumns holds the columns for the "student_career" table.
-	StudentCareerColumns = []*schema.Column{
-		{Name: "student_id", Type: field.TypeInt},
-		{Name: "careers_id", Type: field.TypeInt},
-	}
-	// StudentCareerTable holds the schema information for the "student_career" table.
-	StudentCareerTable = &schema.Table{
-		Name:       "student_career",
-		Columns:    StudentCareerColumns,
-		PrimaryKey: []*schema.Column{StudentCareerColumns[0], StudentCareerColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "student_career_student_id",
-				Columns:    []*schema.Column{StudentCareerColumns[0]},
-				RefColumns: []*schema.Column{StudentsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "student_career_careers_id",
-				Columns:    []*schema.Column{StudentCareerColumns[1]},
-				RefColumns: []*schema.Column{CareersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// SubjectProfessorColumns holds the columns for the "subject_professor" table.
-	SubjectProfessorColumns = []*schema.Column{
-		{Name: "subject_id", Type: field.TypeInt},
-		{Name: "professor_id", Type: field.TypeInt},
-	}
-	// SubjectProfessorTable holds the schema information for the "subject_professor" table.
-	SubjectProfessorTable = &schema.Table{
-		Name:       "subject_professor",
-		Columns:    SubjectProfessorColumns,
-		PrimaryKey: []*schema.Column{SubjectProfessorColumns[0], SubjectProfessorColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "subject_professor_subject_id",
-				Columns:    []*schema.Column{SubjectProfessorColumns[0]},
-				RefColumns: []*schema.Column{SubjectsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "subject_professor_professor_id",
-				Columns:    []*schema.Column{SubjectProfessorColumns[1]},
-				RefColumns: []*schema.Column{ProfessorsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
-	// UsersRoleColumns holds the columns for the "users_role" table.
-	UsersRoleColumns = []*schema.Column{
-		{Name: "users_id", Type: field.TypeInt},
-		{Name: "role_id", Type: field.TypeInt},
-	}
-	// UsersRoleTable holds the schema information for the "users_role" table.
-	UsersRoleTable = &schema.Table{
-		Name:       "users_role",
-		Columns:    UsersRoleColumns,
-		PrimaryKey: []*schema.Column{UsersRoleColumns[0], UsersRoleColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "users_role_users_id",
-				Columns:    []*schema.Column{UsersRoleColumns[0]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "users_role_role_id",
-				Columns:    []*schema.Column{UsersRoleColumns[1]},
-				RefColumns: []*schema.Column{RolesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ActivitiesTable,
@@ -646,52 +476,32 @@ var (
 		StudentsTable,
 		SubjectsTable,
 		UsersTable,
-		ActivityUserTable,
-		NoteStudentTable,
-		NoteSubjectTable,
-		NotificationRecipientTable,
-		PaymentStudentTable,
 		PermissionRolesTable,
-		RequestRequesterTable,
-		RequestReceiverTable,
-		StudentCareerTable,
-		SubjectProfessorTable,
-		UsersRoleTable,
 	}
 )
 
 func init() {
+	ActivitiesTable.ForeignKeys[0].RefTable = UsersTable
 	BlogsTable.ForeignKeys[0].RefTable = UsersTable
-	CareersTable.ForeignKeys[0].RefTable = SubjectsTable
+	CareersTable.ForeignKeys[0].RefTable = ProfessorsTable
+	CareersTable.ForeignKeys[1].RefTable = SubjectsTable
 	ConfigurationsTable.ForeignKeys[0].RefTable = CyclesTable
-	CyclesTable.ForeignKeys[0].RefTable = NotesTable
-	CyclesTable.ForeignKeys[1].RefTable = PaymentsTable
 	ModulesTable.ForeignKeys[0].RefTable = PermissionsTable
-	PaymentMethodsTable.ForeignKeys[0].RefTable = PaymentsTable
-	ProfessorsTable.ForeignKeys[0].RefTable = CareersTable
-	ProfessorsTable.ForeignKeys[1].RefTable = UsersTable
-	ProfessorsTable.ForeignKeys[2].RefTable = ProfessorsTable
+	NotesTable.ForeignKeys[0].RefTable = StudentsTable
+	NotesTable.ForeignKeys[1].RefTable = SubjectsTable
+	NotesTable.ForeignKeys[2].RefTable = CyclesTable
+	NotificationsTable.ForeignKeys[0].RefTable = UsersTable
+	PaymentsTable.ForeignKeys[0].RefTable = StudentsTable
+	PaymentsTable.ForeignKeys[1].RefTable = CyclesTable
+	PaymentsTable.ForeignKeys[2].RefTable = PaymentMethodsTable
+	ProfessorsTable.ForeignKeys[0].RefTable = UsersTable
+	ProfessorsTable.ForeignKeys[1].RefTable = ProfessorsTable
+	RequestsTable.ForeignKeys[0].RefTable = UsersTable
+	RequestsTable.ForeignKeys[1].RefTable = UsersTable
 	StudentsTable.ForeignKeys[0].RefTable = UsersTable
-	ActivityUserTable.ForeignKeys[0].RefTable = ActivitiesTable
-	ActivityUserTable.ForeignKeys[1].RefTable = UsersTable
-	NoteStudentTable.ForeignKeys[0].RefTable = NotesTable
-	NoteStudentTable.ForeignKeys[1].RefTable = StudentsTable
-	NoteSubjectTable.ForeignKeys[0].RefTable = NotesTable
-	NoteSubjectTable.ForeignKeys[1].RefTable = SubjectsTable
-	NotificationRecipientTable.ForeignKeys[0].RefTable = NotificationsTable
-	NotificationRecipientTable.ForeignKeys[1].RefTable = UsersTable
-	PaymentStudentTable.ForeignKeys[0].RefTable = PaymentsTable
-	PaymentStudentTable.ForeignKeys[1].RefTable = StudentsTable
+	StudentsTable.ForeignKeys[1].RefTable = CareersTable
+	SubjectsTable.ForeignKeys[0].RefTable = ProfessorsTable
+	UsersTable.ForeignKeys[0].RefTable = RolesTable
 	PermissionRolesTable.ForeignKeys[0].RefTable = PermissionsTable
 	PermissionRolesTable.ForeignKeys[1].RefTable = RolesTable
-	RequestRequesterTable.ForeignKeys[0].RefTable = RequestsTable
-	RequestRequesterTable.ForeignKeys[1].RefTable = UsersTable
-	RequestReceiverTable.ForeignKeys[0].RefTable = RequestsTable
-	RequestReceiverTable.ForeignKeys[1].RefTable = UsersTable
-	StudentCareerTable.ForeignKeys[0].RefTable = StudentsTable
-	StudentCareerTable.ForeignKeys[1].RefTable = CareersTable
-	SubjectProfessorTable.ForeignKeys[0].RefTable = SubjectsTable
-	SubjectProfessorTable.ForeignKeys[1].RefTable = ProfessorsTable
-	UsersRoleTable.ForeignKeys[0].RefTable = UsersTable
-	UsersRoleTable.ForeignKeys[1].RefTable = RolesTable
 }

@@ -85,19 +85,23 @@ func (nu *NotificationUpdate) SetNillableCreatedAt(t *time.Time) *NotificationUp
 	return nu
 }
 
-// AddRecipientIDs adds the "recipient" edge to the Users entity by IDs.
-func (nu *NotificationUpdate) AddRecipientIDs(ids ...int) *NotificationUpdate {
-	nu.mutation.AddRecipientIDs(ids...)
+// SetRecipientID sets the "recipient" edge to the Users entity by ID.
+func (nu *NotificationUpdate) SetRecipientID(id int) *NotificationUpdate {
+	nu.mutation.SetRecipientID(id)
 	return nu
 }
 
-// AddRecipient adds the "recipient" edges to the Users entity.
-func (nu *NotificationUpdate) AddRecipient(u ...*Users) *NotificationUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetNillableRecipientID sets the "recipient" edge to the Users entity by ID if the given value is not nil.
+func (nu *NotificationUpdate) SetNillableRecipientID(id *int) *NotificationUpdate {
+	if id != nil {
+		nu = nu.SetRecipientID(*id)
 	}
-	return nu.AddRecipientIDs(ids...)
+	return nu
+}
+
+// SetRecipient sets the "recipient" edge to the Users entity.
+func (nu *NotificationUpdate) SetRecipient(u *Users) *NotificationUpdate {
+	return nu.SetRecipientID(u.ID)
 }
 
 // Mutation returns the NotificationMutation object of the builder.
@@ -105,25 +109,10 @@ func (nu *NotificationUpdate) Mutation() *NotificationMutation {
 	return nu.mutation
 }
 
-// ClearRecipient clears all "recipient" edges to the Users entity.
+// ClearRecipient clears the "recipient" edge to the Users entity.
 func (nu *NotificationUpdate) ClearRecipient() *NotificationUpdate {
 	nu.mutation.ClearRecipient()
 	return nu
-}
-
-// RemoveRecipientIDs removes the "recipient" edge to Users entities by IDs.
-func (nu *NotificationUpdate) RemoveRecipientIDs(ids ...int) *NotificationUpdate {
-	nu.mutation.RemoveRecipientIDs(ids...)
-	return nu
-}
-
-// RemoveRecipient removes "recipient" edges to Users entities.
-func (nu *NotificationUpdate) RemoveRecipient(u ...*Users) *NotificationUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return nu.RemoveRecipientIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -194,39 +183,23 @@ func (nu *NotificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nu.mutation.RecipientCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   notification.RecipientTable,
-			Columns: notification.RecipientPrimaryKey,
+			Columns: []string{notification.RecipientColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nu.mutation.RemovedRecipientIDs(); len(nodes) > 0 && !nu.mutation.RecipientCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   notification.RecipientTable,
-			Columns: notification.RecipientPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := nu.mutation.RecipientIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   notification.RecipientTable,
-			Columns: notification.RecipientPrimaryKey,
+			Columns: []string{notification.RecipientColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
@@ -313,19 +286,23 @@ func (nuo *NotificationUpdateOne) SetNillableCreatedAt(t *time.Time) *Notificati
 	return nuo
 }
 
-// AddRecipientIDs adds the "recipient" edge to the Users entity by IDs.
-func (nuo *NotificationUpdateOne) AddRecipientIDs(ids ...int) *NotificationUpdateOne {
-	nuo.mutation.AddRecipientIDs(ids...)
+// SetRecipientID sets the "recipient" edge to the Users entity by ID.
+func (nuo *NotificationUpdateOne) SetRecipientID(id int) *NotificationUpdateOne {
+	nuo.mutation.SetRecipientID(id)
 	return nuo
 }
 
-// AddRecipient adds the "recipient" edges to the Users entity.
-func (nuo *NotificationUpdateOne) AddRecipient(u ...*Users) *NotificationUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetNillableRecipientID sets the "recipient" edge to the Users entity by ID if the given value is not nil.
+func (nuo *NotificationUpdateOne) SetNillableRecipientID(id *int) *NotificationUpdateOne {
+	if id != nil {
+		nuo = nuo.SetRecipientID(*id)
 	}
-	return nuo.AddRecipientIDs(ids...)
+	return nuo
+}
+
+// SetRecipient sets the "recipient" edge to the Users entity.
+func (nuo *NotificationUpdateOne) SetRecipient(u *Users) *NotificationUpdateOne {
+	return nuo.SetRecipientID(u.ID)
 }
 
 // Mutation returns the NotificationMutation object of the builder.
@@ -333,25 +310,10 @@ func (nuo *NotificationUpdateOne) Mutation() *NotificationMutation {
 	return nuo.mutation
 }
 
-// ClearRecipient clears all "recipient" edges to the Users entity.
+// ClearRecipient clears the "recipient" edge to the Users entity.
 func (nuo *NotificationUpdateOne) ClearRecipient() *NotificationUpdateOne {
 	nuo.mutation.ClearRecipient()
 	return nuo
-}
-
-// RemoveRecipientIDs removes the "recipient" edge to Users entities by IDs.
-func (nuo *NotificationUpdateOne) RemoveRecipientIDs(ids ...int) *NotificationUpdateOne {
-	nuo.mutation.RemoveRecipientIDs(ids...)
-	return nuo
-}
-
-// RemoveRecipient removes "recipient" edges to Users entities.
-func (nuo *NotificationUpdateOne) RemoveRecipient(u ...*Users) *NotificationUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return nuo.RemoveRecipientIDs(ids...)
 }
 
 // Where appends a list predicates to the NotificationUpdate builder.
@@ -452,39 +414,23 @@ func (nuo *NotificationUpdateOne) sqlSave(ctx context.Context) (_node *Notificat
 	}
 	if nuo.mutation.RecipientCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   notification.RecipientTable,
-			Columns: notification.RecipientPrimaryKey,
+			Columns: []string{notification.RecipientColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nuo.mutation.RemovedRecipientIDs(); len(nodes) > 0 && !nuo.mutation.RecipientCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   notification.RecipientTable,
-			Columns: notification.RecipientPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := nuo.mutation.RecipientIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   notification.RecipientTable,
-			Columns: notification.RecipientPrimaryKey,
+			Columns: []string{notification.RecipientColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),

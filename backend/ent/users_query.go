@@ -37,6 +37,7 @@ type UsersQuery struct {
 	withActivity         *ActivityQuery
 	withStudents         *StudentQuery
 	withProfessor        *ProfessorQuery
+	withFKs              bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -87,7 +88,7 @@ func (uq *UsersQuery) QueryRole() *RoleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, selector),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, users.RoleTable, users.RolePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, users.RoleTable, users.RoleColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -109,7 +110,7 @@ func (uq *UsersQuery) QueryRequestsMade() *RequestQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, selector),
 			sqlgraph.To(request.Table, request.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, users.RequestsMadeTable, users.RequestsMadePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.RequestsMadeTable, users.RequestsMadeColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -131,7 +132,7 @@ func (uq *UsersQuery) QueryRequestsReceived() *RequestQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, selector),
 			sqlgraph.To(request.Table, request.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, users.RequestsReceivedTable, users.RequestsReceivedPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.RequestsReceivedTable, users.RequestsReceivedColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -175,7 +176,7 @@ func (uq *UsersQuery) QueryNotifications() *NotificationQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, selector),
 			sqlgraph.To(notification.Table, notification.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, users.NotificationsTable, users.NotificationsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.NotificationsTable, users.NotificationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -197,7 +198,7 @@ func (uq *UsersQuery) QueryActivity() *ActivityQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, selector),
 			sqlgraph.To(activity.Table, activity.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, users.ActivityTable, users.ActivityPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.ActivityTable, users.ActivityColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -620,6 +621,7 @@ func (uq *UsersQuery) prepareQuery(ctx context.Context) error {
 func (uq *UsersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Users, error) {
 	var (
 		nodes       = []*Users{}
+		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
 		loadedTypes = [8]bool{
 			uq.withRole != nil,
@@ -632,6 +634,12 @@ func (uq *UsersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Users,
 			uq.withProfessor != nil,
 		}
 	)
+	if uq.withRole != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, users.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Users).scanValues(nil, columns)
 	}
@@ -651,9 +659,8 @@ func (uq *UsersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Users,
 		return nodes, nil
 	}
 	if query := uq.withRole; query != nil {
-		if err := uq.loadRole(ctx, query, nodes,
-			func(n *Users) { n.Edges.Role = []*Role{} },
-			func(n *Users, e *Role) { n.Edges.Role = append(n.Edges.Role, e) }); err != nil {
+		if err := uq.loadRole(ctx, query, nodes, nil,
+			func(n *Users, e *Role) { n.Edges.Role = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -710,185 +717,96 @@ func (uq *UsersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Users,
 }
 
 func (uq *UsersQuery) loadRole(ctx context.Context, query *RoleQuery, nodes []*Users, init func(*Users), assign func(*Users, *Role)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Users)
-	nids := make(map[int]map[*Users]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Users)
+	for i := range nodes {
+		if nodes[i].users_role == nil {
+			continue
 		}
+		fk := *nodes[i].users_role
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(users.RoleTable)
-		s.Join(joinT).On(s.C(role.FieldID), joinT.C(users.RolePrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(users.RolePrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(users.RolePrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
+	if len(ids) == 0 {
+		return nil
 	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Users]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Role](ctx, query, qr, query.inters)
+	query.Where(role.IDIn(ids...))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "role" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "users_role" returned %v`, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil
 }
 func (uq *UsersQuery) loadRequestsMade(ctx context.Context, query *RequestQuery, nodes []*Users, init func(*Users), assign func(*Users, *Request)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Users)
-	nids := make(map[int]map[*Users]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Users)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
 		if init != nil {
-			init(node)
+			init(nodes[i])
 		}
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(users.RequestsMadeTable)
-		s.Join(joinT).On(s.C(request.FieldID), joinT.C(users.RequestsMadePrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(users.RequestsMadePrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(users.RequestsMadePrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Users]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Request](ctx, query, qr, query.inters)
+	query.withFKs = true
+	query.Where(predicate.Request(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(users.RequestsMadeColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		fk := n.request_requester
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "request_requester" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected "requests_made" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "request_requester" returned %v for node %v`, *fk, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
+		assign(node, n)
 	}
 	return nil
 }
 func (uq *UsersQuery) loadRequestsReceived(ctx context.Context, query *RequestQuery, nodes []*Users, init func(*Users), assign func(*Users, *Request)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Users)
-	nids := make(map[int]map[*Users]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Users)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
 		if init != nil {
-			init(node)
+			init(nodes[i])
 		}
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(users.RequestsReceivedTable)
-		s.Join(joinT).On(s.C(request.FieldID), joinT.C(users.RequestsReceivedPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(users.RequestsReceivedPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(users.RequestsReceivedPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Users]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Request](ctx, query, qr, query.inters)
+	query.withFKs = true
+	query.Where(predicate.Request(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(users.RequestsReceivedColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		fk := n.request_receiver
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "request_receiver" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected "requests_received" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "request_receiver" returned %v for node %v`, *fk, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -924,124 +842,64 @@ func (uq *UsersQuery) loadBlog(ctx context.Context, query *BlogQuery, nodes []*U
 	return nil
 }
 func (uq *UsersQuery) loadNotifications(ctx context.Context, query *NotificationQuery, nodes []*Users, init func(*Users), assign func(*Users, *Notification)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Users)
-	nids := make(map[int]map[*Users]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Users)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
 		if init != nil {
-			init(node)
+			init(nodes[i])
 		}
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(users.NotificationsTable)
-		s.Join(joinT).On(s.C(notification.FieldID), joinT.C(users.NotificationsPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(users.NotificationsPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(users.NotificationsPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Users]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Notification](ctx, query, qr, query.inters)
+	query.withFKs = true
+	query.Where(predicate.Notification(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(users.NotificationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		fk := n.notification_recipient
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "notification_recipient" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected "notifications" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "notification_recipient" returned %v for node %v`, *fk, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
+		assign(node, n)
 	}
 	return nil
 }
 func (uq *UsersQuery) loadActivity(ctx context.Context, query *ActivityQuery, nodes []*Users, init func(*Users), assign func(*Users, *Activity)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Users)
-	nids := make(map[int]map[*Users]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Users)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
 		if init != nil {
-			init(node)
+			init(nodes[i])
 		}
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(users.ActivityTable)
-		s.Join(joinT).On(s.C(activity.FieldID), joinT.C(users.ActivityPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(users.ActivityPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(users.ActivityPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Users]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Activity](ctx, query, qr, query.inters)
+	query.withFKs = true
+	query.Where(predicate.Activity(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(users.ActivityColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		fk := n.activity_user
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "activity_user" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected "activity" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "activity_user" returned %v for node %v`, *fk, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
+		assign(node, n)
 	}
 	return nil
 }

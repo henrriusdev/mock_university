@@ -21,7 +21,6 @@ type PaymentMethodQuery struct {
 	order      []paymentmethod.OrderOption
 	inters     []Interceptor
 	predicates []predicate.PaymentMethod
-	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -332,13 +331,9 @@ func (pmq *PaymentMethodQuery) prepareQuery(ctx context.Context) error {
 
 func (pmq *PaymentMethodQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*PaymentMethod, error) {
 	var (
-		nodes   = []*PaymentMethod{}
-		withFKs = pmq.withFKs
-		_spec   = pmq.querySpec()
+		nodes = []*PaymentMethod{}
+		_spec = pmq.querySpec()
 	)
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, paymentmethod.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*PaymentMethod).scanValues(nil, columns)
 	}

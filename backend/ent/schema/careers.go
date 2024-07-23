@@ -22,7 +22,7 @@ func (Careers) Fields() []ent.Field {
 // Edges of the Careers.
 func (Careers) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("leader", Professor.Type),
+		edge.To("leader", Professor.Type).Unique(),
 		edge.From("students", Student.Type).Ref("career"),
 	}
 }

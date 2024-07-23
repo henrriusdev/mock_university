@@ -17,9 +17,8 @@ type PaymentMethod struct {
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
-	Name                   string `json:"name,omitempty"`
-	payment_payment_method *int
-	selectValues           sql.SelectValues
+	Name         string `json:"name,omitempty"`
+	selectValues sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -31,8 +30,6 @@ func (*PaymentMethod) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case paymentmethod.FieldName:
 			values[i] = new(sql.NullString)
-		case paymentmethod.ForeignKeys[0]: // payment_payment_method
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -59,13 +56,6 @@ func (pm *PaymentMethod) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				pm.Name = value.String
-			}
-		case paymentmethod.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field payment_payment_method", value)
-			} else if value.Valid {
-				pm.payment_payment_method = new(int)
-				*pm.payment_payment_method = int(value.Int64)
 			}
 		default:
 			pm.selectValues.Set(columns[i], values[i])

@@ -22,10 +22,8 @@ type Cycle struct {
 	// StartDate holds the value of the "start_date" field.
 	StartDate time.Time `json:"start_date,omitempty"`
 	// EndDate holds the value of the "end_date" field.
-	EndDate       time.Time `json:"end_date,omitempty"`
-	note_cycle    *int
-	payment_cycle *int
-	selectValues  sql.SelectValues
+	EndDate      time.Time `json:"end_date,omitempty"`
+	selectValues sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -39,10 +37,6 @@ func (*Cycle) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case cycle.FieldStartDate, cycle.FieldEndDate:
 			values[i] = new(sql.NullTime)
-		case cycle.ForeignKeys[0]: // note_cycle
-			values[i] = new(sql.NullInt64)
-		case cycle.ForeignKeys[1]: // payment_cycle
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -81,20 +75,6 @@ func (c *Cycle) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field end_date", values[i])
 			} else if value.Valid {
 				c.EndDate = value.Time
-			}
-		case cycle.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field note_cycle", value)
-			} else if value.Valid {
-				c.note_cycle = new(int)
-				*c.note_cycle = int(value.Int64)
-			}
-		case cycle.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field payment_cycle", value)
-			} else if value.Valid {
-				c.payment_cycle = new(int)
-				*c.payment_cycle = int(value.Int64)
 			}
 		default:
 			c.selectValues.Set(columns[i], values[i])

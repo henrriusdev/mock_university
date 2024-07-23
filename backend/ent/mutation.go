@@ -69,8 +69,7 @@ type ActivityMutation struct {
 	description   *string
 	timestamp     *time.Time
 	clearedFields map[string]struct{}
-	user          map[int]struct{}
-	removeduser   map[int]struct{}
+	user          *int
 	cleareduser   bool
 	done          bool
 	oldValue      func(context.Context) (*Activity, error)
@@ -283,14 +282,9 @@ func (m *ActivityMutation) ResetTimestamp() {
 	m.timestamp = nil
 }
 
-// AddUserIDs adds the "user" edge to the Users entity by ids.
-func (m *ActivityMutation) AddUserIDs(ids ...int) {
-	if m.user == nil {
-		m.user = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.user[ids[i]] = struct{}{}
-	}
+// SetUserID sets the "user" edge to the Users entity by id.
+func (m *ActivityMutation) SetUserID(id int) {
+	m.user = &id
 }
 
 // ClearUser clears the "user" edge to the Users entity.
@@ -303,29 +297,20 @@ func (m *ActivityMutation) UserCleared() bool {
 	return m.cleareduser
 }
 
-// RemoveUserIDs removes the "user" edge to the Users entity by IDs.
-func (m *ActivityMutation) RemoveUserIDs(ids ...int) {
-	if m.removeduser == nil {
-		m.removeduser = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.user, ids[i])
-		m.removeduser[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedUser returns the removed IDs of the "user" edge to the Users entity.
-func (m *ActivityMutation) RemovedUserIDs() (ids []int) {
-	for id := range m.removeduser {
-		ids = append(ids, id)
+// UserID returns the "user" edge ID in the mutation.
+func (m *ActivityMutation) UserID() (id int, exists bool) {
+	if m.user != nil {
+		return *m.user, true
 	}
 	return
 }
 
 // UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
 func (m *ActivityMutation) UserIDs() (ids []int) {
-	for id := range m.user {
-		ids = append(ids, id)
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -334,7 +319,6 @@ func (m *ActivityMutation) UserIDs() (ids []int) {
 func (m *ActivityMutation) ResetUser() {
 	m.user = nil
 	m.cleareduser = false
-	m.removeduser = nil
 }
 
 // Where appends a list predicates to the ActivityMutation builder.
@@ -516,11 +500,9 @@ func (m *ActivityMutation) AddedEdges() []string {
 func (m *ActivityMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case activity.EdgeUser:
-		ids := make([]ent.Value, 0, len(m.user))
-		for id := range m.user {
-			ids = append(ids, id)
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -528,23 +510,12 @@ func (m *ActivityMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ActivityMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.removeduser != nil {
-		edges = append(edges, activity.EdgeUser)
-	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *ActivityMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case activity.EdgeUser:
-		ids := make([]ent.Value, 0, len(m.removeduser))
-		for id := range m.removeduser {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
@@ -571,6 +542,9 @@ func (m *ActivityMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *ActivityMutation) ClearEdge(name string) error {
 	switch name {
+	case activity.EdgeUser:
+		m.ClearUser()
+		return nil
 	}
 	return fmt.Errorf("unknown Activity unique edge %s", name)
 }
@@ -1640,8 +1614,7 @@ type CareersMutation struct {
 	name            *string
 	description     *string
 	clearedFields   map[string]struct{}
-	leader          map[int]struct{}
-	removedleader   map[int]struct{}
+	leader          *int
 	clearedleader   bool
 	students        map[int]struct{}
 	removedstudents map[int]struct{}
@@ -1821,14 +1794,9 @@ func (m *CareersMutation) ResetDescription() {
 	m.description = nil
 }
 
-// AddLeaderIDs adds the "leader" edge to the Professor entity by ids.
-func (m *CareersMutation) AddLeaderIDs(ids ...int) {
-	if m.leader == nil {
-		m.leader = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.leader[ids[i]] = struct{}{}
-	}
+// SetLeaderID sets the "leader" edge to the Professor entity by id.
+func (m *CareersMutation) SetLeaderID(id int) {
+	m.leader = &id
 }
 
 // ClearLeader clears the "leader" edge to the Professor entity.
@@ -1841,29 +1809,20 @@ func (m *CareersMutation) LeaderCleared() bool {
 	return m.clearedleader
 }
 
-// RemoveLeaderIDs removes the "leader" edge to the Professor entity by IDs.
-func (m *CareersMutation) RemoveLeaderIDs(ids ...int) {
-	if m.removedleader == nil {
-		m.removedleader = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.leader, ids[i])
-		m.removedleader[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedLeader returns the removed IDs of the "leader" edge to the Professor entity.
-func (m *CareersMutation) RemovedLeaderIDs() (ids []int) {
-	for id := range m.removedleader {
-		ids = append(ids, id)
+// LeaderID returns the "leader" edge ID in the mutation.
+func (m *CareersMutation) LeaderID() (id int, exists bool) {
+	if m.leader != nil {
+		return *m.leader, true
 	}
 	return
 }
 
 // LeaderIDs returns the "leader" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// LeaderID instead. It exists only for internal usage by the builders.
 func (m *CareersMutation) LeaderIDs() (ids []int) {
-	for id := range m.leader {
-		ids = append(ids, id)
+	if id := m.leader; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -1872,7 +1831,6 @@ func (m *CareersMutation) LeaderIDs() (ids []int) {
 func (m *CareersMutation) ResetLeader() {
 	m.leader = nil
 	m.clearedleader = false
-	m.removedleader = nil
 }
 
 // AddStudentIDs adds the "students" edge to the Student entity by ids.
@@ -2094,11 +2052,9 @@ func (m *CareersMutation) AddedEdges() []string {
 func (m *CareersMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case careers.EdgeLeader:
-		ids := make([]ent.Value, 0, len(m.leader))
-		for id := range m.leader {
-			ids = append(ids, id)
+		if id := m.leader; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case careers.EdgeStudents:
 		ids := make([]ent.Value, 0, len(m.students))
 		for id := range m.students {
@@ -2112,9 +2068,6 @@ func (m *CareersMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CareersMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedleader != nil {
-		edges = append(edges, careers.EdgeLeader)
-	}
 	if m.removedstudents != nil {
 		edges = append(edges, careers.EdgeStudents)
 	}
@@ -2125,12 +2078,6 @@ func (m *CareersMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *CareersMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case careers.EdgeLeader:
-		ids := make([]ent.Value, 0, len(m.removedleader))
-		for id := range m.removedleader {
-			ids = append(ids, id)
-		}
-		return ids
 	case careers.EdgeStudents:
 		ids := make([]ent.Value, 0, len(m.removedstudents))
 		for id := range m.removedstudents {
@@ -2169,6 +2116,9 @@ func (m *CareersMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *CareersMutation) ClearEdge(name string) error {
 	switch name {
+	case careers.EdgeLeader:
+		m.ClearLeader()
+		return nil
 	}
 	return fmt.Errorf("unknown Careers unique edge %s", name)
 }
@@ -3729,14 +3679,11 @@ type NoteMutation struct {
 	average        *float32
 	addaverage     *float32
 	clearedFields  map[string]struct{}
-	student        map[int]struct{}
-	removedstudent map[int]struct{}
+	student        *int
 	clearedstudent bool
-	subject        map[int]struct{}
-	removedsubject map[int]struct{}
+	subject        *int
 	clearedsubject bool
-	cycle          map[int]struct{}
-	removedcycle   map[int]struct{}
+	cycle          *int
 	clearedcycle   bool
 	done           bool
 	oldValue       func(context.Context) (*Note, error)
@@ -3976,14 +3923,9 @@ func (m *NoteMutation) ResetAverage() {
 	delete(m.clearedFields, note.FieldAverage)
 }
 
-// AddStudentIDs adds the "student" edge to the Student entity by ids.
-func (m *NoteMutation) AddStudentIDs(ids ...int) {
-	if m.student == nil {
-		m.student = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.student[ids[i]] = struct{}{}
-	}
+// SetStudentID sets the "student" edge to the Student entity by id.
+func (m *NoteMutation) SetStudentID(id int) {
+	m.student = &id
 }
 
 // ClearStudent clears the "student" edge to the Student entity.
@@ -3996,29 +3938,20 @@ func (m *NoteMutation) StudentCleared() bool {
 	return m.clearedstudent
 }
 
-// RemoveStudentIDs removes the "student" edge to the Student entity by IDs.
-func (m *NoteMutation) RemoveStudentIDs(ids ...int) {
-	if m.removedstudent == nil {
-		m.removedstudent = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.student, ids[i])
-		m.removedstudent[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedStudent returns the removed IDs of the "student" edge to the Student entity.
-func (m *NoteMutation) RemovedStudentIDs() (ids []int) {
-	for id := range m.removedstudent {
-		ids = append(ids, id)
+// StudentID returns the "student" edge ID in the mutation.
+func (m *NoteMutation) StudentID() (id int, exists bool) {
+	if m.student != nil {
+		return *m.student, true
 	}
 	return
 }
 
 // StudentIDs returns the "student" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// StudentID instead. It exists only for internal usage by the builders.
 func (m *NoteMutation) StudentIDs() (ids []int) {
-	for id := range m.student {
-		ids = append(ids, id)
+	if id := m.student; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -4027,17 +3960,11 @@ func (m *NoteMutation) StudentIDs() (ids []int) {
 func (m *NoteMutation) ResetStudent() {
 	m.student = nil
 	m.clearedstudent = false
-	m.removedstudent = nil
 }
 
-// AddSubjectIDs adds the "subject" edge to the Subject entity by ids.
-func (m *NoteMutation) AddSubjectIDs(ids ...int) {
-	if m.subject == nil {
-		m.subject = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.subject[ids[i]] = struct{}{}
-	}
+// SetSubjectID sets the "subject" edge to the Subject entity by id.
+func (m *NoteMutation) SetSubjectID(id int) {
+	m.subject = &id
 }
 
 // ClearSubject clears the "subject" edge to the Subject entity.
@@ -4050,29 +3977,20 @@ func (m *NoteMutation) SubjectCleared() bool {
 	return m.clearedsubject
 }
 
-// RemoveSubjectIDs removes the "subject" edge to the Subject entity by IDs.
-func (m *NoteMutation) RemoveSubjectIDs(ids ...int) {
-	if m.removedsubject == nil {
-		m.removedsubject = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.subject, ids[i])
-		m.removedsubject[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedSubject returns the removed IDs of the "subject" edge to the Subject entity.
-func (m *NoteMutation) RemovedSubjectIDs() (ids []int) {
-	for id := range m.removedsubject {
-		ids = append(ids, id)
+// SubjectID returns the "subject" edge ID in the mutation.
+func (m *NoteMutation) SubjectID() (id int, exists bool) {
+	if m.subject != nil {
+		return *m.subject, true
 	}
 	return
 }
 
 // SubjectIDs returns the "subject" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// SubjectID instead. It exists only for internal usage by the builders.
 func (m *NoteMutation) SubjectIDs() (ids []int) {
-	for id := range m.subject {
-		ids = append(ids, id)
+	if id := m.subject; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -4081,17 +3999,11 @@ func (m *NoteMutation) SubjectIDs() (ids []int) {
 func (m *NoteMutation) ResetSubject() {
 	m.subject = nil
 	m.clearedsubject = false
-	m.removedsubject = nil
 }
 
-// AddCycleIDs adds the "cycle" edge to the Cycle entity by ids.
-func (m *NoteMutation) AddCycleIDs(ids ...int) {
-	if m.cycle == nil {
-		m.cycle = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.cycle[ids[i]] = struct{}{}
-	}
+// SetCycleID sets the "cycle" edge to the Cycle entity by id.
+func (m *NoteMutation) SetCycleID(id int) {
+	m.cycle = &id
 }
 
 // ClearCycle clears the "cycle" edge to the Cycle entity.
@@ -4104,29 +4016,20 @@ func (m *NoteMutation) CycleCleared() bool {
 	return m.clearedcycle
 }
 
-// RemoveCycleIDs removes the "cycle" edge to the Cycle entity by IDs.
-func (m *NoteMutation) RemoveCycleIDs(ids ...int) {
-	if m.removedcycle == nil {
-		m.removedcycle = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.cycle, ids[i])
-		m.removedcycle[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedCycle returns the removed IDs of the "cycle" edge to the Cycle entity.
-func (m *NoteMutation) RemovedCycleIDs() (ids []int) {
-	for id := range m.removedcycle {
-		ids = append(ids, id)
+// CycleID returns the "cycle" edge ID in the mutation.
+func (m *NoteMutation) CycleID() (id int, exists bool) {
+	if m.cycle != nil {
+		return *m.cycle, true
 	}
 	return
 }
 
 // CycleIDs returns the "cycle" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CycleID instead. It exists only for internal usage by the builders.
 func (m *NoteMutation) CycleIDs() (ids []int) {
-	for id := range m.cycle {
-		ids = append(ids, id)
+	if id := m.cycle; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -4135,7 +4038,6 @@ func (m *NoteMutation) CycleIDs() (ids []int) {
 func (m *NoteMutation) ResetCycle() {
 	m.cycle = nil
 	m.clearedcycle = false
-	m.removedcycle = nil
 }
 
 // Where appends a list predicates to the NoteMutation builder.
@@ -4336,23 +4238,17 @@ func (m *NoteMutation) AddedEdges() []string {
 func (m *NoteMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case note.EdgeStudent:
-		ids := make([]ent.Value, 0, len(m.student))
-		for id := range m.student {
-			ids = append(ids, id)
+		if id := m.student; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case note.EdgeSubject:
-		ids := make([]ent.Value, 0, len(m.subject))
-		for id := range m.subject {
-			ids = append(ids, id)
+		if id := m.subject; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case note.EdgeCycle:
-		ids := make([]ent.Value, 0, len(m.cycle))
-		for id := range m.cycle {
-			ids = append(ids, id)
+		if id := m.cycle; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -4360,41 +4256,12 @@ func (m *NoteMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *NoteMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.removedstudent != nil {
-		edges = append(edges, note.EdgeStudent)
-	}
-	if m.removedsubject != nil {
-		edges = append(edges, note.EdgeSubject)
-	}
-	if m.removedcycle != nil {
-		edges = append(edges, note.EdgeCycle)
-	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *NoteMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case note.EdgeStudent:
-		ids := make([]ent.Value, 0, len(m.removedstudent))
-		for id := range m.removedstudent {
-			ids = append(ids, id)
-		}
-		return ids
-	case note.EdgeSubject:
-		ids := make([]ent.Value, 0, len(m.removedsubject))
-		for id := range m.removedsubject {
-			ids = append(ids, id)
-		}
-		return ids
-	case note.EdgeCycle:
-		ids := make([]ent.Value, 0, len(m.removedcycle))
-		for id := range m.removedcycle {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
@@ -4431,6 +4298,15 @@ func (m *NoteMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *NoteMutation) ClearEdge(name string) error {
 	switch name {
+	case note.EdgeStudent:
+		m.ClearStudent()
+		return nil
+	case note.EdgeSubject:
+		m.ClearSubject()
+		return nil
+	case note.EdgeCycle:
+		m.ClearCycle()
+		return nil
 	}
 	return fmt.Errorf("unknown Note unique edge %s", name)
 }
@@ -4463,8 +4339,7 @@ type NotificationMutation struct {
 	status           *string
 	created_at       *time.Time
 	clearedFields    map[string]struct{}
-	recipient        map[int]struct{}
-	removedrecipient map[int]struct{}
+	recipient        *int
 	clearedrecipient bool
 	done             bool
 	oldValue         func(context.Context) (*Notification, error)
@@ -4713,14 +4588,9 @@ func (m *NotificationMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// AddRecipientIDs adds the "recipient" edge to the Users entity by ids.
-func (m *NotificationMutation) AddRecipientIDs(ids ...int) {
-	if m.recipient == nil {
-		m.recipient = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.recipient[ids[i]] = struct{}{}
-	}
+// SetRecipientID sets the "recipient" edge to the Users entity by id.
+func (m *NotificationMutation) SetRecipientID(id int) {
+	m.recipient = &id
 }
 
 // ClearRecipient clears the "recipient" edge to the Users entity.
@@ -4733,29 +4603,20 @@ func (m *NotificationMutation) RecipientCleared() bool {
 	return m.clearedrecipient
 }
 
-// RemoveRecipientIDs removes the "recipient" edge to the Users entity by IDs.
-func (m *NotificationMutation) RemoveRecipientIDs(ids ...int) {
-	if m.removedrecipient == nil {
-		m.removedrecipient = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.recipient, ids[i])
-		m.removedrecipient[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedRecipient returns the removed IDs of the "recipient" edge to the Users entity.
-func (m *NotificationMutation) RemovedRecipientIDs() (ids []int) {
-	for id := range m.removedrecipient {
-		ids = append(ids, id)
+// RecipientID returns the "recipient" edge ID in the mutation.
+func (m *NotificationMutation) RecipientID() (id int, exists bool) {
+	if m.recipient != nil {
+		return *m.recipient, true
 	}
 	return
 }
 
 // RecipientIDs returns the "recipient" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RecipientID instead. It exists only for internal usage by the builders.
 func (m *NotificationMutation) RecipientIDs() (ids []int) {
-	for id := range m.recipient {
-		ids = append(ids, id)
+	if id := m.recipient; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -4764,7 +4625,6 @@ func (m *NotificationMutation) RecipientIDs() (ids []int) {
 func (m *NotificationMutation) ResetRecipient() {
 	m.recipient = nil
 	m.clearedrecipient = false
-	m.removedrecipient = nil
 }
 
 // Where appends a list predicates to the NotificationMutation builder.
@@ -4963,11 +4823,9 @@ func (m *NotificationMutation) AddedEdges() []string {
 func (m *NotificationMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case notification.EdgeRecipient:
-		ids := make([]ent.Value, 0, len(m.recipient))
-		for id := range m.recipient {
-			ids = append(ids, id)
+		if id := m.recipient; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -4975,23 +4833,12 @@ func (m *NotificationMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *NotificationMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.removedrecipient != nil {
-		edges = append(edges, notification.EdgeRecipient)
-	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *NotificationMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case notification.EdgeRecipient:
-		ids := make([]ent.Value, 0, len(m.removedrecipient))
-		for id := range m.removedrecipient {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
@@ -5018,6 +4865,9 @@ func (m *NotificationMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *NotificationMutation) ClearEdge(name string) error {
 	switch name {
+	case notification.EdgeRecipient:
+		m.ClearRecipient()
+		return nil
 	}
 	return fmt.Errorf("unknown Notification unique edge %s", name)
 }
@@ -5047,14 +4897,11 @@ type PaymentMutation struct {
 	fee_number            *int
 	addfee_number         *int
 	clearedFields         map[string]struct{}
-	student               map[int]struct{}
-	removedstudent        map[int]struct{}
+	student               *int
 	clearedstudent        bool
-	cycle                 map[int]struct{}
-	removedcycle          map[int]struct{}
+	cycle                 *int
 	clearedcycle          bool
-	payment_method        map[int]struct{}
-	removedpayment_method map[int]struct{}
+	payment_method        *int
 	clearedpayment_method bool
 	done                  bool
 	oldValue              func(context.Context) (*Payment, error)
@@ -5379,14 +5226,9 @@ func (m *PaymentMutation) ResetFeeNumber() {
 	m.addfee_number = nil
 }
 
-// AddStudentIDs adds the "student" edge to the Student entity by ids.
-func (m *PaymentMutation) AddStudentIDs(ids ...int) {
-	if m.student == nil {
-		m.student = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.student[ids[i]] = struct{}{}
-	}
+// SetStudentID sets the "student" edge to the Student entity by id.
+func (m *PaymentMutation) SetStudentID(id int) {
+	m.student = &id
 }
 
 // ClearStudent clears the "student" edge to the Student entity.
@@ -5399,29 +5241,20 @@ func (m *PaymentMutation) StudentCleared() bool {
 	return m.clearedstudent
 }
 
-// RemoveStudentIDs removes the "student" edge to the Student entity by IDs.
-func (m *PaymentMutation) RemoveStudentIDs(ids ...int) {
-	if m.removedstudent == nil {
-		m.removedstudent = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.student, ids[i])
-		m.removedstudent[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedStudent returns the removed IDs of the "student" edge to the Student entity.
-func (m *PaymentMutation) RemovedStudentIDs() (ids []int) {
-	for id := range m.removedstudent {
-		ids = append(ids, id)
+// StudentID returns the "student" edge ID in the mutation.
+func (m *PaymentMutation) StudentID() (id int, exists bool) {
+	if m.student != nil {
+		return *m.student, true
 	}
 	return
 }
 
 // StudentIDs returns the "student" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// StudentID instead. It exists only for internal usage by the builders.
 func (m *PaymentMutation) StudentIDs() (ids []int) {
-	for id := range m.student {
-		ids = append(ids, id)
+	if id := m.student; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -5430,17 +5263,11 @@ func (m *PaymentMutation) StudentIDs() (ids []int) {
 func (m *PaymentMutation) ResetStudent() {
 	m.student = nil
 	m.clearedstudent = false
-	m.removedstudent = nil
 }
 
-// AddCycleIDs adds the "cycle" edge to the Cycle entity by ids.
-func (m *PaymentMutation) AddCycleIDs(ids ...int) {
-	if m.cycle == nil {
-		m.cycle = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.cycle[ids[i]] = struct{}{}
-	}
+// SetCycleID sets the "cycle" edge to the Cycle entity by id.
+func (m *PaymentMutation) SetCycleID(id int) {
+	m.cycle = &id
 }
 
 // ClearCycle clears the "cycle" edge to the Cycle entity.
@@ -5453,29 +5280,20 @@ func (m *PaymentMutation) CycleCleared() bool {
 	return m.clearedcycle
 }
 
-// RemoveCycleIDs removes the "cycle" edge to the Cycle entity by IDs.
-func (m *PaymentMutation) RemoveCycleIDs(ids ...int) {
-	if m.removedcycle == nil {
-		m.removedcycle = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.cycle, ids[i])
-		m.removedcycle[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedCycle returns the removed IDs of the "cycle" edge to the Cycle entity.
-func (m *PaymentMutation) RemovedCycleIDs() (ids []int) {
-	for id := range m.removedcycle {
-		ids = append(ids, id)
+// CycleID returns the "cycle" edge ID in the mutation.
+func (m *PaymentMutation) CycleID() (id int, exists bool) {
+	if m.cycle != nil {
+		return *m.cycle, true
 	}
 	return
 }
 
 // CycleIDs returns the "cycle" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CycleID instead. It exists only for internal usage by the builders.
 func (m *PaymentMutation) CycleIDs() (ids []int) {
-	for id := range m.cycle {
-		ids = append(ids, id)
+	if id := m.cycle; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -5484,17 +5302,11 @@ func (m *PaymentMutation) CycleIDs() (ids []int) {
 func (m *PaymentMutation) ResetCycle() {
 	m.cycle = nil
 	m.clearedcycle = false
-	m.removedcycle = nil
 }
 
-// AddPaymentMethodIDs adds the "payment_method" edge to the PaymentMethod entity by ids.
-func (m *PaymentMutation) AddPaymentMethodIDs(ids ...int) {
-	if m.payment_method == nil {
-		m.payment_method = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.payment_method[ids[i]] = struct{}{}
-	}
+// SetPaymentMethodID sets the "payment_method" edge to the PaymentMethod entity by id.
+func (m *PaymentMutation) SetPaymentMethodID(id int) {
+	m.payment_method = &id
 }
 
 // ClearPaymentMethod clears the "payment_method" edge to the PaymentMethod entity.
@@ -5507,29 +5319,20 @@ func (m *PaymentMutation) PaymentMethodCleared() bool {
 	return m.clearedpayment_method
 }
 
-// RemovePaymentMethodIDs removes the "payment_method" edge to the PaymentMethod entity by IDs.
-func (m *PaymentMutation) RemovePaymentMethodIDs(ids ...int) {
-	if m.removedpayment_method == nil {
-		m.removedpayment_method = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.payment_method, ids[i])
-		m.removedpayment_method[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedPaymentMethod returns the removed IDs of the "payment_method" edge to the PaymentMethod entity.
-func (m *PaymentMutation) RemovedPaymentMethodIDs() (ids []int) {
-	for id := range m.removedpayment_method {
-		ids = append(ids, id)
+// PaymentMethodID returns the "payment_method" edge ID in the mutation.
+func (m *PaymentMutation) PaymentMethodID() (id int, exists bool) {
+	if m.payment_method != nil {
+		return *m.payment_method, true
 	}
 	return
 }
 
 // PaymentMethodIDs returns the "payment_method" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PaymentMethodID instead. It exists only for internal usage by the builders.
 func (m *PaymentMutation) PaymentMethodIDs() (ids []int) {
-	for id := range m.payment_method {
-		ids = append(ids, id)
+	if id := m.payment_method; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -5538,7 +5341,6 @@ func (m *PaymentMutation) PaymentMethodIDs() (ids []int) {
 func (m *PaymentMutation) ResetPaymentMethod() {
 	m.payment_method = nil
 	m.clearedpayment_method = false
-	m.removedpayment_method = nil
 }
 
 // Where appends a list predicates to the PaymentMutation builder.
@@ -5787,23 +5589,17 @@ func (m *PaymentMutation) AddedEdges() []string {
 func (m *PaymentMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case payment.EdgeStudent:
-		ids := make([]ent.Value, 0, len(m.student))
-		for id := range m.student {
-			ids = append(ids, id)
+		if id := m.student; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case payment.EdgeCycle:
-		ids := make([]ent.Value, 0, len(m.cycle))
-		for id := range m.cycle {
-			ids = append(ids, id)
+		if id := m.cycle; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case payment.EdgePaymentMethod:
-		ids := make([]ent.Value, 0, len(m.payment_method))
-		for id := range m.payment_method {
-			ids = append(ids, id)
+		if id := m.payment_method; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -5811,41 +5607,12 @@ func (m *PaymentMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PaymentMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.removedstudent != nil {
-		edges = append(edges, payment.EdgeStudent)
-	}
-	if m.removedcycle != nil {
-		edges = append(edges, payment.EdgeCycle)
-	}
-	if m.removedpayment_method != nil {
-		edges = append(edges, payment.EdgePaymentMethod)
-	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *PaymentMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case payment.EdgeStudent:
-		ids := make([]ent.Value, 0, len(m.removedstudent))
-		for id := range m.removedstudent {
-			ids = append(ids, id)
-		}
-		return ids
-	case payment.EdgeCycle:
-		ids := make([]ent.Value, 0, len(m.removedcycle))
-		for id := range m.removedcycle {
-			ids = append(ids, id)
-		}
-		return ids
-	case payment.EdgePaymentMethod:
-		ids := make([]ent.Value, 0, len(m.removedpayment_method))
-		for id := range m.removedpayment_method {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
@@ -5882,6 +5649,15 @@ func (m *PaymentMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *PaymentMutation) ClearEdge(name string) error {
 	switch name {
+	case payment.EdgeStudent:
+		m.ClearStudent()
+		return nil
+	case payment.EdgeCycle:
+		m.ClearCycle()
+		return nil
+	case payment.EdgePaymentMethod:
+		m.ClearPaymentMethod()
+		return nil
 	}
 	return fmt.Errorf("unknown Payment unique edge %s", name)
 }
@@ -7022,7 +6798,8 @@ type ProfessorMutation struct {
 	subjects            map[int]struct{}
 	removedsubjects     map[int]struct{}
 	clearedsubjects     bool
-	careers             *int
+	careers             map[int]struct{}
+	removedcareers      map[int]struct{}
 	clearedcareers      bool
 	done                bool
 	oldValue            func(context.Context) (*Professor, error)
@@ -7457,9 +7234,14 @@ func (m *ProfessorMutation) ResetSubjects() {
 	m.removedsubjects = nil
 }
 
-// SetCareersID sets the "careers" edge to the Careers entity by id.
-func (m *ProfessorMutation) SetCareersID(id int) {
-	m.careers = &id
+// AddCareerIDs adds the "careers" edge to the Careers entity by ids.
+func (m *ProfessorMutation) AddCareerIDs(ids ...int) {
+	if m.careers == nil {
+		m.careers = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.careers[ids[i]] = struct{}{}
+	}
 }
 
 // ClearCareers clears the "careers" edge to the Careers entity.
@@ -7472,20 +7254,29 @@ func (m *ProfessorMutation) CareersCleared() bool {
 	return m.clearedcareers
 }
 
-// CareersID returns the "careers" edge ID in the mutation.
-func (m *ProfessorMutation) CareersID() (id int, exists bool) {
-	if m.careers != nil {
-		return *m.careers, true
+// RemoveCareerIDs removes the "careers" edge to the Careers entity by IDs.
+func (m *ProfessorMutation) RemoveCareerIDs(ids ...int) {
+	if m.removedcareers == nil {
+		m.removedcareers = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.careers, ids[i])
+		m.removedcareers[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCareers returns the removed IDs of the "careers" edge to the Careers entity.
+func (m *ProfessorMutation) RemovedCareersIDs() (ids []int) {
+	for id := range m.removedcareers {
+		ids = append(ids, id)
 	}
 	return
 }
 
 // CareersIDs returns the "careers" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// CareersID instead. It exists only for internal usage by the builders.
 func (m *ProfessorMutation) CareersIDs() (ids []int) {
-	if id := m.careers; id != nil {
-		ids = append(ids, *id)
+	for id := range m.careers {
+		ids = append(ids, id)
 	}
 	return
 }
@@ -7494,6 +7285,7 @@ func (m *ProfessorMutation) CareersIDs() (ids []int) {
 func (m *ProfessorMutation) ResetCareers() {
 	m.careers = nil
 	m.clearedcareers = false
+	m.removedcareers = nil
 }
 
 // Where appends a list predicates to the ProfessorMutation builder.
@@ -7724,9 +7516,11 @@ func (m *ProfessorMutation) AddedIDs(name string) []ent.Value {
 		}
 		return ids
 	case professor.EdgeCareers:
-		if id := m.careers; id != nil {
-			return []ent.Value{*id}
+		ids := make([]ent.Value, 0, len(m.careers))
+		for id := range m.careers {
+			ids = append(ids, id)
 		}
+		return ids
 	}
 	return nil
 }
@@ -7739,6 +7533,9 @@ func (m *ProfessorMutation) RemovedEdges() []string {
 	}
 	if m.removedsubjects != nil {
 		edges = append(edges, professor.EdgeSubjects)
+	}
+	if m.removedcareers != nil {
+		edges = append(edges, professor.EdgeCareers)
 	}
 	return edges
 }
@@ -7756,6 +7553,12 @@ func (m *ProfessorMutation) RemovedIDs(name string) []ent.Value {
 	case professor.EdgeSubjects:
 		ids := make([]ent.Value, 0, len(m.removedsubjects))
 		for id := range m.removedsubjects {
+			ids = append(ids, id)
+		}
+		return ids
+	case professor.EdgeCareers:
+		ids := make([]ent.Value, 0, len(m.removedcareers))
+		for id := range m.removedcareers {
 			ids = append(ids, id)
 		}
 		return ids
@@ -7812,9 +7615,6 @@ func (m *ProfessorMutation) ClearEdge(name string) error {
 	case professor.EdgeBoss:
 		m.ClearBoss()
 		return nil
-	case professor.EdgeCareers:
-		m.ClearCareers()
-		return nil
 	}
 	return fmt.Errorf("unknown Professor unique edge %s", name)
 }
@@ -7855,11 +7655,9 @@ type RequestMutation struct {
 	created_at       *time.Time
 	updated_at       *time.Time
 	clearedFields    map[string]struct{}
-	requester        map[int]struct{}
-	removedrequester map[int]struct{}
+	requester        *int
 	clearedrequester bool
-	receiver         map[int]struct{}
-	removedreceiver  map[int]struct{}
+	receiver         *int
 	clearedreceiver  bool
 	done             bool
 	oldValue         func(context.Context) (*Request, error)
@@ -8180,14 +7978,9 @@ func (m *RequestMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// AddRequesterIDs adds the "requester" edge to the Users entity by ids.
-func (m *RequestMutation) AddRequesterIDs(ids ...int) {
-	if m.requester == nil {
-		m.requester = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.requester[ids[i]] = struct{}{}
-	}
+// SetRequesterID sets the "requester" edge to the Users entity by id.
+func (m *RequestMutation) SetRequesterID(id int) {
+	m.requester = &id
 }
 
 // ClearRequester clears the "requester" edge to the Users entity.
@@ -8200,29 +7993,20 @@ func (m *RequestMutation) RequesterCleared() bool {
 	return m.clearedrequester
 }
 
-// RemoveRequesterIDs removes the "requester" edge to the Users entity by IDs.
-func (m *RequestMutation) RemoveRequesterIDs(ids ...int) {
-	if m.removedrequester == nil {
-		m.removedrequester = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.requester, ids[i])
-		m.removedrequester[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedRequester returns the removed IDs of the "requester" edge to the Users entity.
-func (m *RequestMutation) RemovedRequesterIDs() (ids []int) {
-	for id := range m.removedrequester {
-		ids = append(ids, id)
+// RequesterID returns the "requester" edge ID in the mutation.
+func (m *RequestMutation) RequesterID() (id int, exists bool) {
+	if m.requester != nil {
+		return *m.requester, true
 	}
 	return
 }
 
 // RequesterIDs returns the "requester" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RequesterID instead. It exists only for internal usage by the builders.
 func (m *RequestMutation) RequesterIDs() (ids []int) {
-	for id := range m.requester {
-		ids = append(ids, id)
+	if id := m.requester; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -8231,17 +8015,11 @@ func (m *RequestMutation) RequesterIDs() (ids []int) {
 func (m *RequestMutation) ResetRequester() {
 	m.requester = nil
 	m.clearedrequester = false
-	m.removedrequester = nil
 }
 
-// AddReceiverIDs adds the "receiver" edge to the Users entity by ids.
-func (m *RequestMutation) AddReceiverIDs(ids ...int) {
-	if m.receiver == nil {
-		m.receiver = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.receiver[ids[i]] = struct{}{}
-	}
+// SetReceiverID sets the "receiver" edge to the Users entity by id.
+func (m *RequestMutation) SetReceiverID(id int) {
+	m.receiver = &id
 }
 
 // ClearReceiver clears the "receiver" edge to the Users entity.
@@ -8254,29 +8032,20 @@ func (m *RequestMutation) ReceiverCleared() bool {
 	return m.clearedreceiver
 }
 
-// RemoveReceiverIDs removes the "receiver" edge to the Users entity by IDs.
-func (m *RequestMutation) RemoveReceiverIDs(ids ...int) {
-	if m.removedreceiver == nil {
-		m.removedreceiver = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.receiver, ids[i])
-		m.removedreceiver[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedReceiver returns the removed IDs of the "receiver" edge to the Users entity.
-func (m *RequestMutation) RemovedReceiverIDs() (ids []int) {
-	for id := range m.removedreceiver {
-		ids = append(ids, id)
+// ReceiverID returns the "receiver" edge ID in the mutation.
+func (m *RequestMutation) ReceiverID() (id int, exists bool) {
+	if m.receiver != nil {
+		return *m.receiver, true
 	}
 	return
 }
 
 // ReceiverIDs returns the "receiver" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ReceiverID instead. It exists only for internal usage by the builders.
 func (m *RequestMutation) ReceiverIDs() (ids []int) {
-	for id := range m.receiver {
-		ids = append(ids, id)
+	if id := m.receiver; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -8285,7 +8054,6 @@ func (m *RequestMutation) ReceiverIDs() (ids []int) {
 func (m *RequestMutation) ResetReceiver() {
 	m.receiver = nil
 	m.clearedreceiver = false
-	m.removedreceiver = nil
 }
 
 // Where appends a list predicates to the RequestMutation builder.
@@ -8521,17 +8289,13 @@ func (m *RequestMutation) AddedEdges() []string {
 func (m *RequestMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case request.EdgeRequester:
-		ids := make([]ent.Value, 0, len(m.requester))
-		for id := range m.requester {
-			ids = append(ids, id)
+		if id := m.requester; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case request.EdgeReceiver:
-		ids := make([]ent.Value, 0, len(m.receiver))
-		for id := range m.receiver {
-			ids = append(ids, id)
+		if id := m.receiver; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -8539,32 +8303,12 @@ func (m *RequestMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RequestMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedrequester != nil {
-		edges = append(edges, request.EdgeRequester)
-	}
-	if m.removedreceiver != nil {
-		edges = append(edges, request.EdgeReceiver)
-	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *RequestMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case request.EdgeRequester:
-		ids := make([]ent.Value, 0, len(m.removedrequester))
-		for id := range m.removedrequester {
-			ids = append(ids, id)
-		}
-		return ids
-	case request.EdgeReceiver:
-		ids := make([]ent.Value, 0, len(m.removedreceiver))
-		for id := range m.removedreceiver {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
@@ -8596,6 +8340,12 @@ func (m *RequestMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *RequestMutation) ClearEdge(name string) error {
 	switch name {
+	case request.EdgeRequester:
+		m.ClearRequester()
+		return nil
+	case request.EdgeReceiver:
+		m.ClearReceiver()
+		return nil
 	}
 	return fmt.Errorf("unknown Request unique edge %s", name)
 }
@@ -9197,8 +8947,7 @@ type StudentMutation struct {
 	payments                    map[int]struct{}
 	removedpayments             map[int]struct{}
 	clearedpayments             bool
-	career                      map[int]struct{}
-	removedcareer               map[int]struct{}
+	career                      *int
 	clearedcareer               bool
 	done                        bool
 	oldValue                    func(context.Context) (*Student, error)
@@ -9834,14 +9583,9 @@ func (m *StudentMutation) ResetPayments() {
 	m.removedpayments = nil
 }
 
-// AddCareerIDs adds the "career" edge to the Careers entity by ids.
-func (m *StudentMutation) AddCareerIDs(ids ...int) {
-	if m.career == nil {
-		m.career = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.career[ids[i]] = struct{}{}
-	}
+// SetCareerID sets the "career" edge to the Careers entity by id.
+func (m *StudentMutation) SetCareerID(id int) {
+	m.career = &id
 }
 
 // ClearCareer clears the "career" edge to the Careers entity.
@@ -9854,29 +9598,20 @@ func (m *StudentMutation) CareerCleared() bool {
 	return m.clearedcareer
 }
 
-// RemoveCareerIDs removes the "career" edge to the Careers entity by IDs.
-func (m *StudentMutation) RemoveCareerIDs(ids ...int) {
-	if m.removedcareer == nil {
-		m.removedcareer = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.career, ids[i])
-		m.removedcareer[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedCareer returns the removed IDs of the "career" edge to the Careers entity.
-func (m *StudentMutation) RemovedCareerIDs() (ids []int) {
-	for id := range m.removedcareer {
-		ids = append(ids, id)
+// CareerID returns the "career" edge ID in the mutation.
+func (m *StudentMutation) CareerID() (id int, exists bool) {
+	if m.career != nil {
+		return *m.career, true
 	}
 	return
 }
 
 // CareerIDs returns the "career" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CareerID instead. It exists only for internal usage by the builders.
 func (m *StudentMutation) CareerIDs() (ids []int) {
-	for id := range m.career {
-		ids = append(ids, id)
+	if id := m.career; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -9885,7 +9620,6 @@ func (m *StudentMutation) CareerIDs() (ids []int) {
 func (m *StudentMutation) ResetCareer() {
 	m.career = nil
 	m.clearedcareer = false
-	m.removedcareer = nil
 }
 
 // Where appends a list predicates to the StudentMutation builder.
@@ -10233,11 +9967,9 @@ func (m *StudentMutation) AddedIDs(name string) []ent.Value {
 		}
 		return ids
 	case student.EdgeCareer:
-		ids := make([]ent.Value, 0, len(m.career))
-		for id := range m.career {
-			ids = append(ids, id)
+		if id := m.career; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -10250,9 +9982,6 @@ func (m *StudentMutation) RemovedEdges() []string {
 	}
 	if m.removedpayments != nil {
 		edges = append(edges, student.EdgePayments)
-	}
-	if m.removedcareer != nil {
-		edges = append(edges, student.EdgeCareer)
 	}
 	return edges
 }
@@ -10270,12 +9999,6 @@ func (m *StudentMutation) RemovedIDs(name string) []ent.Value {
 	case student.EdgePayments:
 		ids := make([]ent.Value, 0, len(m.removedpayments))
 		for id := range m.removedpayments {
-			ids = append(ids, id)
-		}
-		return ids
-	case student.EdgeCareer:
-		ids := make([]ent.Value, 0, len(m.removedcareer))
-		for id := range m.removedcareer {
 			ids = append(ids, id)
 		}
 		return ids
@@ -10324,6 +10047,9 @@ func (m *StudentMutation) ClearEdge(name string) error {
 	case student.EdgeUser:
 		m.ClearUser()
 		return nil
+	case student.EdgeCareer:
+		m.ClearCareer()
+		return nil
 	}
 	return fmt.Errorf("unknown Student unique edge %s", name)
 }
@@ -10371,8 +10097,7 @@ type SubjectMutation struct {
 	addtotal_hours    *int
 	class_schedule    *map[string][]string
 	clearedFields     map[string]struct{}
-	professor         map[int]struct{}
-	removedprofessor  map[int]struct{}
+	professor         *int
 	clearedprofessor  bool
 	career            map[int]struct{}
 	removedcareer     map[int]struct{}
@@ -10976,14 +10701,9 @@ func (m *SubjectMutation) ResetClassSchedule() {
 	delete(m.clearedFields, subject.FieldClassSchedule)
 }
 
-// AddProfessorIDs adds the "professor" edge to the Professor entity by ids.
-func (m *SubjectMutation) AddProfessorIDs(ids ...int) {
-	if m.professor == nil {
-		m.professor = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.professor[ids[i]] = struct{}{}
-	}
+// SetProfessorID sets the "professor" edge to the Professor entity by id.
+func (m *SubjectMutation) SetProfessorID(id int) {
+	m.professor = &id
 }
 
 // ClearProfessor clears the "professor" edge to the Professor entity.
@@ -10996,29 +10716,20 @@ func (m *SubjectMutation) ProfessorCleared() bool {
 	return m.clearedprofessor
 }
 
-// RemoveProfessorIDs removes the "professor" edge to the Professor entity by IDs.
-func (m *SubjectMutation) RemoveProfessorIDs(ids ...int) {
-	if m.removedprofessor == nil {
-		m.removedprofessor = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.professor, ids[i])
-		m.removedprofessor[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedProfessor returns the removed IDs of the "professor" edge to the Professor entity.
-func (m *SubjectMutation) RemovedProfessorIDs() (ids []int) {
-	for id := range m.removedprofessor {
-		ids = append(ids, id)
+// ProfessorID returns the "professor" edge ID in the mutation.
+func (m *SubjectMutation) ProfessorID() (id int, exists bool) {
+	if m.professor != nil {
+		return *m.professor, true
 	}
 	return
 }
 
 // ProfessorIDs returns the "professor" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProfessorID instead. It exists only for internal usage by the builders.
 func (m *SubjectMutation) ProfessorIDs() (ids []int) {
-	for id := range m.professor {
-		ids = append(ids, id)
+	if id := m.professor; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -11027,7 +10738,6 @@ func (m *SubjectMutation) ProfessorIDs() (ids []int) {
 func (m *SubjectMutation) ResetProfessor() {
 	m.professor = nil
 	m.clearedprofessor = false
-	m.removedprofessor = nil
 }
 
 // AddCareerIDs adds the "career" edge to the Careers entity by ids.
@@ -11526,11 +11236,9 @@ func (m *SubjectMutation) AddedEdges() []string {
 func (m *SubjectMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case subject.EdgeProfessor:
-		ids := make([]ent.Value, 0, len(m.professor))
-		for id := range m.professor {
-			ids = append(ids, id)
+		if id := m.professor; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case subject.EdgeCareer:
 		ids := make([]ent.Value, 0, len(m.career))
 		for id := range m.career {
@@ -11550,9 +11258,6 @@ func (m *SubjectMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *SubjectMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.removedprofessor != nil {
-		edges = append(edges, subject.EdgeProfessor)
-	}
 	if m.removedcareer != nil {
 		edges = append(edges, subject.EdgeCareer)
 	}
@@ -11566,12 +11271,6 @@ func (m *SubjectMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *SubjectMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case subject.EdgeProfessor:
-		ids := make([]ent.Value, 0, len(m.removedprofessor))
-		for id := range m.removedprofessor {
-			ids = append(ids, id)
-		}
-		return ids
 	case subject.EdgeCareer:
 		ids := make([]ent.Value, 0, len(m.removedcareer))
 		for id := range m.removedcareer {
@@ -11621,6 +11320,9 @@ func (m *SubjectMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *SubjectMutation) ClearEdge(name string) error {
 	switch name {
+	case subject.EdgeProfessor:
+		m.ClearProfessor()
+		return nil
 	}
 	return fmt.Errorf("unknown Subject unique edge %s", name)
 }
@@ -11656,8 +11358,7 @@ type UsersMutation struct {
 	is_active                *bool
 	created_at               *time.Time
 	clearedFields            map[string]struct{}
-	role                     map[int]struct{}
-	removedrole              map[int]struct{}
+	role                     *int
 	clearedrole              bool
 	requests_made            map[int]struct{}
 	removedrequests_made     map[int]struct{}
@@ -12035,14 +11736,9 @@ func (m *UsersMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// AddRoleIDs adds the "role" edge to the Role entity by ids.
-func (m *UsersMutation) AddRoleIDs(ids ...int) {
-	if m.role == nil {
-		m.role = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.role[ids[i]] = struct{}{}
-	}
+// SetRoleID sets the "role" edge to the Role entity by id.
+func (m *UsersMutation) SetRoleID(id int) {
+	m.role = &id
 }
 
 // ClearRole clears the "role" edge to the Role entity.
@@ -12055,29 +11751,20 @@ func (m *UsersMutation) RoleCleared() bool {
 	return m.clearedrole
 }
 
-// RemoveRoleIDs removes the "role" edge to the Role entity by IDs.
-func (m *UsersMutation) RemoveRoleIDs(ids ...int) {
-	if m.removedrole == nil {
-		m.removedrole = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.role, ids[i])
-		m.removedrole[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedRole returns the removed IDs of the "role" edge to the Role entity.
-func (m *UsersMutation) RemovedRoleIDs() (ids []int) {
-	for id := range m.removedrole {
-		ids = append(ids, id)
+// RoleID returns the "role" edge ID in the mutation.
+func (m *UsersMutation) RoleID() (id int, exists bool) {
+	if m.role != nil {
+		return *m.role, true
 	}
 	return
 }
 
 // RoleIDs returns the "role" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RoleID instead. It exists only for internal usage by the builders.
 func (m *UsersMutation) RoleIDs() (ids []int) {
-	for id := range m.role {
-		ids = append(ids, id)
+	if id := m.role; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -12086,7 +11773,6 @@ func (m *UsersMutation) RoleIDs() (ids []int) {
 func (m *UsersMutation) ResetRole() {
 	m.role = nil
 	m.clearedrole = false
-	m.removedrole = nil
 }
 
 // AddRequestsMadeIDs adds the "requests_made" edge to the Request entity by ids.
@@ -12735,11 +12421,9 @@ func (m *UsersMutation) AddedEdges() []string {
 func (m *UsersMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case users.EdgeRole:
-		ids := make([]ent.Value, 0, len(m.role))
-		for id := range m.role {
-			ids = append(ids, id)
+		if id := m.role; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case users.EdgeRequestsMade:
 		ids := make([]ent.Value, 0, len(m.requests_made))
 		for id := range m.requests_made {
@@ -12789,9 +12473,6 @@ func (m *UsersMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UsersMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 8)
-	if m.removedrole != nil {
-		edges = append(edges, users.EdgeRole)
-	}
 	if m.removedrequests_made != nil {
 		edges = append(edges, users.EdgeRequestsMade)
 	}
@@ -12820,12 +12501,6 @@ func (m *UsersMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *UsersMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case users.EdgeRole:
-		ids := make([]ent.Value, 0, len(m.removedrole))
-		for id := range m.removedrole {
-			ids = append(ids, id)
-		}
-		return ids
 	case users.EdgeRequestsMade:
 		ids := make([]ent.Value, 0, len(m.removedrequests_made))
 		for id := range m.removedrequests_made {
@@ -12930,6 +12605,9 @@ func (m *UsersMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *UsersMutation) ClearEdge(name string) error {
 	switch name {
+	case users.EdgeRole:
+		m.ClearRole()
+		return nil
 	}
 	return fmt.Errorf("unknown Users unique edge %s", name)
 }

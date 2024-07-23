@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	"mocku/backend/ent/careers"
 	"mocku/backend/ent/student"
 	"mocku/backend/ent/users"
 	"strings"
@@ -38,9 +39,10 @@ type Student struct {
 	TotalAverage float64 `json:"total_average,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the StudentQuery when eager-loading is set.
-	Edges        StudentEdges `json:"edges"`
-	student_user *int
-	selectValues sql.SelectValues
+	Edges          StudentEdges `json:"edges"`
+	student_user   *int
+	student_career *int
+	selectValues   sql.SelectValues
 }
 
 // StudentEdges holds the relations/edges for other nodes in the graph.
@@ -52,7 +54,7 @@ type StudentEdges struct {
 	// Payments holds the value of the payments edge.
 	Payments []*Payment `json:"payments,omitempty"`
 	// Career holds the value of the career edge.
-	Career []*Careers `json:"career,omitempty"`
+	Career *Careers `json:"career,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [4]bool
@@ -88,10 +90,12 @@ func (e StudentEdges) PaymentsOrErr() ([]*Payment, error) {
 }
 
 // CareerOrErr returns the Career value or an error if the edge
-// was not loaded in eager-loading.
-func (e StudentEdges) CareerOrErr() ([]*Careers, error) {
-	if e.loadedTypes[3] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e StudentEdges) CareerOrErr() (*Careers, error) {
+	if e.Career != nil {
 		return e.Career, nil
+	} else if e.loadedTypes[3] {
+		return nil, &NotFoundError{label: careers.Label}
 	}
 	return nil, &NotLoadedError{edge: "career"}
 }
@@ -110,6 +114,8 @@ func (*Student) scanValues(columns []string) ([]any, error) {
 		case student.FieldBirthDate:
 			values[i] = new(sql.NullTime)
 		case student.ForeignKeys[0]: // student_user
+			values[i] = new(sql.NullInt64)
+		case student.ForeignKeys[1]: // student_career
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -192,6 +198,13 @@ func (s *Student) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				s.student_user = new(int)
 				*s.student_user = int(value.Int64)
+			}
+		case student.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field student_career", value)
+			} else if value.Valid {
+				s.student_career = new(int)
+				*s.student_career = int(value.Int64)
 			}
 		default:
 			s.selectValues.Set(columns[i], values[i])

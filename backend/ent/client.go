@@ -454,7 +454,7 @@ func (c *ActivityClient) QueryUser(a *Activity) *UsersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(activity.Table, activity.FieldID, id),
 			sqlgraph.To(users.Table, users.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, activity.UserTable, activity.UserPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, activity.UserTable, activity.UserColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -752,7 +752,7 @@ func (c *CareersClient) QueryLeader(ca *Careers) *ProfessorQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(careers.Table, careers.FieldID, id),
 			sqlgraph.To(professor.Table, professor.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, careers.LeaderTable, careers.LeaderColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, careers.LeaderTable, careers.LeaderColumn),
 		)
 		fromV = sqlgraph.Neighbors(ca.driver.Dialect(), step)
 		return fromV, nil
@@ -768,7 +768,7 @@ func (c *CareersClient) QueryStudents(ca *Careers) *StudentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(careers.Table, careers.FieldID, id),
 			sqlgraph.To(student.Table, student.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, careers.StudentsTable, careers.StudentsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, careers.StudentsTable, careers.StudentsColumn),
 		)
 		fromV = sqlgraph.Neighbors(ca.driver.Dialect(), step)
 		return fromV, nil
@@ -1332,7 +1332,7 @@ func (c *NoteClient) QueryStudent(n *Note) *StudentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(note.Table, note.FieldID, id),
 			sqlgraph.To(student.Table, student.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, note.StudentTable, note.StudentPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, note.StudentTable, note.StudentColumn),
 		)
 		fromV = sqlgraph.Neighbors(n.driver.Dialect(), step)
 		return fromV, nil
@@ -1348,7 +1348,7 @@ func (c *NoteClient) QuerySubject(n *Note) *SubjectQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(note.Table, note.FieldID, id),
 			sqlgraph.To(subject.Table, subject.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, note.SubjectTable, note.SubjectPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, note.SubjectTable, note.SubjectColumn),
 		)
 		fromV = sqlgraph.Neighbors(n.driver.Dialect(), step)
 		return fromV, nil
@@ -1364,7 +1364,7 @@ func (c *NoteClient) QueryCycle(n *Note) *CycleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(note.Table, note.FieldID, id),
 			sqlgraph.To(cycle.Table, cycle.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, note.CycleTable, note.CycleColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, note.CycleTable, note.CycleColumn),
 		)
 		fromV = sqlgraph.Neighbors(n.driver.Dialect(), step)
 		return fromV, nil
@@ -1513,7 +1513,7 @@ func (c *NotificationClient) QueryRecipient(n *Notification) *UsersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(notification.Table, notification.FieldID, id),
 			sqlgraph.To(users.Table, users.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, notification.RecipientTable, notification.RecipientPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, notification.RecipientTable, notification.RecipientColumn),
 		)
 		fromV = sqlgraph.Neighbors(n.driver.Dialect(), step)
 		return fromV, nil
@@ -1662,7 +1662,7 @@ func (c *PaymentClient) QueryStudent(pa *Payment) *StudentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(payment.Table, payment.FieldID, id),
 			sqlgraph.To(student.Table, student.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, payment.StudentTable, payment.StudentPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, payment.StudentTable, payment.StudentColumn),
 		)
 		fromV = sqlgraph.Neighbors(pa.driver.Dialect(), step)
 		return fromV, nil
@@ -1678,7 +1678,7 @@ func (c *PaymentClient) QueryCycle(pa *Payment) *CycleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(payment.Table, payment.FieldID, id),
 			sqlgraph.To(cycle.Table, cycle.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, payment.CycleTable, payment.CycleColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, payment.CycleTable, payment.CycleColumn),
 		)
 		fromV = sqlgraph.Neighbors(pa.driver.Dialect(), step)
 		return fromV, nil
@@ -1694,7 +1694,7 @@ func (c *PaymentClient) QueryPaymentMethod(pa *Payment) *PaymentMethodQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(payment.Table, payment.FieldID, id),
 			sqlgraph.To(paymentmethod.Table, paymentmethod.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, payment.PaymentMethodTable, payment.PaymentMethodColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, payment.PaymentMethodTable, payment.PaymentMethodColumn),
 		)
 		fromV = sqlgraph.Neighbors(pa.driver.Dialect(), step)
 		return fromV, nil
@@ -2189,7 +2189,7 @@ func (c *ProfessorClient) QuerySubjects(pr *Professor) *SubjectQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(professor.Table, professor.FieldID, id),
 			sqlgraph.To(subject.Table, subject.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, professor.SubjectsTable, professor.SubjectsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, professor.SubjectsTable, professor.SubjectsColumn),
 		)
 		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
 		return fromV, nil
@@ -2205,7 +2205,7 @@ func (c *ProfessorClient) QueryCareers(pr *Professor) *CareersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(professor.Table, professor.FieldID, id),
 			sqlgraph.To(careers.Table, careers.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, professor.CareersTable, professor.CareersColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, professor.CareersTable, professor.CareersColumn),
 		)
 		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
 		return fromV, nil
@@ -2354,7 +2354,7 @@ func (c *RequestClient) QueryRequester(r *Request) *UsersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(request.Table, request.FieldID, id),
 			sqlgraph.To(users.Table, users.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, request.RequesterTable, request.RequesterPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, request.RequesterTable, request.RequesterColumn),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -2370,7 +2370,7 @@ func (c *RequestClient) QueryReceiver(r *Request) *UsersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(request.Table, request.FieldID, id),
 			sqlgraph.To(users.Table, users.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, request.ReceiverTable, request.ReceiverPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, request.ReceiverTable, request.ReceiverColumn),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -2519,7 +2519,7 @@ func (c *RoleClient) QueryUsers(r *Role) *UsersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(role.Table, role.FieldID, id),
 			sqlgraph.To(users.Table, users.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, role.UsersTable, role.UsersPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, role.UsersTable, role.UsersColumn),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -2700,7 +2700,7 @@ func (c *StudentClient) QueryNotes(s *Student) *NoteQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(student.Table, student.FieldID, id),
 			sqlgraph.To(note.Table, note.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, student.NotesTable, student.NotesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, student.NotesTable, student.NotesColumn),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
@@ -2716,7 +2716,7 @@ func (c *StudentClient) QueryPayments(s *Student) *PaymentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(student.Table, student.FieldID, id),
 			sqlgraph.To(payment.Table, payment.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, student.PaymentsTable, student.PaymentsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, student.PaymentsTable, student.PaymentsColumn),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
@@ -2732,7 +2732,7 @@ func (c *StudentClient) QueryCareer(s *Student) *CareersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(student.Table, student.FieldID, id),
 			sqlgraph.To(careers.Table, careers.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, student.CareerTable, student.CareerPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, student.CareerTable, student.CareerColumn),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
@@ -2881,7 +2881,7 @@ func (c *SubjectClient) QueryProfessor(s *Subject) *ProfessorQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(subject.Table, subject.FieldID, id),
 			sqlgraph.To(professor.Table, professor.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, subject.ProfessorTable, subject.ProfessorPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, subject.ProfessorTable, subject.ProfessorColumn),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
@@ -2913,7 +2913,7 @@ func (c *SubjectClient) QueryNotes(s *Subject) *NoteQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(subject.Table, subject.FieldID, id),
 			sqlgraph.To(note.Table, note.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, subject.NotesTable, subject.NotesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, subject.NotesTable, subject.NotesColumn),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
@@ -3062,7 +3062,7 @@ func (c *UsersClient) QueryRole(u *Users) *RoleQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, id),
 			sqlgraph.To(role.Table, role.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, users.RoleTable, users.RolePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, users.RoleTable, users.RoleColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -3078,7 +3078,7 @@ func (c *UsersClient) QueryRequestsMade(u *Users) *RequestQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, id),
 			sqlgraph.To(request.Table, request.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, users.RequestsMadeTable, users.RequestsMadePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.RequestsMadeTable, users.RequestsMadeColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -3094,7 +3094,7 @@ func (c *UsersClient) QueryRequestsReceived(u *Users) *RequestQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, id),
 			sqlgraph.To(request.Table, request.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, users.RequestsReceivedTable, users.RequestsReceivedPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.RequestsReceivedTable, users.RequestsReceivedColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -3126,7 +3126,7 @@ func (c *UsersClient) QueryNotifications(u *Users) *NotificationQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, id),
 			sqlgraph.To(notification.Table, notification.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, users.NotificationsTable, users.NotificationsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.NotificationsTable, users.NotificationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -3142,7 +3142,7 @@ func (c *UsersClient) QueryActivity(u *Users) *ActivityQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(users.Table, users.FieldID, id),
 			sqlgraph.To(activity.Table, activity.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, users.ActivityTable, users.ActivityPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, users.ActivityTable, users.ActivityColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

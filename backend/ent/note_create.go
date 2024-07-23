@@ -41,49 +41,61 @@ func (nc *NoteCreate) SetNillableAverage(f *float32) *NoteCreate {
 	return nc
 }
 
-// AddStudentIDs adds the "student" edge to the Student entity by IDs.
-func (nc *NoteCreate) AddStudentIDs(ids ...int) *NoteCreate {
-	nc.mutation.AddStudentIDs(ids...)
+// SetStudentID sets the "student" edge to the Student entity by ID.
+func (nc *NoteCreate) SetStudentID(id int) *NoteCreate {
+	nc.mutation.SetStudentID(id)
 	return nc
 }
 
-// AddStudent adds the "student" edges to the Student entity.
-func (nc *NoteCreate) AddStudent(s ...*Student) *NoteCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// SetNillableStudentID sets the "student" edge to the Student entity by ID if the given value is not nil.
+func (nc *NoteCreate) SetNillableStudentID(id *int) *NoteCreate {
+	if id != nil {
+		nc = nc.SetStudentID(*id)
 	}
-	return nc.AddStudentIDs(ids...)
-}
-
-// AddSubjectIDs adds the "subject" edge to the Subject entity by IDs.
-func (nc *NoteCreate) AddSubjectIDs(ids ...int) *NoteCreate {
-	nc.mutation.AddSubjectIDs(ids...)
 	return nc
 }
 
-// AddSubject adds the "subject" edges to the Subject entity.
-func (nc *NoteCreate) AddSubject(s ...*Subject) *NoteCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return nc.AddSubjectIDs(ids...)
+// SetStudent sets the "student" edge to the Student entity.
+func (nc *NoteCreate) SetStudent(s *Student) *NoteCreate {
+	return nc.SetStudentID(s.ID)
 }
 
-// AddCycleIDs adds the "cycle" edge to the Cycle entity by IDs.
-func (nc *NoteCreate) AddCycleIDs(ids ...int) *NoteCreate {
-	nc.mutation.AddCycleIDs(ids...)
+// SetSubjectID sets the "subject" edge to the Subject entity by ID.
+func (nc *NoteCreate) SetSubjectID(id int) *NoteCreate {
+	nc.mutation.SetSubjectID(id)
 	return nc
 }
 
-// AddCycle adds the "cycle" edges to the Cycle entity.
-func (nc *NoteCreate) AddCycle(c ...*Cycle) *NoteCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+// SetNillableSubjectID sets the "subject" edge to the Subject entity by ID if the given value is not nil.
+func (nc *NoteCreate) SetNillableSubjectID(id *int) *NoteCreate {
+	if id != nil {
+		nc = nc.SetSubjectID(*id)
 	}
-	return nc.AddCycleIDs(ids...)
+	return nc
+}
+
+// SetSubject sets the "subject" edge to the Subject entity.
+func (nc *NoteCreate) SetSubject(s *Subject) *NoteCreate {
+	return nc.SetSubjectID(s.ID)
+}
+
+// SetCycleID sets the "cycle" edge to the Cycle entity by ID.
+func (nc *NoteCreate) SetCycleID(id int) *NoteCreate {
+	nc.mutation.SetCycleID(id)
+	return nc
+}
+
+// SetNillableCycleID sets the "cycle" edge to the Cycle entity by ID if the given value is not nil.
+func (nc *NoteCreate) SetNillableCycleID(id *int) *NoteCreate {
+	if id != nil {
+		nc = nc.SetCycleID(*id)
+	}
+	return nc
+}
+
+// SetCycle sets the "cycle" edge to the Cycle entity.
+func (nc *NoteCreate) SetCycle(c *Cycle) *NoteCreate {
+	return nc.SetCycleID(c.ID)
 }
 
 // Mutation returns the NoteMutation object of the builder.
@@ -156,10 +168,10 @@ func (nc *NoteCreate) createSpec() (*Note, *sqlgraph.CreateSpec) {
 	}
 	if nodes := nc.mutation.StudentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: note.StudentPrimaryKey,
+			Columns: []string{note.StudentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -168,14 +180,15 @@ func (nc *NoteCreate) createSpec() (*Note, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.note_student = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := nc.mutation.SubjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: note.SubjectPrimaryKey,
+			Columns: []string{note.SubjectColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -184,11 +197,12 @@ func (nc *NoteCreate) createSpec() (*Note, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.note_subject = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := nc.mutation.CycleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.CycleTable,
 			Columns: []string{note.CycleColumn},
@@ -200,6 +214,7 @@ func (nc *NoteCreate) createSpec() (*Note, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.note_cycle = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

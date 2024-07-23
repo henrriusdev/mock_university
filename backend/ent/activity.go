@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"mocku/backend/ent/activity"
+	"mocku/backend/ent/users"
 	"strings"
 	"time"
 
@@ -25,24 +26,27 @@ type Activity struct {
 	Timestamp time.Time `json:"timestamp,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ActivityQuery when eager-loading is set.
-	Edges        ActivityEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges         ActivityEdges `json:"edges"`
+	activity_user *int
+	selectValues  sql.SelectValues
 }
 
 // ActivityEdges holds the relations/edges for other nodes in the graph.
 type ActivityEdges struct {
 	// User holds the value of the user edge.
-	User []*Users `json:"user,omitempty"`
+	User *Users `json:"user,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
-// was not loaded in eager-loading.
-func (e ActivityEdges) UserOrErr() ([]*Users, error) {
-	if e.loadedTypes[0] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ActivityEdges) UserOrErr() (*Users, error) {
+	if e.User != nil {
 		return e.User, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: users.Label}
 	}
 	return nil, &NotLoadedError{edge: "user"}
 }
@@ -58,6 +62,8 @@ func (*Activity) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case activity.FieldTimestamp:
 			values[i] = new(sql.NullTime)
+		case activity.ForeignKeys[0]: // activity_user
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -96,6 +102,13 @@ func (a *Activity) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field timestamp", values[i])
 			} else if value.Valid {
 				a.Timestamp = value.Time
+			}
+		case activity.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field activity_user", value)
+			} else if value.Valid {
+				a.activity_user = new(int)
+				*a.activity_user = int(value.Int64)
 			}
 		default:
 			a.selectValues.Set(columns[i], values[i])

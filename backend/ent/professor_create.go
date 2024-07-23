@@ -115,23 +115,19 @@ func (pc *ProfessorCreate) AddSubjects(s ...*Subject) *ProfessorCreate {
 	return pc.AddSubjectIDs(ids...)
 }
 
-// SetCareersID sets the "careers" edge to the Careers entity by ID.
-func (pc *ProfessorCreate) SetCareersID(id int) *ProfessorCreate {
-	pc.mutation.SetCareersID(id)
+// AddCareerIDs adds the "careers" edge to the Careers entity by IDs.
+func (pc *ProfessorCreate) AddCareerIDs(ids ...int) *ProfessorCreate {
+	pc.mutation.AddCareerIDs(ids...)
 	return pc
 }
 
-// SetNillableCareersID sets the "careers" edge to the Careers entity by ID if the given value is not nil.
-func (pc *ProfessorCreate) SetNillableCareersID(id *int) *ProfessorCreate {
-	if id != nil {
-		pc = pc.SetCareersID(*id)
+// AddCareers adds the "careers" edges to the Careers entity.
+func (pc *ProfessorCreate) AddCareers(c ...*Careers) *ProfessorCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
-	return pc
-}
-
-// SetCareers sets the "careers" edge to the Careers entity.
-func (pc *ProfessorCreate) SetCareers(c *Careers) *ProfessorCreate {
-	return pc.SetCareersID(c.ID)
+	return pc.AddCareerIDs(ids...)
 }
 
 // Mutation returns the ProfessorMutation object of the builder.
@@ -289,10 +285,10 @@ func (pc *ProfessorCreate) createSpec() (*Professor, *sqlgraph.CreateSpec) {
 	}
 	if nodes := pc.mutation.SubjectsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.SubjectsTable,
-			Columns: professor.SubjectsPrimaryKey,
+			Columns: []string{professor.SubjectsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -305,7 +301,7 @@ func (pc *ProfessorCreate) createSpec() (*Professor, *sqlgraph.CreateSpec) {
 	}
 	if nodes := pc.mutation.CareersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   professor.CareersTable,
 			Columns: []string{professor.CareersColumn},
@@ -317,7 +313,6 @@ func (pc *ProfessorCreate) createSpec() (*Professor, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.careers_leader = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

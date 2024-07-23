@@ -315,7 +315,7 @@ func HasRecipient() predicate.Notification {
 	return predicate.Notification(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, RecipientTable, RecipientPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, RecipientTable, RecipientColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

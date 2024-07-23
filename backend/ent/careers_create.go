@@ -33,19 +33,23 @@ func (cc *CareersCreate) SetDescription(s string) *CareersCreate {
 	return cc
 }
 
-// AddLeaderIDs adds the "leader" edge to the Professor entity by IDs.
-func (cc *CareersCreate) AddLeaderIDs(ids ...int) *CareersCreate {
-	cc.mutation.AddLeaderIDs(ids...)
+// SetLeaderID sets the "leader" edge to the Professor entity by ID.
+func (cc *CareersCreate) SetLeaderID(id int) *CareersCreate {
+	cc.mutation.SetLeaderID(id)
 	return cc
 }
 
-// AddLeader adds the "leader" edges to the Professor entity.
-func (cc *CareersCreate) AddLeader(p ...*Professor) *CareersCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetNillableLeaderID sets the "leader" edge to the Professor entity by ID if the given value is not nil.
+func (cc *CareersCreate) SetNillableLeaderID(id *int) *CareersCreate {
+	if id != nil {
+		cc = cc.SetLeaderID(*id)
 	}
-	return cc.AddLeaderIDs(ids...)
+	return cc
+}
+
+// SetLeader sets the "leader" edge to the Professor entity.
+func (cc *CareersCreate) SetLeader(p *Professor) *CareersCreate {
+	return cc.SetLeaderID(p.ID)
 }
 
 // AddStudentIDs adds the "students" edge to the Student entity by IDs.
@@ -149,7 +153,7 @@ func (cc *CareersCreate) createSpec() (*Careers, *sqlgraph.CreateSpec) {
 	}
 	if nodes := cc.mutation.LeaderIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   careers.LeaderTable,
 			Columns: []string{careers.LeaderColumn},
@@ -161,14 +165,15 @@ func (cc *CareersCreate) createSpec() (*Careers, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.careers_leader = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := cc.mutation.StudentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   careers.StudentsTable,
-			Columns: careers.StudentsPrimaryKey,
+			Columns: []string{careers.StudentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),

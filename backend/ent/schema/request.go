@@ -27,7 +27,7 @@ func (Request) Fields() []ent.Field {
 // Edges of the Request.
 func (Request) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("requester", Users.Type),
-		edge.To("receiver", Users.Type),
+		edge.To("requester", Users.Type).Unique(),
+		edge.To("receiver", Users.Type).Unique(),
 	}
 }

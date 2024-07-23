@@ -53,49 +53,61 @@ func (pc *PaymentCreate) SetFeeNumber(i int) *PaymentCreate {
 	return pc
 }
 
-// AddStudentIDs adds the "student" edge to the Student entity by IDs.
-func (pc *PaymentCreate) AddStudentIDs(ids ...int) *PaymentCreate {
-	pc.mutation.AddStudentIDs(ids...)
+// SetStudentID sets the "student" edge to the Student entity by ID.
+func (pc *PaymentCreate) SetStudentID(id int) *PaymentCreate {
+	pc.mutation.SetStudentID(id)
 	return pc
 }
 
-// AddStudent adds the "student" edges to the Student entity.
-func (pc *PaymentCreate) AddStudent(s ...*Student) *PaymentCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// SetNillableStudentID sets the "student" edge to the Student entity by ID if the given value is not nil.
+func (pc *PaymentCreate) SetNillableStudentID(id *int) *PaymentCreate {
+	if id != nil {
+		pc = pc.SetStudentID(*id)
 	}
-	return pc.AddStudentIDs(ids...)
-}
-
-// AddCycleIDs adds the "cycle" edge to the Cycle entity by IDs.
-func (pc *PaymentCreate) AddCycleIDs(ids ...int) *PaymentCreate {
-	pc.mutation.AddCycleIDs(ids...)
 	return pc
 }
 
-// AddCycle adds the "cycle" edges to the Cycle entity.
-func (pc *PaymentCreate) AddCycle(c ...*Cycle) *PaymentCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return pc.AddCycleIDs(ids...)
+// SetStudent sets the "student" edge to the Student entity.
+func (pc *PaymentCreate) SetStudent(s *Student) *PaymentCreate {
+	return pc.SetStudentID(s.ID)
 }
 
-// AddPaymentMethodIDs adds the "payment_method" edge to the PaymentMethod entity by IDs.
-func (pc *PaymentCreate) AddPaymentMethodIDs(ids ...int) *PaymentCreate {
-	pc.mutation.AddPaymentMethodIDs(ids...)
+// SetCycleID sets the "cycle" edge to the Cycle entity by ID.
+func (pc *PaymentCreate) SetCycleID(id int) *PaymentCreate {
+	pc.mutation.SetCycleID(id)
 	return pc
 }
 
-// AddPaymentMethod adds the "payment_method" edges to the PaymentMethod entity.
-func (pc *PaymentCreate) AddPaymentMethod(p ...*PaymentMethod) *PaymentCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetNillableCycleID sets the "cycle" edge to the Cycle entity by ID if the given value is not nil.
+func (pc *PaymentCreate) SetNillableCycleID(id *int) *PaymentCreate {
+	if id != nil {
+		pc = pc.SetCycleID(*id)
 	}
-	return pc.AddPaymentMethodIDs(ids...)
+	return pc
+}
+
+// SetCycle sets the "cycle" edge to the Cycle entity.
+func (pc *PaymentCreate) SetCycle(c *Cycle) *PaymentCreate {
+	return pc.SetCycleID(c.ID)
+}
+
+// SetPaymentMethodID sets the "payment_method" edge to the PaymentMethod entity by ID.
+func (pc *PaymentCreate) SetPaymentMethodID(id int) *PaymentCreate {
+	pc.mutation.SetPaymentMethodID(id)
+	return pc
+}
+
+// SetNillablePaymentMethodID sets the "payment_method" edge to the PaymentMethod entity by ID if the given value is not nil.
+func (pc *PaymentCreate) SetNillablePaymentMethodID(id *int) *PaymentCreate {
+	if id != nil {
+		pc = pc.SetPaymentMethodID(*id)
+	}
+	return pc
+}
+
+// SetPaymentMethod sets the "payment_method" edge to the PaymentMethod entity.
+func (pc *PaymentCreate) SetPaymentMethod(p *PaymentMethod) *PaymentCreate {
+	return pc.SetPaymentMethodID(p.ID)
 }
 
 // Mutation returns the PaymentMutation object of the builder.
@@ -215,10 +227,10 @@ func (pc *PaymentCreate) createSpec() (*Payment, *sqlgraph.CreateSpec) {
 	}
 	if nodes := pc.mutation.StudentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.StudentTable,
-			Columns: payment.StudentPrimaryKey,
+			Columns: []string{payment.StudentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -227,11 +239,12 @@ func (pc *PaymentCreate) createSpec() (*Payment, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.payment_student = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := pc.mutation.CycleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.CycleTable,
 			Columns: []string{payment.CycleColumn},
@@ -243,11 +256,12 @@ func (pc *PaymentCreate) createSpec() (*Payment, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.payment_cycle = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := pc.mutation.PaymentMethodIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   payment.PaymentMethodTable,
 			Columns: []string{payment.PaymentMethodColumn},
@@ -259,6 +273,7 @@ func (pc *PaymentCreate) createSpec() (*Payment, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.payment_payment_method = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

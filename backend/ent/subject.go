@@ -5,6 +5,7 @@ package ent
 import (
 	"encoding/json"
 	"fmt"
+	"mocku/backend/ent/professor"
 	"mocku/backend/ent/subject"
 	"strings"
 
@@ -39,14 +40,15 @@ type Subject struct {
 	ClassSchedule map[string][]string `json:"class_schedule,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SubjectQuery when eager-loading is set.
-	Edges        SubjectEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges             SubjectEdges `json:"edges"`
+	subject_professor *int
+	selectValues      sql.SelectValues
 }
 
 // SubjectEdges holds the relations/edges for other nodes in the graph.
 type SubjectEdges struct {
 	// Professor holds the value of the professor edge.
-	Professor []*Professor `json:"professor,omitempty"`
+	Professor *Professor `json:"professor,omitempty"`
 	// Career holds the value of the career edge.
 	Career []*Careers `json:"career,omitempty"`
 	// Notes holds the value of the notes edge.
@@ -57,10 +59,12 @@ type SubjectEdges struct {
 }
 
 // ProfessorOrErr returns the Professor value or an error if the edge
-// was not loaded in eager-loading.
-func (e SubjectEdges) ProfessorOrErr() ([]*Professor, error) {
-	if e.loadedTypes[0] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e SubjectEdges) ProfessorOrErr() (*Professor, error) {
+	if e.Professor != nil {
 		return e.Professor, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: professor.Label}
 	}
 	return nil, &NotLoadedError{edge: "professor"}
 }
@@ -94,6 +98,8 @@ func (*Subject) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case subject.FieldName, subject.FieldDescription, subject.FieldCode:
 			values[i] = new(sql.NullString)
+		case subject.ForeignKeys[0]: // subject_professor
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -176,6 +182,13 @@ func (s *Subject) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &s.ClassSchedule); err != nil {
 					return fmt.Errorf("unmarshal field class_schedule: %w", err)
 				}
+			}
+		case subject.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field subject_professor", value)
+			} else if value.Valid {
+				s.subject_professor = new(int)
+				*s.subject_professor = int(value.Int64)
 			}
 		default:
 			s.selectValues.Set(columns[i], values[i])

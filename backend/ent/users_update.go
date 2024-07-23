@@ -118,19 +118,23 @@ func (uu *UsersUpdate) SetNillableIsActive(b *bool) *UsersUpdate {
 	return uu
 }
 
-// AddRoleIDs adds the "role" edge to the Role entity by IDs.
-func (uu *UsersUpdate) AddRoleIDs(ids ...int) *UsersUpdate {
-	uu.mutation.AddRoleIDs(ids...)
+// SetRoleID sets the "role" edge to the Role entity by ID.
+func (uu *UsersUpdate) SetRoleID(id int) *UsersUpdate {
+	uu.mutation.SetRoleID(id)
 	return uu
 }
 
-// AddRole adds the "role" edges to the Role entity.
-func (uu *UsersUpdate) AddRole(r ...*Role) *UsersUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// SetNillableRoleID sets the "role" edge to the Role entity by ID if the given value is not nil.
+func (uu *UsersUpdate) SetNillableRoleID(id *int) *UsersUpdate {
+	if id != nil {
+		uu = uu.SetRoleID(*id)
 	}
-	return uu.AddRoleIDs(ids...)
+	return uu
+}
+
+// SetRole sets the "role" edge to the Role entity.
+func (uu *UsersUpdate) SetRole(r *Role) *UsersUpdate {
+	return uu.SetRoleID(r.ID)
 }
 
 // AddRequestsMadeIDs adds the "requests_made" edge to the Request entity by IDs.
@@ -243,25 +247,10 @@ func (uu *UsersUpdate) Mutation() *UsersMutation {
 	return uu.mutation
 }
 
-// ClearRole clears all "role" edges to the Role entity.
+// ClearRole clears the "role" edge to the Role entity.
 func (uu *UsersUpdate) ClearRole() *UsersUpdate {
 	uu.mutation.ClearRole()
 	return uu
-}
-
-// RemoveRoleIDs removes the "role" edge to Role entities by IDs.
-func (uu *UsersUpdate) RemoveRoleIDs(ids ...int) *UsersUpdate {
-	uu.mutation.RemoveRoleIDs(ids...)
-	return uu
-}
-
-// RemoveRole removes "role" edges to Role entities.
-func (uu *UsersUpdate) RemoveRole(r ...*Role) *UsersUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return uu.RemoveRoleIDs(ids...)
 }
 
 // ClearRequestsMade clears all "requests_made" edges to the Request entity.
@@ -500,39 +489,23 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if uu.mutation.RoleCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   users.RoleTable,
-			Columns: users.RolePrimaryKey,
+			Columns: []string{users.RoleColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedRoleIDs(); len(nodes) > 0 && !uu.mutation.RoleCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   users.RoleTable,
-			Columns: users.RolePrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := uu.mutation.RoleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   users.RoleTable,
-			Columns: users.RolePrimaryKey,
+			Columns: []string{users.RoleColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
@@ -545,10 +518,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if uu.mutation.RequestsMadeCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsMadeTable,
-			Columns: users.RequestsMadePrimaryKey,
+			Columns: []string{users.RequestsMadeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -558,10 +531,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.RemovedRequestsMadeIDs(); len(nodes) > 0 && !uu.mutation.RequestsMadeCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsMadeTable,
-			Columns: users.RequestsMadePrimaryKey,
+			Columns: []string{users.RequestsMadeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -574,10 +547,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.RequestsMadeIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsMadeTable,
-			Columns: users.RequestsMadePrimaryKey,
+			Columns: []string{users.RequestsMadeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -590,10 +563,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if uu.mutation.RequestsReceivedCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsReceivedTable,
-			Columns: users.RequestsReceivedPrimaryKey,
+			Columns: []string{users.RequestsReceivedColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -603,10 +576,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.RemovedRequestsReceivedIDs(); len(nodes) > 0 && !uu.mutation.RequestsReceivedCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsReceivedTable,
-			Columns: users.RequestsReceivedPrimaryKey,
+			Columns: []string{users.RequestsReceivedColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -619,10 +592,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.RequestsReceivedIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsReceivedTable,
-			Columns: users.RequestsReceivedPrimaryKey,
+			Columns: []string{users.RequestsReceivedColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -680,10 +653,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if uu.mutation.NotificationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.NotificationsTable,
-			Columns: users.NotificationsPrimaryKey,
+			Columns: []string{users.NotificationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt),
@@ -693,10 +666,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.RemovedNotificationsIDs(); len(nodes) > 0 && !uu.mutation.NotificationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.NotificationsTable,
-			Columns: users.NotificationsPrimaryKey,
+			Columns: []string{users.NotificationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt),
@@ -709,10 +682,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.NotificationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.NotificationsTable,
-			Columns: users.NotificationsPrimaryKey,
+			Columns: []string{users.NotificationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt),
@@ -725,10 +698,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if uu.mutation.ActivityCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.ActivityTable,
-			Columns: users.ActivityPrimaryKey,
+			Columns: []string{users.ActivityColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeInt),
@@ -738,10 +711,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.RemovedActivityIDs(); len(nodes) > 0 && !uu.mutation.ActivityCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.ActivityTable,
-			Columns: users.ActivityPrimaryKey,
+			Columns: []string{users.ActivityColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeInt),
@@ -754,10 +727,10 @@ func (uu *UsersUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.ActivityIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.ActivityTable,
-			Columns: users.ActivityPrimaryKey,
+			Columns: []string{users.ActivityColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeInt),
@@ -962,19 +935,23 @@ func (uuo *UsersUpdateOne) SetNillableIsActive(b *bool) *UsersUpdateOne {
 	return uuo
 }
 
-// AddRoleIDs adds the "role" edge to the Role entity by IDs.
-func (uuo *UsersUpdateOne) AddRoleIDs(ids ...int) *UsersUpdateOne {
-	uuo.mutation.AddRoleIDs(ids...)
+// SetRoleID sets the "role" edge to the Role entity by ID.
+func (uuo *UsersUpdateOne) SetRoleID(id int) *UsersUpdateOne {
+	uuo.mutation.SetRoleID(id)
 	return uuo
 }
 
-// AddRole adds the "role" edges to the Role entity.
-func (uuo *UsersUpdateOne) AddRole(r ...*Role) *UsersUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// SetNillableRoleID sets the "role" edge to the Role entity by ID if the given value is not nil.
+func (uuo *UsersUpdateOne) SetNillableRoleID(id *int) *UsersUpdateOne {
+	if id != nil {
+		uuo = uuo.SetRoleID(*id)
 	}
-	return uuo.AddRoleIDs(ids...)
+	return uuo
+}
+
+// SetRole sets the "role" edge to the Role entity.
+func (uuo *UsersUpdateOne) SetRole(r *Role) *UsersUpdateOne {
+	return uuo.SetRoleID(r.ID)
 }
 
 // AddRequestsMadeIDs adds the "requests_made" edge to the Request entity by IDs.
@@ -1087,25 +1064,10 @@ func (uuo *UsersUpdateOne) Mutation() *UsersMutation {
 	return uuo.mutation
 }
 
-// ClearRole clears all "role" edges to the Role entity.
+// ClearRole clears the "role" edge to the Role entity.
 func (uuo *UsersUpdateOne) ClearRole() *UsersUpdateOne {
 	uuo.mutation.ClearRole()
 	return uuo
-}
-
-// RemoveRoleIDs removes the "role" edge to Role entities by IDs.
-func (uuo *UsersUpdateOne) RemoveRoleIDs(ids ...int) *UsersUpdateOne {
-	uuo.mutation.RemoveRoleIDs(ids...)
-	return uuo
-}
-
-// RemoveRole removes "role" edges to Role entities.
-func (uuo *UsersUpdateOne) RemoveRole(r ...*Role) *UsersUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return uuo.RemoveRoleIDs(ids...)
 }
 
 // ClearRequestsMade clears all "requests_made" edges to the Request entity.
@@ -1374,39 +1336,23 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if uuo.mutation.RoleCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   users.RoleTable,
-			Columns: users.RolePrimaryKey,
+			Columns: []string{users.RoleColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedRoleIDs(); len(nodes) > 0 && !uuo.mutation.RoleCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   users.RoleTable,
-			Columns: users.RolePrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := uuo.mutation.RoleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   users.RoleTable,
-			Columns: users.RolePrimaryKey,
+			Columns: []string{users.RoleColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
@@ -1419,10 +1365,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if uuo.mutation.RequestsMadeCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsMadeTable,
-			Columns: users.RequestsMadePrimaryKey,
+			Columns: []string{users.RequestsMadeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -1432,10 +1378,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if nodes := uuo.mutation.RemovedRequestsMadeIDs(); len(nodes) > 0 && !uuo.mutation.RequestsMadeCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsMadeTable,
-			Columns: users.RequestsMadePrimaryKey,
+			Columns: []string{users.RequestsMadeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -1448,10 +1394,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if nodes := uuo.mutation.RequestsMadeIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsMadeTable,
-			Columns: users.RequestsMadePrimaryKey,
+			Columns: []string{users.RequestsMadeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -1464,10 +1410,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if uuo.mutation.RequestsReceivedCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsReceivedTable,
-			Columns: users.RequestsReceivedPrimaryKey,
+			Columns: []string{users.RequestsReceivedColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -1477,10 +1423,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if nodes := uuo.mutation.RemovedRequestsReceivedIDs(); len(nodes) > 0 && !uuo.mutation.RequestsReceivedCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsReceivedTable,
-			Columns: users.RequestsReceivedPrimaryKey,
+			Columns: []string{users.RequestsReceivedColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -1493,10 +1439,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if nodes := uuo.mutation.RequestsReceivedIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.RequestsReceivedTable,
-			Columns: users.RequestsReceivedPrimaryKey,
+			Columns: []string{users.RequestsReceivedColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeInt),
@@ -1554,10 +1500,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if uuo.mutation.NotificationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.NotificationsTable,
-			Columns: users.NotificationsPrimaryKey,
+			Columns: []string{users.NotificationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt),
@@ -1567,10 +1513,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if nodes := uuo.mutation.RemovedNotificationsIDs(); len(nodes) > 0 && !uuo.mutation.NotificationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.NotificationsTable,
-			Columns: users.NotificationsPrimaryKey,
+			Columns: []string{users.NotificationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt),
@@ -1583,10 +1529,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if nodes := uuo.mutation.NotificationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.NotificationsTable,
-			Columns: users.NotificationsPrimaryKey,
+			Columns: []string{users.NotificationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt),
@@ -1599,10 +1545,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if uuo.mutation.ActivityCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.ActivityTable,
-			Columns: users.ActivityPrimaryKey,
+			Columns: []string{users.ActivityColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeInt),
@@ -1612,10 +1558,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if nodes := uuo.mutation.RemovedActivityIDs(); len(nodes) > 0 && !uuo.mutation.ActivityCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.ActivityTable,
-			Columns: users.ActivityPrimaryKey,
+			Columns: []string{users.ActivityColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeInt),
@@ -1628,10 +1574,10 @@ func (uuo *UsersUpdateOne) sqlSave(ctx context.Context) (_node *Users, err error
 	}
 	if nodes := uuo.mutation.ActivityIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   users.ActivityTable,
-			Columns: users.ActivityPrimaryKey,
+			Columns: []string{users.ActivityColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeInt),

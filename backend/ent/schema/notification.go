@@ -25,6 +25,6 @@ func (Notification) Fields() []ent.Field {
 // Edges of the Notification.
 func (Notification) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("recipient", Users.Type),
+		edge.To("recipient", Users.Type).Unique(),
 	}
 }

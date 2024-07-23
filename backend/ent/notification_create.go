@@ -61,19 +61,23 @@ func (nc *NotificationCreate) SetNillableCreatedAt(t *time.Time) *NotificationCr
 	return nc
 }
 
-// AddRecipientIDs adds the "recipient" edge to the Users entity by IDs.
-func (nc *NotificationCreate) AddRecipientIDs(ids ...int) *NotificationCreate {
-	nc.mutation.AddRecipientIDs(ids...)
+// SetRecipientID sets the "recipient" edge to the Users entity by ID.
+func (nc *NotificationCreate) SetRecipientID(id int) *NotificationCreate {
+	nc.mutation.SetRecipientID(id)
 	return nc
 }
 
-// AddRecipient adds the "recipient" edges to the Users entity.
-func (nc *NotificationCreate) AddRecipient(u ...*Users) *NotificationCreate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetNillableRecipientID sets the "recipient" edge to the Users entity by ID if the given value is not nil.
+func (nc *NotificationCreate) SetNillableRecipientID(id *int) *NotificationCreate {
+	if id != nil {
+		nc = nc.SetRecipientID(*id)
 	}
-	return nc.AddRecipientIDs(ids...)
+	return nc
+}
+
+// SetRecipient sets the "recipient" edge to the Users entity.
+func (nc *NotificationCreate) SetRecipient(u *Users) *NotificationCreate {
+	return nc.SetRecipientID(u.ID)
 }
 
 // Mutation returns the NotificationMutation object of the builder.
@@ -189,10 +193,10 @@ func (nc *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec)
 	}
 	if nodes := nc.mutation.RecipientIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   notification.RecipientTable,
-			Columns: notification.RecipientPrimaryKey,
+			Columns: []string{notification.RecipientColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(users.FieldID, field.TypeInt),
@@ -201,6 +205,7 @@ func (nc *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec)
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.notification_recipient = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

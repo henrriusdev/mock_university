@@ -26,11 +26,13 @@ const (
 	EdgeRecipient = "recipient"
 	// Table holds the table name of the notification in the database.
 	Table = "notifications"
-	// RecipientTable is the table that holds the recipient relation/edge. The primary key declared below.
-	RecipientTable = "notification_recipient"
+	// RecipientTable is the table that holds the recipient relation/edge.
+	RecipientTable = "notifications"
 	// RecipientInverseTable is the table name for the Users entity.
 	// It exists in this package in order to avoid circular dependency with the "users" package.
 	RecipientInverseTable = "users"
+	// RecipientColumn is the table column denoting the recipient relation/edge.
+	RecipientColumn = "notification_recipient"
 )
 
 // Columns holds all SQL columns for notification fields.
@@ -42,16 +44,21 @@ var Columns = []string{
 	FieldCreatedAt,
 }
 
-var (
-	// RecipientPrimaryKey and RecipientColumn2 are the table columns denoting the
-	// primary key for the recipient relation (M2M).
-	RecipientPrimaryKey = []string{"notification_id", "users_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "notifications"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"notification_recipient",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -97,23 +104,16 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// ByRecipientCount orders the results by recipient count.
-func ByRecipientCount(opts ...sql.OrderTermOption) OrderOption {
+// ByRecipientField orders the results by recipient field.
+func ByRecipientField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newRecipientStep(), opts...)
-	}
-}
-
-// ByRecipient orders the results by recipient terms.
-func ByRecipient(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRecipientStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newRecipientStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newRecipientStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RecipientInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, RecipientTable, RecipientPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, false, RecipientTable, RecipientColumn),
 	)
 }

@@ -47,21 +47,27 @@ const (
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "student_user"
-	// NotesTable is the table that holds the notes relation/edge. The primary key declared below.
-	NotesTable = "note_student"
+	// NotesTable is the table that holds the notes relation/edge.
+	NotesTable = "notes"
 	// NotesInverseTable is the table name for the Note entity.
 	// It exists in this package in order to avoid circular dependency with the "note" package.
 	NotesInverseTable = "notes"
-	// PaymentsTable is the table that holds the payments relation/edge. The primary key declared below.
-	PaymentsTable = "payment_student"
+	// NotesColumn is the table column denoting the notes relation/edge.
+	NotesColumn = "note_student"
+	// PaymentsTable is the table that holds the payments relation/edge.
+	PaymentsTable = "payments"
 	// PaymentsInverseTable is the table name for the Payment entity.
 	// It exists in this package in order to avoid circular dependency with the "payment" package.
 	PaymentsInverseTable = "payments"
-	// CareerTable is the table that holds the career relation/edge. The primary key declared below.
-	CareerTable = "student_career"
+	// PaymentsColumn is the table column denoting the payments relation/edge.
+	PaymentsColumn = "payment_student"
+	// CareerTable is the table that holds the career relation/edge.
+	CareerTable = "students"
 	// CareerInverseTable is the table name for the Careers entity.
 	// It exists in this package in order to avoid circular dependency with the "careers" package.
 	CareerInverseTable = "careers"
+	// CareerColumn is the table column denoting the career relation/edge.
+	CareerColumn = "student_career"
 )
 
 // Columns holds all SQL columns for student fields.
@@ -82,19 +88,8 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"student_user",
+	"student_career",
 }
-
-var (
-	// NotesPrimaryKey and NotesColumn2 are the table columns denoting the
-	// primary key for the notes relation (M2M).
-	NotesPrimaryKey = []string{"note_id", "student_id"}
-	// PaymentsPrimaryKey and PaymentsColumn2 are the table columns denoting the
-	// primary key for the payments relation (M2M).
-	PaymentsPrimaryKey = []string{"payment_id", "student_id"}
-	// CareerPrimaryKey and CareerColumn2 are the table columns denoting the
-	// primary key for the career relation (M2M).
-	CareerPrimaryKey = []string{"student_id", "careers_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -218,17 +213,10 @@ func ByPayments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByCareerCount orders the results by career count.
-func ByCareerCount(opts ...sql.OrderTermOption) OrderOption {
+// ByCareerField orders the results by career field.
+func ByCareerField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newCareerStep(), opts...)
-	}
-}
-
-// ByCareer orders the results by career terms.
-func ByCareer(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newCareerStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newCareerStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newUserStep() *sqlgraph.Step {
@@ -242,20 +230,20 @@ func newNotesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(NotesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, NotesTable, NotesPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, true, NotesTable, NotesColumn),
 	)
 }
 func newPaymentsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PaymentsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, PaymentsTable, PaymentsPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, true, PaymentsTable, PaymentsColumn),
 	)
 }
 func newCareerStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CareerInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, CareerTable, CareerPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, false, CareerTable, CareerColumn),
 	)
 }

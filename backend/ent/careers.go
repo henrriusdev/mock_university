@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"mocku/backend/ent/careers"
+	"mocku/backend/ent/professor"
 	"strings"
 
 	"entgo.io/ent"
@@ -23,6 +24,7 @@ type Careers struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the CareersQuery when eager-loading is set.
 	Edges          CareersEdges `json:"edges"`
+	careers_leader *int
 	subject_career *int
 	selectValues   sql.SelectValues
 }
@@ -30,7 +32,7 @@ type Careers struct {
 // CareersEdges holds the relations/edges for other nodes in the graph.
 type CareersEdges struct {
 	// Leader holds the value of the leader edge.
-	Leader []*Professor `json:"leader,omitempty"`
+	Leader *Professor `json:"leader,omitempty"`
 	// Students holds the value of the students edge.
 	Students []*Student `json:"students,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -39,10 +41,12 @@ type CareersEdges struct {
 }
 
 // LeaderOrErr returns the Leader value or an error if the edge
-// was not loaded in eager-loading.
-func (e CareersEdges) LeaderOrErr() ([]*Professor, error) {
-	if e.loadedTypes[0] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e CareersEdges) LeaderOrErr() (*Professor, error) {
+	if e.Leader != nil {
 		return e.Leader, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: professor.Label}
 	}
 	return nil, &NotLoadedError{edge: "leader"}
 }
@@ -65,7 +69,9 @@ func (*Careers) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case careers.FieldName, careers.FieldDescription:
 			values[i] = new(sql.NullString)
-		case careers.ForeignKeys[0]: // subject_career
+		case careers.ForeignKeys[0]: // careers_leader
+			values[i] = new(sql.NullInt64)
+		case careers.ForeignKeys[1]: // subject_career
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -101,6 +107,13 @@ func (c *Careers) assignValues(columns []string, values []any) error {
 				c.Description = value.String
 			}
 		case careers.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field careers_leader", value)
+			} else if value.Valid {
+				c.careers_leader = new(int)
+				*c.careers_leader = int(value.Int64)
+			}
+		case careers.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field subject_career", value)
 			} else if value.Valid {

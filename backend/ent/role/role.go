@@ -22,11 +22,13 @@ const (
 	EdgePermissions = "permissions"
 	// Table holds the table name of the role in the database.
 	Table = "roles"
-	// UsersTable is the table that holds the users relation/edge. The primary key declared below.
-	UsersTable = "users_role"
+	// UsersTable is the table that holds the users relation/edge.
+	UsersTable = "users"
 	// UsersInverseTable is the table name for the Users entity.
 	// It exists in this package in order to avoid circular dependency with the "users" package.
 	UsersInverseTable = "users"
+	// UsersColumn is the table column denoting the users relation/edge.
+	UsersColumn = "users_role"
 	// PermissionsTable is the table that holds the permissions relation/edge. The primary key declared below.
 	PermissionsTable = "permission_roles"
 	// PermissionsInverseTable is the table name for the Permission entity.
@@ -42,9 +44,6 @@ var Columns = []string{
 }
 
 var (
-	// UsersPrimaryKey and UsersColumn2 are the table columns denoting the
-	// primary key for the users relation (M2M).
-	UsersPrimaryKey = []string{"users_id", "role_id"}
 	// PermissionsPrimaryKey and PermissionsColumn2 are the table columns denoting the
 	// primary key for the permissions relation (M2M).
 	PermissionsPrimaryKey = []string{"permission_id", "role_id"}
@@ -116,7 +115,7 @@ func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsersInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, UsersTable, UsersPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, true, UsersTable, UsersColumn),
 	)
 }
 func newPermissionsStep() *sqlgraph.Step {

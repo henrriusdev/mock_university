@@ -23,17 +23,19 @@ const (
 	// Table holds the table name of the careers in the database.
 	Table = "careers"
 	// LeaderTable is the table that holds the leader relation/edge.
-	LeaderTable = "professors"
+	LeaderTable = "careers"
 	// LeaderInverseTable is the table name for the Professor entity.
 	// It exists in this package in order to avoid circular dependency with the "professor" package.
 	LeaderInverseTable = "professors"
 	// LeaderColumn is the table column denoting the leader relation/edge.
 	LeaderColumn = "careers_leader"
-	// StudentsTable is the table that holds the students relation/edge. The primary key declared below.
-	StudentsTable = "student_career"
+	// StudentsTable is the table that holds the students relation/edge.
+	StudentsTable = "students"
 	// StudentsInverseTable is the table name for the Student entity.
 	// It exists in this package in order to avoid circular dependency with the "student" package.
 	StudentsInverseTable = "students"
+	// StudentsColumn is the table column denoting the students relation/edge.
+	StudentsColumn = "student_career"
 )
 
 // Columns holds all SQL columns for careers fields.
@@ -46,14 +48,9 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "careers"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
+	"careers_leader",
 	"subject_career",
 }
-
-var (
-	// StudentsPrimaryKey and StudentsColumn2 are the table columns denoting the
-	// primary key for the students relation (M2M).
-	StudentsPrimaryKey = []string{"student_id", "careers_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -95,17 +92,10 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByLeaderCount orders the results by leader count.
-func ByLeaderCount(opts ...sql.OrderTermOption) OrderOption {
+// ByLeaderField orders the results by leader field.
+func ByLeaderField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newLeaderStep(), opts...)
-	}
-}
-
-// ByLeader orders the results by leader terms.
-func ByLeader(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newLeaderStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newLeaderStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -126,13 +116,13 @@ func newLeaderStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(LeaderInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, LeaderTable, LeaderColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, LeaderTable, LeaderColumn),
 	)
 }
 func newStudentsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(StudentsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, StudentsTable, StudentsPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, true, StudentsTable, StudentsColumn),
 	)
 }

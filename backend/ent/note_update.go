@@ -76,49 +76,61 @@ func (nu *NoteUpdate) ClearAverage() *NoteUpdate {
 	return nu
 }
 
-// AddStudentIDs adds the "student" edge to the Student entity by IDs.
-func (nu *NoteUpdate) AddStudentIDs(ids ...int) *NoteUpdate {
-	nu.mutation.AddStudentIDs(ids...)
+// SetStudentID sets the "student" edge to the Student entity by ID.
+func (nu *NoteUpdate) SetStudentID(id int) *NoteUpdate {
+	nu.mutation.SetStudentID(id)
 	return nu
 }
 
-// AddStudent adds the "student" edges to the Student entity.
-func (nu *NoteUpdate) AddStudent(s ...*Student) *NoteUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// SetNillableStudentID sets the "student" edge to the Student entity by ID if the given value is not nil.
+func (nu *NoteUpdate) SetNillableStudentID(id *int) *NoteUpdate {
+	if id != nil {
+		nu = nu.SetStudentID(*id)
 	}
-	return nu.AddStudentIDs(ids...)
-}
-
-// AddSubjectIDs adds the "subject" edge to the Subject entity by IDs.
-func (nu *NoteUpdate) AddSubjectIDs(ids ...int) *NoteUpdate {
-	nu.mutation.AddSubjectIDs(ids...)
 	return nu
 }
 
-// AddSubject adds the "subject" edges to the Subject entity.
-func (nu *NoteUpdate) AddSubject(s ...*Subject) *NoteUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return nu.AddSubjectIDs(ids...)
+// SetStudent sets the "student" edge to the Student entity.
+func (nu *NoteUpdate) SetStudent(s *Student) *NoteUpdate {
+	return nu.SetStudentID(s.ID)
 }
 
-// AddCycleIDs adds the "cycle" edge to the Cycle entity by IDs.
-func (nu *NoteUpdate) AddCycleIDs(ids ...int) *NoteUpdate {
-	nu.mutation.AddCycleIDs(ids...)
+// SetSubjectID sets the "subject" edge to the Subject entity by ID.
+func (nu *NoteUpdate) SetSubjectID(id int) *NoteUpdate {
+	nu.mutation.SetSubjectID(id)
 	return nu
 }
 
-// AddCycle adds the "cycle" edges to the Cycle entity.
-func (nu *NoteUpdate) AddCycle(c ...*Cycle) *NoteUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+// SetNillableSubjectID sets the "subject" edge to the Subject entity by ID if the given value is not nil.
+func (nu *NoteUpdate) SetNillableSubjectID(id *int) *NoteUpdate {
+	if id != nil {
+		nu = nu.SetSubjectID(*id)
 	}
-	return nu.AddCycleIDs(ids...)
+	return nu
+}
+
+// SetSubject sets the "subject" edge to the Subject entity.
+func (nu *NoteUpdate) SetSubject(s *Subject) *NoteUpdate {
+	return nu.SetSubjectID(s.ID)
+}
+
+// SetCycleID sets the "cycle" edge to the Cycle entity by ID.
+func (nu *NoteUpdate) SetCycleID(id int) *NoteUpdate {
+	nu.mutation.SetCycleID(id)
+	return nu
+}
+
+// SetNillableCycleID sets the "cycle" edge to the Cycle entity by ID if the given value is not nil.
+func (nu *NoteUpdate) SetNillableCycleID(id *int) *NoteUpdate {
+	if id != nil {
+		nu = nu.SetCycleID(*id)
+	}
+	return nu
+}
+
+// SetCycle sets the "cycle" edge to the Cycle entity.
+func (nu *NoteUpdate) SetCycle(c *Cycle) *NoteUpdate {
+	return nu.SetCycleID(c.ID)
 }
 
 // Mutation returns the NoteMutation object of the builder.
@@ -126,67 +138,22 @@ func (nu *NoteUpdate) Mutation() *NoteMutation {
 	return nu.mutation
 }
 
-// ClearStudent clears all "student" edges to the Student entity.
+// ClearStudent clears the "student" edge to the Student entity.
 func (nu *NoteUpdate) ClearStudent() *NoteUpdate {
 	nu.mutation.ClearStudent()
 	return nu
 }
 
-// RemoveStudentIDs removes the "student" edge to Student entities by IDs.
-func (nu *NoteUpdate) RemoveStudentIDs(ids ...int) *NoteUpdate {
-	nu.mutation.RemoveStudentIDs(ids...)
-	return nu
-}
-
-// RemoveStudent removes "student" edges to Student entities.
-func (nu *NoteUpdate) RemoveStudent(s ...*Student) *NoteUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return nu.RemoveStudentIDs(ids...)
-}
-
-// ClearSubject clears all "subject" edges to the Subject entity.
+// ClearSubject clears the "subject" edge to the Subject entity.
 func (nu *NoteUpdate) ClearSubject() *NoteUpdate {
 	nu.mutation.ClearSubject()
 	return nu
 }
 
-// RemoveSubjectIDs removes the "subject" edge to Subject entities by IDs.
-func (nu *NoteUpdate) RemoveSubjectIDs(ids ...int) *NoteUpdate {
-	nu.mutation.RemoveSubjectIDs(ids...)
-	return nu
-}
-
-// RemoveSubject removes "subject" edges to Subject entities.
-func (nu *NoteUpdate) RemoveSubject(s ...*Subject) *NoteUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return nu.RemoveSubjectIDs(ids...)
-}
-
-// ClearCycle clears all "cycle" edges to the Cycle entity.
+// ClearCycle clears the "cycle" edge to the Cycle entity.
 func (nu *NoteUpdate) ClearCycle() *NoteUpdate {
 	nu.mutation.ClearCycle()
 	return nu
-}
-
-// RemoveCycleIDs removes the "cycle" edge to Cycle entities by IDs.
-func (nu *NoteUpdate) RemoveCycleIDs(ids ...int) *NoteUpdate {
-	nu.mutation.RemoveCycleIDs(ids...)
-	return nu
-}
-
-// RemoveCycle removes "cycle" edges to Cycle entities.
-func (nu *NoteUpdate) RemoveCycle(c ...*Cycle) *NoteUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return nu.RemoveCycleIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -247,39 +214,23 @@ func (nu *NoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nu.mutation.StudentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: note.StudentPrimaryKey,
+			Columns: []string{note.StudentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nu.mutation.RemovedStudentIDs(); len(nodes) > 0 && !nu.mutation.StudentCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   note.StudentTable,
-			Columns: note.StudentPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := nu.mutation.StudentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: note.StudentPrimaryKey,
+			Columns: []string{note.StudentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -292,39 +243,23 @@ func (nu *NoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nu.mutation.SubjectCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: note.SubjectPrimaryKey,
+			Columns: []string{note.SubjectColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nu.mutation.RemovedSubjectIDs(); len(nodes) > 0 && !nu.mutation.SubjectCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   note.SubjectTable,
-			Columns: note.SubjectPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := nu.mutation.SubjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: note.SubjectPrimaryKey,
+			Columns: []string{note.SubjectColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -337,7 +272,7 @@ func (nu *NoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nu.mutation.CycleCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.CycleTable,
 			Columns: []string{note.CycleColumn},
@@ -345,28 +280,12 @@ func (nu *NoteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cycle.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nu.mutation.RemovedCycleIDs(); len(nodes) > 0 && !nu.mutation.CycleCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   note.CycleTable,
-			Columns: []string{note.CycleColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cycle.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := nu.mutation.CycleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.CycleTable,
 			Columns: []string{note.CycleColumn},
@@ -445,49 +364,61 @@ func (nuo *NoteUpdateOne) ClearAverage() *NoteUpdateOne {
 	return nuo
 }
 
-// AddStudentIDs adds the "student" edge to the Student entity by IDs.
-func (nuo *NoteUpdateOne) AddStudentIDs(ids ...int) *NoteUpdateOne {
-	nuo.mutation.AddStudentIDs(ids...)
+// SetStudentID sets the "student" edge to the Student entity by ID.
+func (nuo *NoteUpdateOne) SetStudentID(id int) *NoteUpdateOne {
+	nuo.mutation.SetStudentID(id)
 	return nuo
 }
 
-// AddStudent adds the "student" edges to the Student entity.
-func (nuo *NoteUpdateOne) AddStudent(s ...*Student) *NoteUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// SetNillableStudentID sets the "student" edge to the Student entity by ID if the given value is not nil.
+func (nuo *NoteUpdateOne) SetNillableStudentID(id *int) *NoteUpdateOne {
+	if id != nil {
+		nuo = nuo.SetStudentID(*id)
 	}
-	return nuo.AddStudentIDs(ids...)
-}
-
-// AddSubjectIDs adds the "subject" edge to the Subject entity by IDs.
-func (nuo *NoteUpdateOne) AddSubjectIDs(ids ...int) *NoteUpdateOne {
-	nuo.mutation.AddSubjectIDs(ids...)
 	return nuo
 }
 
-// AddSubject adds the "subject" edges to the Subject entity.
-func (nuo *NoteUpdateOne) AddSubject(s ...*Subject) *NoteUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return nuo.AddSubjectIDs(ids...)
+// SetStudent sets the "student" edge to the Student entity.
+func (nuo *NoteUpdateOne) SetStudent(s *Student) *NoteUpdateOne {
+	return nuo.SetStudentID(s.ID)
 }
 
-// AddCycleIDs adds the "cycle" edge to the Cycle entity by IDs.
-func (nuo *NoteUpdateOne) AddCycleIDs(ids ...int) *NoteUpdateOne {
-	nuo.mutation.AddCycleIDs(ids...)
+// SetSubjectID sets the "subject" edge to the Subject entity by ID.
+func (nuo *NoteUpdateOne) SetSubjectID(id int) *NoteUpdateOne {
+	nuo.mutation.SetSubjectID(id)
 	return nuo
 }
 
-// AddCycle adds the "cycle" edges to the Cycle entity.
-func (nuo *NoteUpdateOne) AddCycle(c ...*Cycle) *NoteUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+// SetNillableSubjectID sets the "subject" edge to the Subject entity by ID if the given value is not nil.
+func (nuo *NoteUpdateOne) SetNillableSubjectID(id *int) *NoteUpdateOne {
+	if id != nil {
+		nuo = nuo.SetSubjectID(*id)
 	}
-	return nuo.AddCycleIDs(ids...)
+	return nuo
+}
+
+// SetSubject sets the "subject" edge to the Subject entity.
+func (nuo *NoteUpdateOne) SetSubject(s *Subject) *NoteUpdateOne {
+	return nuo.SetSubjectID(s.ID)
+}
+
+// SetCycleID sets the "cycle" edge to the Cycle entity by ID.
+func (nuo *NoteUpdateOne) SetCycleID(id int) *NoteUpdateOne {
+	nuo.mutation.SetCycleID(id)
+	return nuo
+}
+
+// SetNillableCycleID sets the "cycle" edge to the Cycle entity by ID if the given value is not nil.
+func (nuo *NoteUpdateOne) SetNillableCycleID(id *int) *NoteUpdateOne {
+	if id != nil {
+		nuo = nuo.SetCycleID(*id)
+	}
+	return nuo
+}
+
+// SetCycle sets the "cycle" edge to the Cycle entity.
+func (nuo *NoteUpdateOne) SetCycle(c *Cycle) *NoteUpdateOne {
+	return nuo.SetCycleID(c.ID)
 }
 
 // Mutation returns the NoteMutation object of the builder.
@@ -495,67 +426,22 @@ func (nuo *NoteUpdateOne) Mutation() *NoteMutation {
 	return nuo.mutation
 }
 
-// ClearStudent clears all "student" edges to the Student entity.
+// ClearStudent clears the "student" edge to the Student entity.
 func (nuo *NoteUpdateOne) ClearStudent() *NoteUpdateOne {
 	nuo.mutation.ClearStudent()
 	return nuo
 }
 
-// RemoveStudentIDs removes the "student" edge to Student entities by IDs.
-func (nuo *NoteUpdateOne) RemoveStudentIDs(ids ...int) *NoteUpdateOne {
-	nuo.mutation.RemoveStudentIDs(ids...)
-	return nuo
-}
-
-// RemoveStudent removes "student" edges to Student entities.
-func (nuo *NoteUpdateOne) RemoveStudent(s ...*Student) *NoteUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return nuo.RemoveStudentIDs(ids...)
-}
-
-// ClearSubject clears all "subject" edges to the Subject entity.
+// ClearSubject clears the "subject" edge to the Subject entity.
 func (nuo *NoteUpdateOne) ClearSubject() *NoteUpdateOne {
 	nuo.mutation.ClearSubject()
 	return nuo
 }
 
-// RemoveSubjectIDs removes the "subject" edge to Subject entities by IDs.
-func (nuo *NoteUpdateOne) RemoveSubjectIDs(ids ...int) *NoteUpdateOne {
-	nuo.mutation.RemoveSubjectIDs(ids...)
-	return nuo
-}
-
-// RemoveSubject removes "subject" edges to Subject entities.
-func (nuo *NoteUpdateOne) RemoveSubject(s ...*Subject) *NoteUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return nuo.RemoveSubjectIDs(ids...)
-}
-
-// ClearCycle clears all "cycle" edges to the Cycle entity.
+// ClearCycle clears the "cycle" edge to the Cycle entity.
 func (nuo *NoteUpdateOne) ClearCycle() *NoteUpdateOne {
 	nuo.mutation.ClearCycle()
 	return nuo
-}
-
-// RemoveCycleIDs removes the "cycle" edge to Cycle entities by IDs.
-func (nuo *NoteUpdateOne) RemoveCycleIDs(ids ...int) *NoteUpdateOne {
-	nuo.mutation.RemoveCycleIDs(ids...)
-	return nuo
-}
-
-// RemoveCycle removes "cycle" edges to Cycle entities.
-func (nuo *NoteUpdateOne) RemoveCycle(c ...*Cycle) *NoteUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return nuo.RemoveCycleIDs(ids...)
 }
 
 // Where appends a list predicates to the NoteUpdate builder.
@@ -646,39 +532,23 @@ func (nuo *NoteUpdateOne) sqlSave(ctx context.Context) (_node *Note, err error) 
 	}
 	if nuo.mutation.StudentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: note.StudentPrimaryKey,
+			Columns: []string{note.StudentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nuo.mutation.RemovedStudentIDs(); len(nodes) > 0 && !nuo.mutation.StudentCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   note.StudentTable,
-			Columns: note.StudentPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := nuo.mutation.StudentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.StudentTable,
-			Columns: note.StudentPrimaryKey,
+			Columns: []string{note.StudentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
@@ -691,39 +561,23 @@ func (nuo *NoteUpdateOne) sqlSave(ctx context.Context) (_node *Note, err error) 
 	}
 	if nuo.mutation.SubjectCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: note.SubjectPrimaryKey,
+			Columns: []string{note.SubjectColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nuo.mutation.RemovedSubjectIDs(); len(nodes) > 0 && !nuo.mutation.SubjectCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   note.SubjectTable,
-			Columns: note.SubjectPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := nuo.mutation.SubjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.SubjectTable,
-			Columns: note.SubjectPrimaryKey,
+			Columns: []string{note.SubjectColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
@@ -736,7 +590,7 @@ func (nuo *NoteUpdateOne) sqlSave(ctx context.Context) (_node *Note, err error) 
 	}
 	if nuo.mutation.CycleCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.CycleTable,
 			Columns: []string{note.CycleColumn},
@@ -744,28 +598,12 @@ func (nuo *NoteUpdateOne) sqlSave(ctx context.Context) (_node *Note, err error) 
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cycle.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nuo.mutation.RemovedCycleIDs(); len(nodes) > 0 && !nuo.mutation.CycleCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   note.CycleTable,
-			Columns: []string{note.CycleColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cycle.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := nuo.mutation.CycleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   note.CycleTable,
 			Columns: []string{note.CycleColumn},

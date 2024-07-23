@@ -32,6 +32,6 @@ func (Student) Edges() []ent.Edge {
 		edge.To("user", Users.Type).Unique(),
 		edge.From("notes", Note.Type).Ref("student"),
 		edge.From("payments", Payment.Type).Ref("student"),
-		edge.To("career", Careers.Type),
+		edge.To("career", Careers.Type).Unique(),
 	}
 }

@@ -24,18 +24,22 @@ const (
 	EdgeCycle = "cycle"
 	// Table holds the table name of the note in the database.
 	Table = "notes"
-	// StudentTable is the table that holds the student relation/edge. The primary key declared below.
-	StudentTable = "note_student"
+	// StudentTable is the table that holds the student relation/edge.
+	StudentTable = "notes"
 	// StudentInverseTable is the table name for the Student entity.
 	// It exists in this package in order to avoid circular dependency with the "student" package.
 	StudentInverseTable = "students"
-	// SubjectTable is the table that holds the subject relation/edge. The primary key declared below.
-	SubjectTable = "note_subject"
+	// StudentColumn is the table column denoting the student relation/edge.
+	StudentColumn = "note_student"
+	// SubjectTable is the table that holds the subject relation/edge.
+	SubjectTable = "notes"
 	// SubjectInverseTable is the table name for the Subject entity.
 	// It exists in this package in order to avoid circular dependency with the "subject" package.
 	SubjectInverseTable = "subjects"
+	// SubjectColumn is the table column denoting the subject relation/edge.
+	SubjectColumn = "note_subject"
 	// CycleTable is the table that holds the cycle relation/edge.
-	CycleTable = "cycles"
+	CycleTable = "notes"
 	// CycleInverseTable is the table name for the Cycle entity.
 	// It exists in this package in order to avoid circular dependency with the "cycle" package.
 	CycleInverseTable = "cycles"
@@ -50,19 +54,23 @@ var Columns = []string{
 	FieldAverage,
 }
 
-var (
-	// StudentPrimaryKey and StudentColumn2 are the table columns denoting the
-	// primary key for the student relation (M2M).
-	StudentPrimaryKey = []string{"note_id", "student_id"}
-	// SubjectPrimaryKey and SubjectColumn2 are the table columns denoting the
-	// primary key for the subject relation (M2M).
-	SubjectPrimaryKey = []string{"note_id", "subject_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "notes"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"note_student",
+	"note_subject",
+	"note_cycle",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -82,65 +90,44 @@ func ByAverage(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAverage, opts...).ToFunc()
 }
 
-// ByStudentCount orders the results by student count.
-func ByStudentCount(opts ...sql.OrderTermOption) OrderOption {
+// ByStudentField orders the results by student field.
+func ByStudentField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newStudentStep(), opts...)
+		sqlgraph.OrderByNeighborTerms(s, newStudentStep(), sql.OrderByField(field, opts...))
 	}
 }
 
-// ByStudent orders the results by student terms.
-func ByStudent(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// BySubjectField orders the results by subject field.
+func BySubjectField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newStudentStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newSubjectStep(), sql.OrderByField(field, opts...))
 	}
 }
 
-// BySubjectCount orders the results by subject count.
-func BySubjectCount(opts ...sql.OrderTermOption) OrderOption {
+// ByCycleField orders the results by cycle field.
+func ByCycleField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSubjectStep(), opts...)
-	}
-}
-
-// BySubject orders the results by subject terms.
-func BySubject(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSubjectStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByCycleCount orders the results by cycle count.
-func ByCycleCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newCycleStep(), opts...)
-	}
-}
-
-// ByCycle orders the results by cycle terms.
-func ByCycle(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newCycleStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newCycleStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newStudentStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(StudentInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, StudentTable, StudentPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, false, StudentTable, StudentColumn),
 	)
 }
 func newSubjectStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SubjectInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, SubjectTable, SubjectPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, false, SubjectTable, SubjectColumn),
 	)
 }
 func newCycleStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CycleInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, CycleTable, CycleColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, CycleTable, CycleColumn),
 	)
 }

@@ -82,19 +82,23 @@ func (sc *SubjectCreate) SetClassSchedule(m map[string][]string) *SubjectCreate 
 	return sc
 }
 
-// AddProfessorIDs adds the "professor" edge to the Professor entity by IDs.
-func (sc *SubjectCreate) AddProfessorIDs(ids ...int) *SubjectCreate {
-	sc.mutation.AddProfessorIDs(ids...)
+// SetProfessorID sets the "professor" edge to the Professor entity by ID.
+func (sc *SubjectCreate) SetProfessorID(id int) *SubjectCreate {
+	sc.mutation.SetProfessorID(id)
 	return sc
 }
 
-// AddProfessor adds the "professor" edges to the Professor entity.
-func (sc *SubjectCreate) AddProfessor(p ...*Professor) *SubjectCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetNillableProfessorID sets the "professor" edge to the Professor entity by ID if the given value is not nil.
+func (sc *SubjectCreate) SetNillableProfessorID(id *int) *SubjectCreate {
+	if id != nil {
+		sc = sc.SetProfessorID(*id)
 	}
-	return sc.AddProfessorIDs(ids...)
+	return sc
+}
+
+// SetProfessor sets the "professor" edge to the Professor entity.
+func (sc *SubjectCreate) SetProfessor(p *Professor) *SubjectCreate {
+	return sc.SetProfessorID(p.ID)
 }
 
 // AddCareerIDs adds the "career" edge to the Careers entity by IDs.
@@ -301,10 +305,10 @@ func (sc *SubjectCreate) createSpec() (*Subject, *sqlgraph.CreateSpec) {
 	}
 	if nodes := sc.mutation.ProfessorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   subject.ProfessorTable,
-			Columns: subject.ProfessorPrimaryKey,
+			Columns: []string{subject.ProfessorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(professor.FieldID, field.TypeInt),
@@ -313,6 +317,7 @@ func (sc *SubjectCreate) createSpec() (*Subject, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.subject_professor = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := sc.mutation.CareerIDs(); len(nodes) > 0 {
@@ -333,10 +338,10 @@ func (sc *SubjectCreate) createSpec() (*Subject, *sqlgraph.CreateSpec) {
 	}
 	if nodes := sc.mutation.NotesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
 			Table:   subject.NotesTable,
-			Columns: subject.NotesPrimaryKey,
+			Columns: []string{subject.NotesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),

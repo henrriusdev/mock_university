@@ -4,7 +4,6 @@ package ent
 
 import (
 	"fmt"
-	"mocku/backend/ent/careers"
 	"mocku/backend/ent/professor"
 	"mocku/backend/ent/users"
 	"strings"
@@ -30,7 +29,6 @@ type Professor struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ProfessorQuery when eager-loading is set.
 	Edges                  ProfessorEdges `json:"edges"`
-	careers_leader         *int
 	professor_user         *int
 	professor_subordinates *int
 	selectValues           sql.SelectValues
@@ -47,7 +45,7 @@ type ProfessorEdges struct {
 	// Subjects holds the value of the subjects edge.
 	Subjects []*Subject `json:"subjects,omitempty"`
 	// Careers holds the value of the careers edge.
-	Careers *Careers `json:"careers,omitempty"`
+	Careers []*Careers `json:"careers,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [5]bool
@@ -94,12 +92,10 @@ func (e ProfessorEdges) SubjectsOrErr() ([]*Subject, error) {
 }
 
 // CareersOrErr returns the Careers value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e ProfessorEdges) CareersOrErr() (*Careers, error) {
-	if e.Careers != nil {
+// was not loaded in eager-loading.
+func (e ProfessorEdges) CareersOrErr() ([]*Careers, error) {
+	if e.loadedTypes[4] {
 		return e.Careers, nil
-	} else if e.loadedTypes[4] {
-		return nil, &NotFoundError{label: careers.Label}
 	}
 	return nil, &NotLoadedError{edge: "careers"}
 }
@@ -115,11 +111,9 @@ func (*Professor) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case professor.FieldBirthDate:
 			values[i] = new(sql.NullTime)
-		case professor.ForeignKeys[0]: // careers_leader
+		case professor.ForeignKeys[0]: // professor_user
 			values[i] = new(sql.NullInt64)
-		case professor.ForeignKeys[1]: // professor_user
-			values[i] = new(sql.NullInt64)
-		case professor.ForeignKeys[2]: // professor_subordinates
+		case professor.ForeignKeys[1]: // professor_subordinates
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -168,19 +162,12 @@ func (pr *Professor) assignValues(columns []string, values []any) error {
 			}
 		case professor.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field careers_leader", value)
-			} else if value.Valid {
-				pr.careers_leader = new(int)
-				*pr.careers_leader = int(value.Int64)
-			}
-		case professor.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field professor_user", value)
 			} else if value.Valid {
 				pr.professor_user = new(int)
 				*pr.professor_user = int(value.Int64)
 			}
-		case professor.ForeignKeys[2]:
+		case professor.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field professor_subordinates", value)
 			} else if value.Valid {
