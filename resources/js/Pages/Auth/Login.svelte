@@ -21,7 +21,7 @@
                 <div class="grid gap-4">
                     <div class="grid gap-2">
                         <Label for="email">Email</Label>
-                        <Input id="email" type="email" placeholder="m@example.com" required/>
+                        <Input id="email" type="email" placeholder="m@example.com" required name="email"/>
                     </div>
                     <div class="grid gap-2">
                         <div class="flex items-center">
@@ -30,7 +30,7 @@
                                 Forgot your password?
                             </a>
                         </div>
-                        <Input id="password" type="password" required/>
+                        <Input id="password" type="password" name="password" required/>
                     </div>
                     <Button type="submit" class="w-full">Login</Button>
                     <Button variant="outline" class="w-full">Login with Google</Button>
