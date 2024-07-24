@@ -127,7 +127,7 @@ func (h *Handler) PaymentsDashHandler(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		err = i.Render(w, r, "Payments/Dash", inertia.Props{
+		err = i.Render(w, r, "Payment/Dash", inertia.Props{
 			"careers": careers,
 		})
 
