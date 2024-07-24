@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
     import Activity from "lucide-svelte/icons/activity";
     import ArrowUpRight from "lucide-svelte/icons/arrow-up-right";
     import CircleUser from "lucide-svelte/icons/circle-user";
