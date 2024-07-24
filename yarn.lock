@@ -1674,12 +1674,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lucide-svelte@npm:^0.412.0":
-  version: 0.412.0
-  resolution: "lucide-svelte@npm:0.412.0"
+"lucide-svelte@npm:^0.414.0":
+  version: 0.414.0
+  resolution: "lucide-svelte@npm:0.414.0"
   peerDependencies:
     svelte: ^3 || ^4 || ^5.0.0-next.42
-  checksum: 10c0/d93f57ec422a686b455dc65ff53155727a880258988286277e127583d7e87bd117b30ab5d33b7b67820b7059e8d5328f75a81797e2660abd4e8c549c133a6d43
+  checksum: 10c0/b8474c541ca14f8e3b13ed2e88bfab8878a7a3b1a1ceb9d3aa35824666fd95524cc13d5c9401863e9d7c33d6a5161f9f8718a1f6ce64651f8e1056fce33b2a36
   languageName: node
   linkType: hard
 
@@ -2774,7 +2774,7 @@ __metadata:
     clsx: "npm:^2.1.1"
     cmdk-sv: "npm:^0.0.17"
     laravel-vite-plugin: "npm:^1.0.4"
-    lucide-svelte: "npm:^0.412.0"
+    lucide-svelte: "npm:^0.414.0"
     mode-watcher: "npm:^0.4.0"
     postcss: "npm:^8.4.38"
     svelte: "npm:^4.2.18"

@@ -1,8 +1,12 @@
 package handlers
 
-import "mocku/backend/ent"
+import (
+	"log"
+
+	"mocku/backend/ent"
+)
 
 type Handler struct {
-	DB *ent.Client
-	// Add more dependencies here
+	DB     *ent.Client
+	Logger *log.Logger
 }
