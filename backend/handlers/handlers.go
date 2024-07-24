@@ -12,7 +12,7 @@ func (h *Handler) HomeHandler(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		careers, err := h.DB.Careers.Query().All(r.Context())
 		if err != nil {
-			HandleServerErr(w, err)
+			HandleServerErr(i, err)
 			return
 		}
 
@@ -21,7 +21,7 @@ func (h *Handler) HomeHandler(i *inertia.Inertia) http.Handler {
 		})
 
 		if err != nil {
-			HandleServerErr(w, err)
+			HandleServerErr(i, err)
 			return
 		}
 	}
@@ -33,7 +33,7 @@ func (h *Handler) LoginHandler(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		careers, err := h.DB.Careers.Query().All(r.Context())
 		if err != nil {
-			HandleServerErr(w, err)
+			HandleServerErr(i, err)
 			return
 		}
 
@@ -42,7 +42,7 @@ func (h *Handler) LoginHandler(i *inertia.Inertia) http.Handler {
 		})
 
 		if err != nil {
-			HandleServerErr(w, err)
+			HandleServerErr(i, err)
 			return
 		}
 	}
@@ -55,13 +55,13 @@ func (h *Handler) LoginPostHandler(i *inertia.Inertia) http.Handler {
 		var formData LoginDto
 		err := json.NewDecoder(r.Body).Decode(&formData)
 		if err != nil {
-			HandleServerErr(w, err)
+			HandleServerErr(i, err)
 			return
 		}
 
 		user, err := h.DB.Users.Query().Where(users.EmailEQ(formData.Email)).First(r.Context())
 		if err != nil {
-			HandleServerErr(w, err)
+			HandleServerErr(i, err)
 			return
 		}
 
@@ -90,7 +90,112 @@ func (h *Handler) LoginPostHandler(i *inertia.Inertia) http.Handler {
 		})
 
 		if err != nil {
-			HandleServerErr(w, err)
+			HandleServerErr(i, err)
+			return
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) DirectiveDashHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		careers, err := h.DB.Careers.Query().All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+
+		err = i.Render(w, r, "Directive/Dash", inertia.Props{
+			"careers": careers,
+		})
+
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) PaymentsDashHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		careers, err := h.DB.Careers.Query().All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+
+		err = i.Render(w, r, "Payments/Dash", inertia.Props{
+			"careers": careers,
+		})
+
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) ControlDashHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		careers, err := h.DB.Careers.Query().All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+
+		err = i.Render(w, r, "Control/Dash", inertia.Props{
+			"careers": careers,
+		})
+
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) ProfessorDashHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		careers, err := h.DB.Careers.Query().All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+
+		err = i.Render(w, r, "Professor/Dash", inertia.Props{
+			"careers": careers,
+		})
+
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) StudentDashHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		careers, err := h.DB.Careers.Query().All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+
+		err = i.Render(w, r, "Student/Dash", inertia.Props{
+			"careers": careers,
+		})
+
+		if err != nil {
+			HandleServerErr(i, err)
 			return
 		}
 	}
