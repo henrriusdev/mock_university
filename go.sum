@@ -49,6 +49,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/romsar/gonertia v1.1.4 h1:M6DHcGlkzti/QAJqtObv3BUvp3BcGJddrMJ2fafDwNQ=
 github.com/romsar/gonertia v1.1.4/go.mod h1:4B9dtHbxdbUDZimnGmaIojrC37RYjTMOuTZpeo4jZ0E=
+github.com/romsar/gonertia v1.2.2 h1:X+e7av+JsuDHSwqKo7CTBiTHa9KfTS4qNWHpSLMA2uM=
+github.com/romsar/gonertia v1.2.2/go.mod h1:4B9dtHbxdbUDZimnGmaIojrC37RYjTMOuTZpeo4jZ0E=
 github.com/sergi/go-diff v1.0.0 h1:Kpca3qRNrduNnOQeazBd0ysaKrUJiIuISHxogkT9RPQ=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/spf13/cobra v1.7.0 h1:hyqWnYt1ZQShIddO5kBpj3vu05/++x6tJ6dg8EC572I=

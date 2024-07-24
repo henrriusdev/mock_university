@@ -52,47 +52,59 @@ func (h *Handler) LoginHandler(i *inertia.Inertia) http.Handler {
 
 func (h *Handler) LoginPostHandler(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			HandleNotFound(i).ServeHTTP(w, r)
+			return
+		}
+
 		var formData LoginDto
 		err := json.NewDecoder(r.Body).Decode(&formData)
+		println(formData.Email, formData.Password, err, "l63")
 		if err != nil {
 			HandleServerErr(i, err)
 			return
 		}
 
 		user, err := h.DB.Users.Query().Where(users.EmailEQ(formData.Email)).First(r.Context())
+		println(user, err, "l69")
 		if err != nil {
 			HandleServerErr(i, err)
+			return
+		}
+
+		careers, err := h.DB.Careers.Query().All(r.Context())
+		if !utils.CheckPassword(user.Password, formData.Password) {
+			err = i.Render(w, r, "Auth/Login", inertia.Props{
+				"careers": careers,
+				"error":   "Credenciales incorrectas",
+			})
+
+			if err != nil {
+				HandleServerErr(i, err)
+				return
+			}
+
 			return
 		}
 
 		var view string
-		if utils.CheckPassword(user.Password, formData.Password) {
-			role := user.Edges.Role.ID
-			switch role {
-			case 1:
-				view = "Admin/Index"
-			case 2:
-				view = "Payments/Index"
-			case 3:
-				view = "Control/Index"
-			case 4, 5:
-				view = "Professor/Index"
-			case 6:
-				view = "Student/Index"
-			}
+		role := user.Edges.Role.ID
+		switch role {
+		case 1:
+			view = "/directive"
+		case 2:
+			view = "/payments"
+		case 3:
+			view = "/control"
+		case 4, 5:
+			view = "/professor"
+		case 6:
+			view = "/student"
 		}
 
 		println(view)
 
-		careers, err := h.DB.Careers.Query().All(r.Context())
-		err = i.Render(w, r, "Auth/Login", inertia.Props{
-			"careers": careers,
-		})
-
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
+		i.Redirect(w, r, view, 302)
 	}
 
 	return http.HandlerFunc(fn)

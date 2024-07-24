@@ -26,6 +26,12 @@ func MountApp() {
 
 	mux.Handle("/", i.Middleware(handler.HomeHandler(i)))
 	mux.Handle("/login", i.Middleware(handler.LoginHandler(i)))
+	mux.Handle("/login_post", i.Middleware(handler.LoginPostHandler(i)))
+	mux.Handle("/directive", i.Middleware(handler.DirectiveDashHandler(i)))
+	mux.Handle("/payment", i.Middleware(handler.PaymentsDashHandler(i)))
+	mux.Handle("/student", i.Middleware(handler.StudentDashHandler(i)))
+	mux.Handle("/professor", i.Middleware(handler.ProfessorDashHandler(i)))
+	mux.Handle("/control", i.Middleware(handler.ControlDashHandler(i)))
 	mux.Handle("/build/", http.StripPrefix("/build/", http.FileServer(http.Dir("./public/build"))))
 
 	http.ListenAndServe(":3000", mux)

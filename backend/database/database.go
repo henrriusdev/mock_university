@@ -43,7 +43,7 @@ func InsertDefaultRoles(ctx context.Context, client *ent.Client) error {
 
 func InsertDefaultUsers(ctx context.Context, client *ent.Client) error {
 	// Check if the master admin user exists
-	exists, err := client.Users.Query().Where(users.Username("director")).Exist(ctx)
+	exists, err := client.Users.Query().Where(users.Username("admin_master")).Exist(ctx)
 	if err != nil {
 		return err
 	}

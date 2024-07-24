@@ -6,7 +6,7 @@ require (
 	entgo.io/ent v0.13.1
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
-	github.com/romsar/gonertia v1.1.4
+	github.com/romsar/gonertia v1.2.2
 )
 
 require (
