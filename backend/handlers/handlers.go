@@ -216,3 +216,78 @@ func (h *Handler) StudentDashHandler(i *inertia.Inertia) http.Handler {
 
 	return http.HandlerFunc(fn)
 }
+
+func (h *Handler) SettingsHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		err := i.Render(w, r, "Directive/Settings/Home", nil)
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) SettingsProfileHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		err := i.Render(w, r, "Settings/Profile", nil)
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) SettingsProfilePostHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			HandleNotFound(i).ServeHTTP(w, r)
+			return
+		}
+
+		err := i.Render(w, r, "Settings/Profile", nil)
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) SettingsNotesPostHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			HandleNotFound(i).ServeHTTP(w, r)
+			return
+		}
+
+		err := i.Render(w, r, "Settings/Home", nil)
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) SettingsDatesPostHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			HandleNotFound(i).ServeHTTP(w, r)
+			return
+		}
+
+		err := i.Render(w, r, "Settings/Home", nil)
+		if err != nil {
+			HandleServerErr(i, err)
+			return
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
