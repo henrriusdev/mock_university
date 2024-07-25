@@ -5,6 +5,8 @@
     import {Checkbox} from "$lib/components/ui/checkbox/index.js";
     import {Input} from "$lib/components/ui/input/index.js";
     import * as Card from "$lib/components/ui/card/index.js";
+
+    let actual = "#notes";
 </script>
 
 <DirectiveLayout title="Settings page - MockU"
@@ -19,24 +21,21 @@
 
 
              data-x-chunk-container="chunk-container after:right-0">
-            <a href="##" class="font-semibold text-primary"> General </a>
-            <a href="##">Notes</a>
-            <a href="##">Configuration</a>
-            <a href="##">Careers</a>
-            <a href="##">Career's Leader</a>
-            <a href="##">Advanced</a>
+            <a href="#notes" on:click={() => actual = "#notes"} class="{actual === '#notes' ? 'font-semibold text-primary' : '' }">Notes</a>
+            <a href="#config" on:click={() => actual = "#config"} class="{actual === '#config' ? 'font-semibold text-primary' : '' }">Configuration</a>
+            <a href="#careers" on:click={() => actual = "#careers"} class="{actual === '#careers' ? 'font-semibold text-primary' : '' }">Careers</a>
         </nav>
-        <div class="grid gap-6">
+        <div class="grid gap-6" id="notes">
             <Card.Root>
                 <Card.Header>
-                    <Card.Title>Store Name</Card.Title>
+                    <Card.Title>Notes Quantity</Card.Title>
                     <Card.Description>
-                        Used to identify your store in the marketplace.
+                        Used for the length of notes in one semester
                     </Card.Description>
                 </Card.Header>
                 <Card.Content>
-                    <form>
-                        <Input placeholder="Store Name"/>
+                    <form method="post" action="/settings/notes">
+                        <Input placeholder="Notes quantity" name="notes" type="number"/>
                     </form>
                 </Card.Content>
                 <Card.Footer class="border-t px-6 py-4">
@@ -45,23 +44,17 @@
             </Card.Root>
             <Card.Root>
                 <Card.Header>
-                    <Card.Title>Plugins Directory</Card.Title>
+                    <Card.Title>Notes percentage</Card.Title>
                     <Card.Description>
-                        The directory within your project, in which your plugins are located.
+                        The percentages of each note of the semester
                     </Card.Description>
                 </Card.Header>
                 <Card.Content>
                     <form class="flex flex-col gap-4">
-                        <Input placeholder="Project Name" value="/content/plugins"/>
-                        <div class="flex items-center space-x-2">
-                            <Checkbox id="include" checked={true}/>
-                            <label
-                                    for="include"
-                                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                                Allow administrators to change the directory.
-                            </label>
-                        </div>
+                        <Input placeholder="Note 1"/>
+                        <Input placeholder="Note 2"/>
+                        <Input placeholder="Note 3"/>
+                        <Input placeholder="Note 4"/>
                     </form>
                 </Card.Content>
                 <Card.Footer class="border-t px-6 py-4">
