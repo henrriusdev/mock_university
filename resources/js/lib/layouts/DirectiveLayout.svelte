@@ -20,6 +20,17 @@
     export let title;
     export let description;
     export let keywords;
+
+    const routes = [
+        {name: "Dashboard", href: "/directive",},
+        {name: "Students", href: "/directive/students",},
+        {name: "Subjects", href: "/directive/subjects",},
+        {name: "Professors", href: "/directive/professors",},
+        {name: "Careers", href: "/directive.careers",},
+        {name: "Payments", href: "/directive/payments",},
+        {name: "Requests", href: "/directive/requests",},
+        {name: "Settings", href: "/settings",},
+    ];
 </script>
 <svelte:head>
     {#if title}
@@ -38,25 +49,15 @@
         <nav
                 class="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6"
         >
-            <a href="##" class="flex items-center gap-2 text-lg font-semibold md:text-base">
+            <a href="/" class="flex items-center gap-2 text-lg font-semibold md:text-base">
                 <Package2 class="h-6 w-6"/>
-                <span class="sr-only">Acme Inc</span>
+                <span class="sr-only">MockU</span>
             </a>
-            <a href="##" class="text-foreground transition-colors hover:text-foreground">
-                Dashboard
-            </a>
-            <a href="##" class="text-muted-foreground transition-colors hover:text-foreground">
-                Orders
-            </a>
-            <a href="##" class="text-muted-foreground transition-colors hover:text-foreground">
-                Products
-            </a>
-            <a href="##" class="text-muted-foreground transition-colors hover:text-foreground">
-                Customers
-            </a>
-            <a href="##" class="text-muted-foreground transition-colors hover:text-foreground">
-                Analytics
-            </a>
+            {#each routes as {name, href} (href)}
+                <a href={href} class="text-foreground transition-colors hover:text-foreground">
+                    {name}
+                </a>
+            {/each}
             <LightSwitch/>
         </nav>
         <Sheet>
@@ -77,11 +78,11 @@
                         <Package2 class="h-6 w-6"/>
                         <span class="sr-only">Acme Inc</span>
                     </a>
-                    <a href="##" class="hover:text-foreground"> Dashboard </a>
-                    <a href="##" class="text-muted-foreground hover:text-foreground"> Orders </a>
-                    <a href="##" class="text-muted-foreground hover:text-foreground"> Products </a>
-                    <a href="##" class="text-muted-foreground hover:text-foreground"> Customers </a>
-                    <a href="##" class="text-muted-foreground hover:text-foreground"> Analytics </a>
+                    {#each routes as {name, href} (href)}
+                        <a href={href} class="text-foreground transition-colors hover:text-foreground">
+                            {name}
+                        </a>
+                    {/each}
                 </nav>
             </SheetContent>
         </Sheet>
