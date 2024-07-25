@@ -37,6 +37,11 @@ func MountApp() {
 	mux.Handle("/professor", i.Middleware(handler.ProfessorDashHandler(i)))
 	mux.Handle("/control", i.Middleware(handler.ControlDashHandler(i)))
 
+	// Directives routes
+	mux.Handle("/settings", i.Middleware(handler.SettingsHandler(i)))
+	mux.Handle("/settings/notes", i.Middleware(handler.SettingsNotesPostHandler(i)))
+	mux.Handle("/settings/dates", i.Middleware(handler.SettingsDatesPostHandler(i)))
+
 	// API routes
 	mux.Handle("/build/", http.StripPrefix("/build/", http.FileServer(http.Dir("./public/build"))))
 
