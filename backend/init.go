@@ -15,6 +15,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// MountApp mounts the application, initialize inertia.js and database,  and starts the server
 func MountApp() {
 	i := initInertia()
 	mux := http.NewServeMux()
@@ -24,13 +25,25 @@ func MountApp() {
 		DB: client,
 	}
 
+	// Routes
 	mux.Handle("/", i.Middleware(handler.HomeHandler(i)))
 	mux.Handle("/login", i.Middleware(handler.LoginHandler(i)))
+	mux.Handle("/login_post", i.Middleware(handler.LoginPostHandler(i)))
+
+	// Dashboard routes
+	mux.Handle("/directive", i.Middleware(handler.DirectiveDashHandler(i)))
+	mux.Handle("/payment", i.Middleware(handler.PaymentsDashHandler(i)))
+	mux.Handle("/student", i.Middleware(handler.StudentDashHandler(i)))
+	mux.Handle("/professor", i.Middleware(handler.ProfessorDashHandler(i)))
+	mux.Handle("/control", i.Middleware(handler.ControlDashHandler(i)))
+
+	// API routes
 	mux.Handle("/build/", http.StripPrefix("/build/", http.FileServer(http.Dir("./public/build"))))
 
 	http.ListenAndServe(":3000", mux)
 }
 
+// initDatabase initializes the database connection and creates the schema
 func initDatabase() *ent.Client {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", os.Getenv("PG_HOST"), os.Getenv("PG_PORT"), os.Getenv("PG_USER"), os.Getenv("PG_PASSWORD"), os.Getenv("PG_DATABASE"))
 
@@ -55,13 +68,11 @@ func initDatabase() *ent.Client {
 	return client
 }
 
+// initInertia initializes the inertia.js instance
 func initInertia() *inertia.Inertia {
 	manifestPath := "./public/build/manifest.json"
 
-	// check if the manifest file exists, if not, rename it
 	if _, err := os.Stat(manifestPath); os.IsNotExist(err) {
-		// move the manifest from ./public/build/.vite/manifest.json to ./public/build/manifest.json
-		// so that the vite function can find it
 		err := os.Rename("./public/build/.vite/manifest.json", "./public/build/manifest.json")
 		if err != nil {
 			return nil

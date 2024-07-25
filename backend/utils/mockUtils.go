@@ -19,9 +19,35 @@ func CheckPassword(hashedPassword, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) == nil
 }
 
-func ValidatePassword(password string) bool {
-	// Valida que la contraseña tenga al menos 6 caracteres
-	return len(password) >= 6
+func ValidatePassword(password string) []string {
+	// Valida que la contraseña tenga al menos 6 caracteres, 1 mayúscula, 1 minúscula, 1 número, 1 caracter especial, minimo 8 caracteres de longitud y no contenga espacios
+	var errors []string
+
+	if len(password) < 8 {
+		errors = append(errors, "La contraseña debe tener al menos 8 caracteres")
+	}
+
+	if !regexp.MustCompile(`[A-Z]`).Match([]byte(password)) {
+		errors = append(errors, "La contraseña debe tener al menos una mayúscula")
+	}
+
+	if !regexp.MustCompile(`[a-z]`).Match([]byte(password)) {
+		errors = append(errors, "La contraseña debe tener al menos una minúscula")
+	}
+
+	if !regexp.MustCompile(`[0-9]`).Match([]byte(password)) {
+		errors = append(errors, "La contraseña debe tener al menos un número")
+	}
+
+	if !regexp.MustCompile(`[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]`).Match([]byte(password)) {
+		errors = append(errors, "La contraseña debe tener al menos un caracter especial")
+	}
+
+	if regexp.MustCompile(`\s`).Match([]byte(password)) {
+		errors = append(errors, "La contraseña no debe contener espacios")
+	}
+
+	return errors
 }
 
 func ValidateEmail(email string) bool {

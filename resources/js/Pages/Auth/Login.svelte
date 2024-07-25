@@ -11,7 +11,7 @@
             description="Login to the MockU system to access your account" {careers}>
     <div class="w-full lg:grid lg:grid-cols-2 min-h-scn">
         <div class="flex items-center justify-center py-12">
-            <div class="mx-auto grid w-[350px] gap-6">
+            <form method="post" action="/login_post" class="mx-auto grid w-[350px] gap-6">
                 <div class="grid gap-2 text-center">
                     <h1 class="text-3xl font-bold">Login</h1>
                     <p class="text-balance text-muted-foreground">
@@ -35,7 +35,7 @@
                     <Button type="submit" class="w-full">Login</Button>
                     <Button variant="outline" class="w-full">Login with Google</Button>
                 </div>
-            </div>
+            </form>
         </div>
         <div class="hidden bg-muted lg:block">
             <img
