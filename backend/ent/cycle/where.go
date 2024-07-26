@@ -69,6 +69,11 @@ func EndDate(v time.Time) predicate.Cycle {
 	return predicate.Cycle(sql.FieldEQ(FieldEndDate, v))
 }
 
+// Active applies equality check predicate on the "active" field. It's identical to ActiveEQ.
+func Active(v bool) predicate.Cycle {
+	return predicate.Cycle(sql.FieldEQ(FieldActive, v))
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.Cycle {
 	return predicate.Cycle(sql.FieldEQ(FieldName, v))
@@ -212,6 +217,16 @@ func EndDateLT(v time.Time) predicate.Cycle {
 // EndDateLTE applies the LTE predicate on the "end_date" field.
 func EndDateLTE(v time.Time) predicate.Cycle {
 	return predicate.Cycle(sql.FieldLTE(FieldEndDate, v))
+}
+
+// ActiveEQ applies the EQ predicate on the "active" field.
+func ActiveEQ(v bool) predicate.Cycle {
+	return predicate.Cycle(sql.FieldEQ(FieldActive, v))
+}
+
+// ActiveNEQ applies the NEQ predicate on the "active" field.
+func ActiveNEQ(v bool) predicate.Cycle {
+	return predicate.Cycle(sql.FieldNEQ(FieldActive, v))
 }
 
 // And groups predicates with the AND operator between them.

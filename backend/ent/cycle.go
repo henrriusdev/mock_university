@@ -22,7 +22,9 @@ type Cycle struct {
 	// StartDate holds the value of the "start_date" field.
 	StartDate time.Time `json:"start_date,omitempty"`
 	// EndDate holds the value of the "end_date" field.
-	EndDate      time.Time `json:"end_date,omitempty"`
+	EndDate time.Time `json:"end_date,omitempty"`
+	// Active holds the value of the "active" field.
+	Active       bool `json:"active,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -31,6 +33,8 @@ func (*Cycle) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case cycle.FieldActive:
+			values[i] = new(sql.NullBool)
 		case cycle.FieldID:
 			values[i] = new(sql.NullInt64)
 		case cycle.FieldName:
@@ -76,6 +80,12 @@ func (c *Cycle) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				c.EndDate = value.Time
 			}
+		case cycle.FieldActive:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field active", values[i])
+			} else if value.Valid {
+				c.Active = value.Bool
+			}
 		default:
 			c.selectValues.Set(columns[i], values[i])
 		}
@@ -120,6 +130,9 @@ func (c *Cycle) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("end_date=")
 	builder.WriteString(c.EndDate.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("active=")
+	builder.WriteString(fmt.Sprintf("%v", c.Active))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -70,6 +70,20 @@ func (cu *CycleUpdate) SetNillableEndDate(t *time.Time) *CycleUpdate {
 	return cu
 }
 
+// SetActive sets the "active" field.
+func (cu *CycleUpdate) SetActive(b bool) *CycleUpdate {
+	cu.mutation.SetActive(b)
+	return cu
+}
+
+// SetNillableActive sets the "active" field if the given value is not nil.
+func (cu *CycleUpdate) SetNillableActive(b *bool) *CycleUpdate {
+	if b != nil {
+		cu.SetActive(*b)
+	}
+	return cu
+}
+
 // Mutation returns the CycleMutation object of the builder.
 func (cu *CycleUpdate) Mutation() *CycleMutation {
 	return cu.mutation
@@ -133,6 +147,9 @@ func (cu *CycleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := cu.mutation.EndDate(); ok {
 		_spec.SetField(cycle.FieldEndDate, field.TypeTime, value)
 	}
+	if value, ok := cu.mutation.Active(); ok {
+		_spec.SetField(cycle.FieldActive, field.TypeBool, value)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{cycle.Label}
@@ -191,6 +208,20 @@ func (cuo *CycleUpdateOne) SetEndDate(t time.Time) *CycleUpdateOne {
 func (cuo *CycleUpdateOne) SetNillableEndDate(t *time.Time) *CycleUpdateOne {
 	if t != nil {
 		cuo.SetEndDate(*t)
+	}
+	return cuo
+}
+
+// SetActive sets the "active" field.
+func (cuo *CycleUpdateOne) SetActive(b bool) *CycleUpdateOne {
+	cuo.mutation.SetActive(b)
+	return cuo
+}
+
+// SetNillableActive sets the "active" field if the given value is not nil.
+func (cuo *CycleUpdateOne) SetNillableActive(b *bool) *CycleUpdateOne {
+	if b != nil {
+		cuo.SetActive(*b)
 	}
 	return cuo
 }
@@ -287,6 +318,9 @@ func (cuo *CycleUpdateOne) sqlSave(ctx context.Context) (_node *Cycle, err error
 	}
 	if value, ok := cuo.mutation.EndDate(); ok {
 		_spec.SetField(cycle.FieldEndDate, field.TypeTime, value)
+	}
+	if value, ok := cuo.mutation.Active(); ok {
+		_spec.SetField(cycle.FieldActive, field.TypeBool, value)
 	}
 	_node = &Cycle{config: cuo.config}
 	_spec.Assign = _node.assignValues

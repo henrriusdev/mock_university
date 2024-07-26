@@ -11,6 +11,7 @@ import (
 	"mocku/backend/ent/predicate"
 	"mocku/backend/ent/professor"
 	"mocku/backend/ent/student"
+	"mocku/backend/ent/subject"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -26,6 +27,7 @@ type CareersQuery struct {
 	predicates   []predicate.Careers
 	withLeader   *ProfessorQuery
 	withStudents *StudentQuery
+	withSubjects *SubjectQuery
 	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -100,6 +102,28 @@ func (cq *CareersQuery) QueryStudents() *StudentQuery {
 			sqlgraph.From(careers.Table, careers.FieldID, selector),
 			sqlgraph.To(student.Table, student.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, careers.StudentsTable, careers.StudentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySubjects chains the current query on the "subjects" edge.
+func (cq *CareersQuery) QuerySubjects() *SubjectQuery {
+	query := (&SubjectClient{config: cq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(careers.Table, careers.FieldID, selector),
+			sqlgraph.To(subject.Table, subject.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, careers.SubjectsTable, careers.SubjectsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
 		return fromU, nil
@@ -301,6 +325,7 @@ func (cq *CareersQuery) Clone() *CareersQuery {
 		predicates:   append([]predicate.Careers{}, cq.predicates...),
 		withLeader:   cq.withLeader.Clone(),
 		withStudents: cq.withStudents.Clone(),
+		withSubjects: cq.withSubjects.Clone(),
 		// clone intermediate query.
 		sql:  cq.sql.Clone(),
 		path: cq.path,
@@ -326,6 +351,17 @@ func (cq *CareersQuery) WithStudents(opts ...func(*StudentQuery)) *CareersQuery 
 		opt(query)
 	}
 	cq.withStudents = query
+	return cq
+}
+
+// WithSubjects tells the query-builder to eager-load the nodes that are connected to
+// the "subjects" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *CareersQuery) WithSubjects(opts ...func(*SubjectQuery)) *CareersQuery {
+	query := (&SubjectClient{config: cq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withSubjects = query
 	return cq
 }
 
@@ -408,9 +444,10 @@ func (cq *CareersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Care
 		nodes       = []*Careers{}
 		withFKs     = cq.withFKs
 		_spec       = cq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			cq.withLeader != nil,
 			cq.withStudents != nil,
+			cq.withSubjects != nil,
 		}
 	)
 	if cq.withLeader != nil {
@@ -447,6 +484,13 @@ func (cq *CareersQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Care
 		if err := cq.loadStudents(ctx, query, nodes,
 			func(n *Careers) { n.Edges.Students = []*Student{} },
 			func(n *Careers, e *Student) { n.Edges.Students = append(n.Edges.Students, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := cq.withSubjects; query != nil {
+		if err := cq.loadSubjects(ctx, query, nodes,
+			func(n *Careers) { n.Edges.Subjects = []*Subject{} },
+			func(n *Careers, e *Subject) { n.Edges.Subjects = append(n.Edges.Subjects, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -513,6 +557,67 @@ func (cq *CareersQuery) loadStudents(ctx context.Context, query *StudentQuery, n
 			return fmt.Errorf(`unexpected referenced foreign-key "student_career" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (cq *CareersQuery) loadSubjects(ctx context.Context, query *SubjectQuery, nodes []*Careers, init func(*Careers), assign func(*Careers, *Subject)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Careers)
+	nids := make(map[int]map[*Careers]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(careers.SubjectsTable)
+		s.Join(joinT).On(s.C(subject.FieldID), joinT.C(careers.SubjectsPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(careers.SubjectsPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(careers.SubjectsPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Careers]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Subject](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "subjects" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

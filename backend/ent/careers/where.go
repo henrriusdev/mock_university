@@ -240,6 +240,29 @@ func HasStudentsWith(preds ...predicate.Student) predicate.Careers {
 	})
 }
 
+// HasSubjects applies the HasEdge predicate on the "subjects" edge.
+func HasSubjects() predicate.Careers {
+	return predicate.Careers(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, SubjectsTable, SubjectsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSubjectsWith applies the HasEdge predicate on the "subjects" edge with a given conditions (other predicates).
+func HasSubjectsWith(preds ...predicate.Subject) predicate.Careers {
+	return predicate.Careers(func(s *sql.Selector) {
+		step := newSubjectsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Careers) predicate.Careers {
 	return predicate.Careers(sql.AndPredicates(predicates...))
