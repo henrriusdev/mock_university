@@ -1,12 +1,12 @@
 <script>
     import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
-
     import {Button} from "$lib/components/ui/button/index.js";
     import {Input} from "$lib/components/ui/input/index.js";
     import * as Card from "$lib/components/ui/card/index.js";
     import DatePicker from "$lib/components/DatePicker.svelte";
     import DateRangePicker from "$lib/components/DateRangePicker.svelte";
     import {CalendarDate} from "@internationalized/date";
+    import {Label} from "$lib/components/ui/label/index.js";
 
     export let notesNumber = 1;
     export let paymentNumber = 1;
@@ -14,10 +14,32 @@
     let actual = "#notes";
 
     let paymentDates = Array.from({length: paymentNumber}, () => new CalendarDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
+
     let subjectInscriptionStart = new CalendarDate(2024, 1, 1);
     let subjectInscriptionEnd = new CalendarDate(2024, 4, 1);
     let cycleStart = new CalendarDate(2024, 4, 1);
     let cycleEnd = new CalendarDate(2024, 7, 1);
+
+    let subjectStart = subjectInscriptionStart.toString();
+    let subjectEnd = subjectInscriptionEnd.toString();
+    let startCycle = cycleStart.toString();
+    let endCycle = cycleEnd.toString();
+
+    $: if(subjectInscriptionStart) {
+        subjectStart = subjectInscriptionStart.toString();
+    }
+
+    $: if(subjectInscriptionEnd) {
+        subjectEnd = subjectInscriptionEnd.toString();
+    }
+
+    $: if(cycleStart) {
+        startCycle = cycleStart.toString();
+    }
+
+    $: if(cycleEnd) {
+        endCycle = cycleEnd.toString();
+    }
 
     $: notesNumber = notesNumber > 10 ? 10 : notesNumber;
     $: if(paymentNumber) {
@@ -83,9 +105,15 @@
                     </Card.Description>
                 </Card.Header>
                 <Card.Content>
-                    <form method="post" action="/settings/dates">
-                        <DateRangePicker bind:startValue={subjectInscriptionStart} bind:endValue={subjectInscriptionEnd} placeholder="Subject Inscription"/>
-                        <DateRangePicker bind:startValue={cycleStart} bind:endValue={cycleEnd} placeholder="Cycle dates"/>
+                    <form method="post" action="/settings/dates" class="flex flex-col gap-2">
+                        <Label>Subject Inscription</Label>
+                        <DateRangePicker bind:startValue={subjectInscriptionStart} bind:endValue={subjectInscriptionEnd} placeholder="Subject Inscription start and end dates"/>
+                        <Label>Subject Inscription</Label>
+                        <DateRangePicker bind:startValue={cycleStart} bind:endValue={cycleEnd} placeholder="Cycle start and end dates"/>
+                        <input type="hidden" name="subjectInscriptionStart" bind:value={subjectStart} />
+                        <input type="hidden" name="subjectInscriptionEnd" bind:value={subjectEnd} />
+                        <input type="hidden" name="cycleStart" bind:value={startCycle} />
+                        <input type="hidden" name="cycleEnd" bind:value={endCycle} />
                         <Button type="submit" class="w-fit m-2 px-4">Save</Button>
                     </form>
                 </Card.Content>
