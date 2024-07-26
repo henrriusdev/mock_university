@@ -70,6 +70,14 @@ func initDatabase() *ent.Client {
 		log.Fatalf("failed inserting default users: %v", err)
 	}
 
+	if err := database.InsertDefaultCycle(context.Background(), client); err != nil {
+		log.Fatalf("failed inserting default cycle: %v", err)
+	}
+
+	if err := database.InsertDefaultConfig(context.Background(), client); err != nil {
+		log.Fatalf("failed inserting default config: %v", err)
+	}
+
 	return client
 }
 
