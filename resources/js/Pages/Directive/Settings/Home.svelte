@@ -18,18 +18,15 @@
 
     let paymentDates = Array.from({length: paymentNumber}, () => new CalendarDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
 
-    console.log(startRegSubj, endRegSubj, cycleStart, cycleEnd);
-
-    // convert startRegSubj, endRegSubj, cycleStart, cycleEnd to Date objects
     startRegSubj = startRegSubj ? new Date(startRegSubj) : new Date();
     endRegSubj = endRegSubj ? new Date(endRegSubj) : new Date();
     cycleStart = cycleStart ? new Date(cycleStart) : new Date();
     cycleEnd = cycleEnd ? new Date(cycleEnd) : new Date();
 
-    let subjectInscriptionStart = startRegSubj ? new CalendarDate(startRegSubj.getFullYear(), startRegSubj.getMonth(), startRegSubj.getDate()) : new CalendarDate(2024, 3, 1);
-    let subjectInscriptionEnd = endRegSubj ? new CalendarDate(endRegSubj.getFullYear(), endRegSubj.getMonth(), endRegSubj.getDate()) : new CalendarDate(2024, 3, 1);
-    let cycleStartDate = cycleStart ? new CalendarDate(cycleStart.getFullYear(), cycleStart.getMonth(), cycleStart.getDate()) : new CalendarDate(2024, 3, 1);
-    let cycleEndDate = cycleEnd ? new CalendarDate(cycleEnd.getFullYear(), cycleEnd.getMonth(), cycleEnd.getDate()) : new CalendarDate(2024, 3, 1);
+    let subjectInscriptionStart = startRegSubj ? new CalendarDate(startRegSubj.getFullYear(), startRegSubj.getMonth() + 1, startRegSubj.getDate()) : new CalendarDate(2024, 3, 1);
+    let subjectInscriptionEnd = endRegSubj ? new CalendarDate(endRegSubj.getFullYear(), endRegSubj.getMonth() + 1, endRegSubj.getDate()) : new CalendarDate(2024, 3, 1);
+    let cycleStartDate = cycleStart ? new CalendarDate(cycleStart.getFullYear(), cycleStart.getMonth() + 1, cycleStart.getDate()) : new CalendarDate(2024, 3, 1);
+    let cycleEndDate = cycleEnd ? new CalendarDate(cycleEnd.getFullYear(), cycleEnd.getMonth() + 1, cycleEnd.getDate()) : new CalendarDate(2024, 3, 1);
 
     let subjectStart = subjectInscriptionStart.toString();
     let subjectEnd = subjectInscriptionEnd.toString();
@@ -44,11 +41,11 @@
         subjectEnd = subjectInscriptionEnd.toString();
     }
 
-    $: if(cycleStart) {
+    $: if(cycleStartDate) {
         startCycle = cycleStartDate.toString();
     }
 
-    $: if(cycleEnd) {
+    $: if(cycleEndDate) {
         endCycle = cycleEndDate.toString();
     }
 
@@ -117,9 +114,9 @@
                 </Card.Header>
                 <Card.Content>
                     <form method="post" action="/settings/dates" class="flex flex-col gap-2">
-                        <Label>Subject Inscription</Label>
+                        <Label class="my-4">Subject Inscription</Label>
                         <DateRangePicker bind:startValue={subjectInscriptionStart} bind:endValue={subjectInscriptionEnd} placeholder="Subject Inscription start and end dates"/>
-                        <Label>Subject Inscription</Label>
+                        <Label class="my-4">Subject Inscription</Label>
                         <DateRangePicker bind:startValue={cycleStartDate} bind:endValue={cycleEndDate} placeholder="Cycle start and end dates"/>
                         <input type="hidden" name="start_registration_subjects" bind:value={subjectStart} />
                         <input type="hidden" name="end_registration_subjects" bind:value={subjectEnd} />

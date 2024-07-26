@@ -80,7 +80,7 @@ func InsertDefaultUsers(ctx context.Context, client *ent.Client) error {
 
 func InsertDefaultCycle(ctx context.Context, client *ent.Client) error {
 	// Check if the master admin user exists
-	exists, err := client.Cycle.Query().Where(cycle.Name("2021")).Exist(ctx)
+	exists, err := client.Cycle.Query().Where(cycle.ActiveEQ(true)).Exist(ctx)
 	if err != nil {
 		return err
 	}
