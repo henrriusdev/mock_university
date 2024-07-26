@@ -16,6 +16,8 @@
     let paymentDates = Array.from({length: paymentNumber}, () => new CalendarDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
     let subjectInscriptionStart = new CalendarDate(2024, 1, 1);
     let subjectInscriptionEnd = new CalendarDate(2024, 4, 1);
+    let cycleStart = new CalendarDate(2024, 4, 1);
+    let cycleEnd = new CalendarDate(2024, 7, 1);
 
     $: notesNumber = notesNumber > 10 ? 10 : notesNumber;
     $: if(paymentNumber) {
@@ -75,14 +77,15 @@
         <div class="grid gap-6" id="cycle">
             <Card.Root>
                 <Card.Header>
-                    <Card.Title>Subject inscription</Card.Title>
+                    <Card.Title>Subject inscription And Cycle Dates</Card.Title>
                     <Card.Description>
-                        Set the start and end date for the subject inscription
+                        Set the start and end date for the subject inscription and the cycle dates for the semester
                     </Card.Description>
                 </Card.Header>
                 <Card.Content>
                     <form method="post" action="/settings/dates">
-                        <DateRangePicker bind:startValue={subjectInscriptionStart} bind:endValue={subjectInscriptionEnd} />
+                        <DateRangePicker bind:startValue={subjectInscriptionStart} bind:endValue={subjectInscriptionEnd} placeholder="Subject Inscription"/>
+                        <DateRangePicker bind:startValue={cycleStart} bind:endValue={cycleEnd} placeholder="Cycle dates"/>
                         <Button type="submit" class="w-fit m-2 px-4">Save</Button>
                     </form>
                 </Card.Content>
@@ -98,7 +101,7 @@
                     </Card.Description>
                 </Card.Header>
                 <Card.Content>
-                    <form method="post" action="/settings/dates">
+                    <form method="post" action="/settings/payment">
                         <Input placeholder="Payments amount" name="payments" type="number" min="{1}" max="{10}" bind:value={paymentNumber}/>
                         <Button type="submit" class="w-fit m-2 px-4">Save</Button>
                     </form>
