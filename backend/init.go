@@ -40,6 +40,7 @@ func MountApp() {
 	// Directives routes
 	mux.Handle("/settings", i.Middleware(handler.SettingsHandler(i)))
 	mux.Handle("/settings/notes", i.Middleware(handler.SettingsNotesPostHandler(i)))
+	mux.Handle("/settings/payment", i.Middleware(handler.SettingsPaymentsPostHandler(i)))
 	mux.Handle("/settings/dates", i.Middleware(handler.SettingsDatesPostHandler(i)))
 
 	// API routes

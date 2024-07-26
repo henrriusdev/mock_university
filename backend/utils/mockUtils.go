@@ -3,6 +3,7 @@ package utils
 import (
 	"golang.org/x/crypto/bcrypt"
 	"regexp"
+	"time"
 )
 
 func HashPassword(password string) (string, error) {
@@ -68,4 +69,19 @@ func ValidatePhone(phone string) bool {
 	}
 
 	return ok
+}
+
+func ParseDate(date string) (time.Time, error) {
+	// Parsea la fecha a time.Time
+	t, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return t, nil
+}
+
+func FormatDate(date time.Time) string {
+	// Formatea la fecha a string
+	return date.Format("2006-01-02")
 }

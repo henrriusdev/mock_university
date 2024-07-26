@@ -222,14 +222,19 @@ func (h *Handler) StudentDashHandler(i *inertia.Inertia) http.Handler {
 
 func (h *Handler) SettingsHandler(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		config := h.DB.Configuration.Query().Where(configuration.HasCycleWith(cycle.Name("2024-2"))).OnlyX(r.Context())
+		config := h.DB.Configuration.Query().WithCycle().Where(configuration.HasCycleWith(cycle.Name("2024-2"))).OnlyX(r.Context())
 		if config == nil {
 			HandleServerErr(i, fmt.Errorf("config not found")).ServeHTTP(w, r)
 			return
 		}
 
 		err := i.Render(w, r, "Directive/Settings/Home", inertia.Props{
-			"notesNumber": config.NumberNotes,
+			"notesNumber":   config.NumberNotes,
+			"paymentNumber": config.NumberFees,
+			"startRegSubj":  utils.FormatDate(config.StartRegistrationSubjects),
+			"endRegSubj":    utils.FormatDate(config.EndRegistrationSubjects),
+			"cycleStart":    utils.FormatDate(config.Edges.Cycle.StartDate),
+			"cycleEnd":      utils.FormatDate(config.Edges.Cycle.EndDate),
 		})
 		if err != nil {
 			HandleServerErr(i, err)
@@ -271,7 +276,6 @@ func (h *Handler) SettingsProfilePostHandler(i *inertia.Inertia) http.Handler {
 
 func (h *Handler) SettingsNotesPostHandler(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
 			return
@@ -309,11 +313,82 @@ func (h *Handler) SettingsDatesPostHandler(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		err := i.Render(w, r, "Settings/Home", nil)
+		err := r.ParseForm()
+		if err != nil {
+			println(err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		startRegistrationSubjects, err := utils.ParseDate(r.FormValue("start_registration_subjects"))
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		endRegistrationSubjects, err := utils.ParseDate(r.FormValue("end_registration_subjects"))
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		cycleStart, err := utils.ParseDate(r.FormValue("cycle_start"))
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		cycleEnd, err := utils.ParseDate(r.FormValue("cycle_end"))
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		_, err = h.DB.Cycle.Update().Where(cycle.ActiveEQ(true)).SetStartDate(cycleStart).SetEndDate(cycleEnd).Save(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		_, err = h.DB.Configuration.Update().Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).SetStartRegistrationSubjects(startRegistrationSubjects).SetEndRegistrationSubjects(endRegistrationSubjects).Save(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		i.Redirect(w, r, "/settings", 302)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) SettingsPaymentsPostHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			HandleNotFound(i).ServeHTTP(w, r)
+			return
+		}
+
+		err := r.ParseForm()
+		if err != nil {
+			println(err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		numberFees, err := strconv.Atoi(r.FormValue("payments"))
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		_, err = h.DB.Configuration.Update().Where(configuration.ID(1)).SetNumberFees(numberFees).Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err)
 			return
 		}
+
+		i.Redirect(w, r, "/settings", 302)
 	}
 
 	return http.HandlerFunc(fn)
