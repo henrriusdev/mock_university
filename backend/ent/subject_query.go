@@ -101,7 +101,7 @@ func (sq *SubjectQuery) QueryCareer() *CareersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(subject.Table, subject.FieldID, selector),
 			sqlgraph.To(careers.Table, careers.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, subject.CareerTable, subject.CareerColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, subject.CareerTable, subject.CareerPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
 		return fromU, nil
@@ -530,33 +530,63 @@ func (sq *SubjectQuery) loadProfessor(ctx context.Context, query *ProfessorQuery
 	return nil
 }
 func (sq *SubjectQuery) loadCareer(ctx context.Context, query *CareersQuery, nodes []*Subject, init func(*Subject), assign func(*Subject, *Careers)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Subject)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Subject)
+	nids := make(map[int]map[*Subject]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
 		if init != nil {
-			init(nodes[i])
+			init(node)
 		}
 	}
-	query.withFKs = true
-	query.Where(predicate.Careers(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(subject.CareerColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(subject.CareerTable)
+		s.Join(joinT).On(s.C(careers.FieldID), joinT.C(subject.CareerPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(subject.CareerPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(subject.CareerPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Subject]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Careers](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.subject_career
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "subject_career" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "subject_career" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected "career" node returned %v`, n.ID)
 		}
-		assign(node, n)
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

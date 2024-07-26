@@ -125,6 +125,10 @@ func init() {
 	cycleDescEndDate := cycleFields[2].Descriptor()
 	// cycle.DefaultEndDate holds the default value on creation for the end_date field.
 	cycle.DefaultEndDate = cycleDescEndDate.Default.(func() time.Time)
+	// cycleDescActive is the schema descriptor for active field.
+	cycleDescActive := cycleFields[3].Descriptor()
+	// cycle.DefaultActive holds the default value on creation for the active field.
+	cycle.DefaultActive = cycleDescActive.Default.(bool)
 	moduleFields := schema.Module{}.Fields()
 	_ = moduleFields
 	// moduleDescName is the schema descriptor for name field.

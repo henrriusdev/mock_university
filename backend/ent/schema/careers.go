@@ -24,5 +24,6 @@ func (Careers) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("leader", Professor.Type).Unique(),
 		edge.From("students", Student.Type).Ref("career"),
+		edge.From("subjects", Subject.Type).Ref("career"),
 	}
 }

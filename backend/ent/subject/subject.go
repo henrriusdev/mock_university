@@ -47,13 +47,11 @@ const (
 	ProfessorInverseTable = "professors"
 	// ProfessorColumn is the table column denoting the professor relation/edge.
 	ProfessorColumn = "subject_professor"
-	// CareerTable is the table that holds the career relation/edge.
-	CareerTable = "careers"
+	// CareerTable is the table that holds the career relation/edge. The primary key declared below.
+	CareerTable = "subject_career"
 	// CareerInverseTable is the table name for the Careers entity.
 	// It exists in this package in order to avoid circular dependency with the "careers" package.
 	CareerInverseTable = "careers"
-	// CareerColumn is the table column denoting the career relation/edge.
-	CareerColumn = "subject_career"
 	// NotesTable is the table that holds the notes relation/edge.
 	NotesTable = "notes"
 	// NotesInverseTable is the table name for the Note entity.
@@ -83,6 +81,12 @@ var Columns = []string{
 var ForeignKeys = []string{
 	"subject_professor",
 }
+
+var (
+	// CareerPrimaryKey and CareerColumn2 are the table columns denoting the
+	// primary key for the career relation (M2M).
+	CareerPrimaryKey = []string{"subject_id", "careers_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -218,7 +222,7 @@ func newCareerStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CareerInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, CareerTable, CareerColumn),
+		sqlgraph.Edge(sqlgraph.M2M, false, CareerTable, CareerPrimaryKey...),
 	)
 }
 func newNotesStep() *sqlgraph.Step {

@@ -65,7 +65,6 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 100},
 		{Name: "description", Type: field.TypeString, Size: 2147483647},
 		{Name: "careers_leader", Type: field.TypeInt, Nullable: true},
-		{Name: "subject_career", Type: field.TypeInt, Nullable: true},
 	}
 	// CareersTable holds the schema information for the "careers" table.
 	CareersTable = &schema.Table{
@@ -77,12 +76,6 @@ var (
 				Symbol:     "careers_professors_leader",
 				Columns:    []*schema.Column{CareersColumns[3]},
 				RefColumns: []*schema.Column{ProfessorsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "careers_subjects_career",
-				Columns:    []*schema.Column{CareersColumns[4]},
-				RefColumns: []*schema.Column{SubjectsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -118,6 +111,7 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 100},
 		{Name: "start_date", Type: field.TypeTime},
 		{Name: "end_date", Type: field.TypeTime},
+		{Name: "active", Type: field.TypeBool, Default: false},
 	}
 	// CyclesTable holds the schema information for the "cycles" table.
 	CyclesTable = &schema.Table{
@@ -457,6 +451,31 @@ var (
 			},
 		},
 	}
+	// SubjectCareerColumns holds the columns for the "subject_career" table.
+	SubjectCareerColumns = []*schema.Column{
+		{Name: "subject_id", Type: field.TypeInt},
+		{Name: "careers_id", Type: field.TypeInt},
+	}
+	// SubjectCareerTable holds the schema information for the "subject_career" table.
+	SubjectCareerTable = &schema.Table{
+		Name:       "subject_career",
+		Columns:    SubjectCareerColumns,
+		PrimaryKey: []*schema.Column{SubjectCareerColumns[0], SubjectCareerColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "subject_career_subject_id",
+				Columns:    []*schema.Column{SubjectCareerColumns[0]},
+				RefColumns: []*schema.Column{SubjectsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "subject_career_careers_id",
+				Columns:    []*schema.Column{SubjectCareerColumns[1]},
+				RefColumns: []*schema.Column{CareersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ActivitiesTable,
@@ -477,6 +496,7 @@ var (
 		SubjectsTable,
 		UsersTable,
 		PermissionRolesTable,
+		SubjectCareerTable,
 	}
 )
 
@@ -484,7 +504,6 @@ func init() {
 	ActivitiesTable.ForeignKeys[0].RefTable = UsersTable
 	BlogsTable.ForeignKeys[0].RefTable = UsersTable
 	CareersTable.ForeignKeys[0].RefTable = ProfessorsTable
-	CareersTable.ForeignKeys[1].RefTable = SubjectsTable
 	ConfigurationsTable.ForeignKeys[0].RefTable = CyclesTable
 	ModulesTable.ForeignKeys[0].RefTable = PermissionsTable
 	NotesTable.ForeignKeys[0].RefTable = StudentsTable
@@ -504,4 +523,6 @@ func init() {
 	UsersTable.ForeignKeys[0].RefTable = RolesTable
 	PermissionRolesTable.ForeignKeys[0].RefTable = PermissionsTable
 	PermissionRolesTable.ForeignKeys[1].RefTable = RolesTable
+	SubjectCareerTable.ForeignKeys[0].RefTable = SubjectsTable
+	SubjectCareerTable.ForeignKeys[1].RefTable = CareersTable
 }

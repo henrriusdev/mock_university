@@ -25,7 +25,6 @@ type Careers struct {
 	// The values are being populated by the CareersQuery when eager-loading is set.
 	Edges          CareersEdges `json:"edges"`
 	careers_leader *int
-	subject_career *int
 	selectValues   sql.SelectValues
 }
 
@@ -35,9 +34,11 @@ type CareersEdges struct {
 	Leader *Professor `json:"leader,omitempty"`
 	// Students holds the value of the students edge.
 	Students []*Student `json:"students,omitempty"`
+	// Subjects holds the value of the subjects edge.
+	Subjects []*Subject `json:"subjects,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // LeaderOrErr returns the Leader value or an error if the edge
@@ -60,6 +61,15 @@ func (e CareersEdges) StudentsOrErr() ([]*Student, error) {
 	return nil, &NotLoadedError{edge: "students"}
 }
 
+// SubjectsOrErr returns the Subjects value or an error if the edge
+// was not loaded in eager-loading.
+func (e CareersEdges) SubjectsOrErr() ([]*Subject, error) {
+	if e.loadedTypes[2] {
+		return e.Subjects, nil
+	}
+	return nil, &NotLoadedError{edge: "subjects"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Careers) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -70,8 +80,6 @@ func (*Careers) scanValues(columns []string) ([]any, error) {
 		case careers.FieldName, careers.FieldDescription:
 			values[i] = new(sql.NullString)
 		case careers.ForeignKeys[0]: // careers_leader
-			values[i] = new(sql.NullInt64)
-		case careers.ForeignKeys[1]: // subject_career
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -113,13 +121,6 @@ func (c *Careers) assignValues(columns []string, values []any) error {
 				c.careers_leader = new(int)
 				*c.careers_leader = int(value.Int64)
 			}
-		case careers.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field subject_career", value)
-			} else if value.Valid {
-				c.subject_career = new(int)
-				*c.subject_career = int(value.Int64)
-			}
 		default:
 			c.selectValues.Set(columns[i], values[i])
 		}
@@ -141,6 +142,11 @@ func (c *Careers) QueryLeader() *ProfessorQuery {
 // QueryStudents queries the "students" edge of the Careers entity.
 func (c *Careers) QueryStudents() *StudentQuery {
 	return NewCareersClient(c.config).QueryStudents(c)
+}
+
+// QuerySubjects queries the "subjects" edge of the Careers entity.
+func (c *Careers) QuerySubjects() *SubjectQuery {
+	return NewCareersClient(c.config).QuerySubjects(c)
 }
 
 // Update returns a builder for updating this Careers.

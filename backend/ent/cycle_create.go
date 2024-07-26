@@ -54,6 +54,20 @@ func (cc *CycleCreate) SetNillableEndDate(t *time.Time) *CycleCreate {
 	return cc
 }
 
+// SetActive sets the "active" field.
+func (cc *CycleCreate) SetActive(b bool) *CycleCreate {
+	cc.mutation.SetActive(b)
+	return cc
+}
+
+// SetNillableActive sets the "active" field if the given value is not nil.
+func (cc *CycleCreate) SetNillableActive(b *bool) *CycleCreate {
+	if b != nil {
+		cc.SetActive(*b)
+	}
+	return cc
+}
+
 // Mutation returns the CycleMutation object of the builder.
 func (cc *CycleCreate) Mutation() *CycleMutation {
 	return cc.mutation
@@ -97,6 +111,10 @@ func (cc *CycleCreate) defaults() {
 		v := cycle.DefaultEndDate()
 		cc.mutation.SetEndDate(v)
 	}
+	if _, ok := cc.mutation.Active(); !ok {
+		v := cycle.DefaultActive
+		cc.mutation.SetActive(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -114,6 +132,9 @@ func (cc *CycleCreate) check() error {
 	}
 	if _, ok := cc.mutation.EndDate(); !ok {
 		return &ValidationError{Name: "end_date", err: errors.New(`ent: missing required field "Cycle.end_date"`)}
+	}
+	if _, ok := cc.mutation.Active(); !ok {
+		return &ValidationError{Name: "active", err: errors.New(`ent: missing required field "Cycle.active"`)}
 	}
 	return nil
 }
@@ -152,6 +173,10 @@ func (cc *CycleCreate) createSpec() (*Cycle, *sqlgraph.CreateSpec) {
 	if value, ok := cc.mutation.EndDate(); ok {
 		_spec.SetField(cycle.FieldEndDate, field.TypeTime, value)
 		_node.EndDate = value
+	}
+	if value, ok := cc.mutation.Active(); ok {
+		_spec.SetField(cycle.FieldActive, field.TypeBool, value)
+		_node.Active = value
 	}
 	return _node, _spec
 }

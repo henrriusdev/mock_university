@@ -1619,6 +1619,9 @@ type CareersMutation struct {
 	students        map[int]struct{}
 	removedstudents map[int]struct{}
 	clearedstudents bool
+	subjects        map[int]struct{}
+	removedsubjects map[int]struct{}
+	clearedsubjects bool
 	done            bool
 	oldValue        func(context.Context) (*Careers, error)
 	predicates      []predicate.Careers
@@ -1887,6 +1890,60 @@ func (m *CareersMutation) ResetStudents() {
 	m.removedstudents = nil
 }
 
+// AddSubjectIDs adds the "subjects" edge to the Subject entity by ids.
+func (m *CareersMutation) AddSubjectIDs(ids ...int) {
+	if m.subjects == nil {
+		m.subjects = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.subjects[ids[i]] = struct{}{}
+	}
+}
+
+// ClearSubjects clears the "subjects" edge to the Subject entity.
+func (m *CareersMutation) ClearSubjects() {
+	m.clearedsubjects = true
+}
+
+// SubjectsCleared reports if the "subjects" edge to the Subject entity was cleared.
+func (m *CareersMutation) SubjectsCleared() bool {
+	return m.clearedsubjects
+}
+
+// RemoveSubjectIDs removes the "subjects" edge to the Subject entity by IDs.
+func (m *CareersMutation) RemoveSubjectIDs(ids ...int) {
+	if m.removedsubjects == nil {
+		m.removedsubjects = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.subjects, ids[i])
+		m.removedsubjects[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedSubjects returns the removed IDs of the "subjects" edge to the Subject entity.
+func (m *CareersMutation) RemovedSubjectsIDs() (ids []int) {
+	for id := range m.removedsubjects {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// SubjectsIDs returns the "subjects" edge IDs in the mutation.
+func (m *CareersMutation) SubjectsIDs() (ids []int) {
+	for id := range m.subjects {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetSubjects resets all changes to the "subjects" edge.
+func (m *CareersMutation) ResetSubjects() {
+	m.subjects = nil
+	m.clearedsubjects = false
+	m.removedsubjects = nil
+}
+
 // Where appends a list predicates to the CareersMutation builder.
 func (m *CareersMutation) Where(ps ...predicate.Careers) {
 	m.predicates = append(m.predicates, ps...)
@@ -2037,12 +2094,15 @@ func (m *CareersMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *CareersMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.leader != nil {
 		edges = append(edges, careers.EdgeLeader)
 	}
 	if m.students != nil {
 		edges = append(edges, careers.EdgeStudents)
+	}
+	if m.subjects != nil {
+		edges = append(edges, careers.EdgeSubjects)
 	}
 	return edges
 }
@@ -2061,15 +2121,24 @@ func (m *CareersMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case careers.EdgeSubjects:
+		ids := make([]ent.Value, 0, len(m.subjects))
+		for id := range m.subjects {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CareersMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedstudents != nil {
 		edges = append(edges, careers.EdgeStudents)
+	}
+	if m.removedsubjects != nil {
+		edges = append(edges, careers.EdgeSubjects)
 	}
 	return edges
 }
@@ -2084,18 +2153,27 @@ func (m *CareersMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case careers.EdgeSubjects:
+		ids := make([]ent.Value, 0, len(m.removedsubjects))
+		for id := range m.removedsubjects {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *CareersMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedleader {
 		edges = append(edges, careers.EdgeLeader)
 	}
 	if m.clearedstudents {
 		edges = append(edges, careers.EdgeStudents)
+	}
+	if m.clearedsubjects {
+		edges = append(edges, careers.EdgeSubjects)
 	}
 	return edges
 }
@@ -2108,6 +2186,8 @@ func (m *CareersMutation) EdgeCleared(name string) bool {
 		return m.clearedleader
 	case careers.EdgeStudents:
 		return m.clearedstudents
+	case careers.EdgeSubjects:
+		return m.clearedsubjects
 	}
 	return false
 }
@@ -2132,6 +2212,9 @@ func (m *CareersMutation) ResetEdge(name string) error {
 		return nil
 	case careers.EdgeStudents:
 		m.ResetStudents()
+		return nil
+	case careers.EdgeSubjects:
+		m.ResetSubjects()
 		return nil
 	}
 	return fmt.Errorf("unknown Careers edge %s", name)
@@ -2917,6 +3000,7 @@ type CycleMutation struct {
 	name          *string
 	start_date    *time.Time
 	end_date      *time.Time
+	active        *bool
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*Cycle, error)
@@ -3129,6 +3213,42 @@ func (m *CycleMutation) ResetEndDate() {
 	m.end_date = nil
 }
 
+// SetActive sets the "active" field.
+func (m *CycleMutation) SetActive(b bool) {
+	m.active = &b
+}
+
+// Active returns the value of the "active" field in the mutation.
+func (m *CycleMutation) Active() (r bool, exists bool) {
+	v := m.active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActive returns the old "active" field's value of the Cycle entity.
+// If the Cycle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CycleMutation) OldActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActive: %w", err)
+	}
+	return oldValue.Active, nil
+}
+
+// ResetActive resets all changes to the "active" field.
+func (m *CycleMutation) ResetActive() {
+	m.active = nil
+}
+
 // Where appends a list predicates to the CycleMutation builder.
 func (m *CycleMutation) Where(ps ...predicate.Cycle) {
 	m.predicates = append(m.predicates, ps...)
@@ -3163,7 +3283,7 @@ func (m *CycleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CycleMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m.name != nil {
 		fields = append(fields, cycle.FieldName)
 	}
@@ -3172,6 +3292,9 @@ func (m *CycleMutation) Fields() []string {
 	}
 	if m.end_date != nil {
 		fields = append(fields, cycle.FieldEndDate)
+	}
+	if m.active != nil {
+		fields = append(fields, cycle.FieldActive)
 	}
 	return fields
 }
@@ -3187,6 +3310,8 @@ func (m *CycleMutation) Field(name string) (ent.Value, bool) {
 		return m.StartDate()
 	case cycle.FieldEndDate:
 		return m.EndDate()
+	case cycle.FieldActive:
+		return m.Active()
 	}
 	return nil, false
 }
@@ -3202,6 +3327,8 @@ func (m *CycleMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldStartDate(ctx)
 	case cycle.FieldEndDate:
 		return m.OldEndDate(ctx)
+	case cycle.FieldActive:
+		return m.OldActive(ctx)
 	}
 	return nil, fmt.Errorf("unknown Cycle field %s", name)
 }
@@ -3231,6 +3358,13 @@ func (m *CycleMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetEndDate(v)
+		return nil
+	case cycle.FieldActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActive(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Cycle field %s", name)
@@ -3289,6 +3423,9 @@ func (m *CycleMutation) ResetField(name string) error {
 		return nil
 	case cycle.FieldEndDate:
 		m.ResetEndDate()
+		return nil
+	case cycle.FieldActive:
+		m.ResetActive()
 		return nil
 	}
 	return fmt.Errorf("unknown Cycle field %s", name)
