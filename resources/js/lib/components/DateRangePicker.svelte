@@ -16,6 +16,7 @@
 
     export let startValue = new CalendarDate(new Date());
     export let endValue = new CalendarDate(new Date()).add({ days: 50 });
+    export let placeholder = "Pick a date";
 
     let value = { start: startValue, end: endValue };
 
@@ -45,7 +46,7 @@
                         {df.format(startValue.toDate(getLocalTimeZone()))}
                     {/if}
                 {:else}
-                    Pick a date
+                    {placeholder}
                 {/if}
             </Button>
         </Popover.Trigger>
