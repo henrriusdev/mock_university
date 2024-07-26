@@ -572,7 +572,7 @@ func HasCareer() predicate.Subject {
 	return predicate.Subject(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CareerTable, CareerColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, CareerTable, CareerPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

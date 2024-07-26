@@ -776,6 +776,22 @@ func (c *CareersClient) QueryStudents(ca *Careers) *StudentQuery {
 	return query
 }
 
+// QuerySubjects queries the subjects edge of a Careers.
+func (c *CareersClient) QuerySubjects(ca *Careers) *SubjectQuery {
+	query := (&SubjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ca.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(careers.Table, careers.FieldID, id),
+			sqlgraph.To(subject.Table, subject.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, careers.SubjectsTable, careers.SubjectsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(ca.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *CareersClient) Hooks() []Hook {
 	return c.hooks.Careers
@@ -2897,7 +2913,7 @@ func (c *SubjectClient) QueryCareer(s *Subject) *CareersQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(subject.Table, subject.FieldID, id),
 			sqlgraph.To(careers.Table, careers.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, subject.CareerTable, subject.CareerColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, subject.CareerTable, subject.CareerPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil

@@ -19,6 +19,8 @@ const (
 	FieldStartDate = "start_date"
 	// FieldEndDate holds the string denoting the end_date field in the database.
 	FieldEndDate = "end_date"
+	// FieldActive holds the string denoting the active field in the database.
+	FieldActive = "active"
 	// Table holds the table name of the cycle in the database.
 	Table = "cycles"
 )
@@ -29,6 +31,7 @@ var Columns = []string{
 	FieldName,
 	FieldStartDate,
 	FieldEndDate,
+	FieldActive,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -48,6 +51,8 @@ var (
 	DefaultStartDate func() time.Time
 	// DefaultEndDate holds the default value on creation for the "end_date" field.
 	DefaultEndDate func() time.Time
+	// DefaultActive holds the default value on creation for the "active" field.
+	DefaultActive bool
 )
 
 // OrderOption defines the ordering options for the Cycle queries.
@@ -71,4 +76,9 @@ func ByStartDate(opts ...sql.OrderTermOption) OrderOption {
 // ByEndDate orders the results by the end_date field.
 func ByEndDate(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEndDate, opts...).ToFunc()
+}
+
+// ByActive orders the results by the active field.
+func ByActive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldActive, opts...).ToFunc()
 }
