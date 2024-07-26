@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"fmt"
+	"mocku/backend/ent/configuration"
+	"mocku/backend/ent/cycle"
 	"net/http"
+	"strconv"
 
 	"mocku/backend/ent/users"
 	"mocku/backend/utils"
@@ -219,7 +222,15 @@ func (h *Handler) StudentDashHandler(i *inertia.Inertia) http.Handler {
 
 func (h *Handler) SettingsHandler(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		err := i.Render(w, r, "Directive/Settings/Home", nil)
+		config := h.DB.Configuration.Query().Where(configuration.HasCycleWith(cycle.Name("2024-2"))).OnlyX(r.Context())
+		if config == nil {
+			HandleServerErr(i, fmt.Errorf("config not found")).ServeHTTP(w, r)
+			return
+		}
+
+		err := i.Render(w, r, "Directive/Settings/Home", inertia.Props{
+			"notesNumber": config.NumberNotes,
+		})
 		if err != nil {
 			HandleServerErr(i, err)
 			return
@@ -260,16 +271,32 @@ func (h *Handler) SettingsProfilePostHandler(i *inertia.Inertia) http.Handler {
 
 func (h *Handler) SettingsNotesPostHandler(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
+
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
 			return
 		}
 
-		err := i.Render(w, r, "Settings/Home", nil)
+		err := r.ParseForm()
+		if err != nil {
+			println(err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		notesNumber, err := strconv.Atoi(r.FormValue("notes"))
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		_, err = h.DB.Configuration.Update().Where(configuration.ID(1)).SetNumberNotes(notesNumber).Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err)
 			return
 		}
+
+		i.Redirect(w, r, "/settings", 302)
 	}
 
 	return http.HandlerFunc(fn)

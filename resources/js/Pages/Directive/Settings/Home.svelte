@@ -2,29 +2,43 @@
     import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
 
     import {Button} from "$lib/components/ui/button/index.js";
-    import {Checkbox} from "$lib/components/ui/checkbox/index.js";
     import {Input} from "$lib/components/ui/input/index.js";
     import * as Card from "$lib/components/ui/card/index.js";
+    import DatePicker from "$lib/components/DatePicker.svelte";
+    import DateRangePicker from "$lib/components/DateRangePicker.svelte";
+    import {CalendarDate} from "@internationalized/date";
+
+    export let notesNumber = 1;
+    export let paymentNumber = 1;
 
     let actual = "#notes";
+
+    let paymentDates = Array.from({length: paymentNumber}, () => new CalendarDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
+    let subjectInscriptionStart = new CalendarDate(2024, 1, 1);
+    let subjectInscriptionEnd = new CalendarDate(2024, 4, 1);
+
+    $: notesNumber = notesNumber > 10 ? 10 : notesNumber;
+    $: if(paymentNumber) {
+        paymentNumber = paymentNumber > 10 ? 10 : paymentNumber;
+        paymentDates = Array.from({length: paymentNumber}, () => new CalendarDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
+    }
 </script>
 
-<DirectiveLayout title="Settings page - MockU"
-                 description="Set the program settings or your user settings in this page">
+<DirectiveLayout title="Configuration page - MockU"
+                 description="Set the web system settings like cycle, notes, percentages, and more on this page" keywords="configuration, settings, mocku">
     <div class="mx-auto grid w-full max-w-6xl gap-2">
-        <h1 class="text-3xl font-semibold">Settings</h1>
+        <h1 class="text-3xl font-semibold">Configuration</h1>
     </div>
     <div
             class="mx-auto grid w-full max-w-6xl items-start gap-6 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]"
     >
         <nav class="grid gap-4 text-sm text-muted-foreground"
-
-
              data-x-chunk-container="chunk-container after:right-0">
             <a href="#notes" on:click={() => actual = "#notes"} class="{actual === '#notes' ? 'font-semibold text-primary' : '' }">Notes</a>
-            <a href="#config" on:click={() => actual = "#config"} class="{actual === '#config' ? 'font-semibold text-primary' : '' }">Configuration</a>
-            <a href="#careers" on:click={() => actual = "#careers"} class="{actual === '#careers' ? 'font-semibold text-primary' : '' }">Careers</a>
+            <a href="#cycle" on:click={() => actual = "#cycle"} class="{actual === '#cycle' ? 'font-semibold text-primary' : '' }">Cycle</a>
+            <a href="#paids" on:click={() => actual = "#paids"} class="{actual === '#paids' ? 'font-semibold text-primary' : '' }">Payments</a>
         </nav>
+        {#if actual === "#notes"}
         <div class="grid gap-6" id="notes">
             <Card.Root>
                 <Card.Header>
@@ -35,12 +49,10 @@
                 </Card.Header>
                 <Card.Content>
                     <form method="post" action="/settings/notes">
-                        <Input placeholder="Notes quantity" name="notes" type="number"/>
+                        <Input placeholder="Notes quantity" name="notes" type="number" min="{1}" max="{10}" bind:value={notesNumber}/>
+                    <Button type="submit" class="w-fit m-2 px-4">Save</Button>
                     </form>
                 </Card.Content>
-                <Card.Footer class="border-t px-6 py-4">
-                    <Button>Save</Button>
-                </Card.Footer>
             </Card.Root>
             <Card.Root>
                 <Card.Header>
@@ -50,17 +62,65 @@
                     </Card.Description>
                 </Card.Header>
                 <Card.Content>
-                    <form class="flex flex-col gap-4">
-                        <Input placeholder="Note 1"/>
-                        <Input placeholder="Note 2"/>
-                        <Input placeholder="Note 3"/>
-                        <Input placeholder="Note 4"/>
+                    <form class="flex flex-col gap-4" method="post" action="/settings/notes/percentages">
+                        {#each Array.from({length: notesNumber}) as _, i}
+                            <Input placeholder="Note {i + 1}" type="number" name="note-{i + 1}"/>
+                        {/each}
+                        <Button type="submit" class="w-fit m-2 px-4">Save</Button>
                     </form>
                 </Card.Content>
-                <Card.Footer class="border-t px-6 py-4">
-                    <Button>Save</Button>
-                </Card.Footer>
             </Card.Root>
         </div>
+        {:else if actual === "#cycle"}
+        <div class="grid gap-6" id="cycle">
+            <Card.Root>
+                <Card.Header>
+                    <Card.Title>Subject inscription</Card.Title>
+                    <Card.Description>
+                        Set the start and end date for the subject inscription
+                    </Card.Description>
+                </Card.Header>
+                <Card.Content>
+                    <form method="post" action="/settings/dates">
+                        <DateRangePicker bind:startValue={subjectInscriptionStart} bind:endValue={subjectInscriptionEnd} />
+                        <Button type="submit" class="w-fit m-2 px-4">Save</Button>
+                    </form>
+                </Card.Content>
+            </Card.Root>
+        </div>
+        {:else if actual === "#paids"}
+        <div class="grid gap-6" id="paids">
+            <Card.Root>
+                <Card.Header>
+                    <Card.Title>Payments Amount</Card.Title>
+                    <Card.Description>
+                        Set the amount of payments for the cycle
+                    </Card.Description>
+                </Card.Header>
+                <Card.Content>
+                    <form method="post" action="/settings/dates">
+                        <Input placeholder="Payments amount" name="payments" type="number" min="{1}" max="{10}" bind:value={paymentNumber}/>
+                        <Button type="submit" class="w-fit m-2 px-4">Save</Button>
+                    </form>
+                </Card.Content>
+            </Card.Root>
+            <Card.Root>
+                <Card.Header>
+                    <Card.Title>Payment dates</Card.Title>
+                    <Card.Description>
+                        Set the payment dates for the cycle
+                    </Card.Description>
+                </Card.Header>
+                <Card.Content>
+                    <form method="post" action="/settings/payments" class="flex flex-col gap-4">
+                        {#each paymentDates as paymentDate}
+                            <DatePicker bind:value={paymentDate} />
+                        {/each}
+                        <Button type="submit" class="w-fit m-2 px-4">Save</Button>
+                    </form>
+                </Card.Content>
+            </Card.Root>
+        </div>
+        {/if}
     </div>
 </DirectiveLayout>
