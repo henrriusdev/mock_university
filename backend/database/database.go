@@ -4,6 +4,8 @@ import (
 	"context"
 	"golang.org/x/crypto/bcrypt"
 	"mocku/backend/ent"
+	"mocku/backend/ent/configuration"
+	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/role"
 	"mocku/backend/ent/users"
 	"time"
@@ -68,6 +70,47 @@ func InsertDefaultUsers(ctx context.Context, client *ent.Client) error {
 			SetIsActive(true).
 			SetCreatedAt(time.Now()).
 			SetRole(adminRole).
+			Save(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func InsertDefaultCycle(ctx context.Context, client *ent.Client) error {
+	// Check if the master admin user exists
+	exists, err := client.Cycle.Query().Where(cycle.Name("2021")).Exist(ctx)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		if _, err := client.Cycle.Create().
+			SetName("2024-2").
+			Save(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func InsertDefaultConfig(ctx context.Context, client *ent.Client) error {
+	// Check if the master admin user exists
+	exists, err := client.Configuration.Query().Where(configuration.HasCycleWith(cycle.Name("2024-2"))).Exist(ctx)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		if _, err := client.Configuration.Create().
+			SetCycleID(1).
+			SetBlockNotPayInscription(true).
+			SetNumberFees(0).
+			SetNumberNotes(0).
+			SetStartRegistrationSubjects(time.Now()).
+			SetEndRegistrationSubjects(time.Now()).
 			Save(ctx); err != nil {
 			return err
 		}

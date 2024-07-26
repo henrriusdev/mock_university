@@ -5,12 +5,12 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "tmp\\main.exe"
-  cmd = "go build -o ./tmp/main.exe ."
+  cmd = "yarn build && go build -o ./tmp/main.exe ."
   delay = 500
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "public", "bootstrap", "node_modules"]
   exclude_file = []
   exclude_regex = ["_test.go"]
-  exclude_unchanged = false # Para reconstruir siempre
+  exclude_unchanged = true # Para reconstruir siempre
   follow_symlink = false
   full_bin = ""
   include_dir = []
@@ -20,7 +20,6 @@ tmp_dir = "tmp"
   log = "build-errors.log"
   rerun = false # Volver a ejecutar en cada cambio
   rerun_delay = 1000
-  pre_cmd = ["yarn build"]
   send_interrupt = false
   stop_on_error = true
 
@@ -45,4 +44,4 @@ tmp_dir = "tmp"
 
 [screen]
   clear_on_rebuild = true
-  keep_scroll = true
+  keep_scroll = false
