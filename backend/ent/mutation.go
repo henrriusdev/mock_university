@@ -2235,6 +2235,8 @@ type ConfigurationMutation struct {
 	addnumber_fees              *int
 	number_notes                *int
 	addnumber_notes             *int
+	notes_Percentages           *[]float64
+	appendnotes_Percentages     []float64
 	clearedFields               map[string]struct{}
 	cycle                       *int
 	clearedcycle                bool
@@ -2626,6 +2628,71 @@ func (m *ConfigurationMutation) ResetNumberNotes() {
 	m.addnumber_notes = nil
 }
 
+// SetNotesPercentages sets the "notes_Percentages" field.
+func (m *ConfigurationMutation) SetNotesPercentages(f []float64) {
+	m.notes_Percentages = &f
+	m.appendnotes_Percentages = nil
+}
+
+// NotesPercentages returns the value of the "notes_Percentages" field in the mutation.
+func (m *ConfigurationMutation) NotesPercentages() (r []float64, exists bool) {
+	v := m.notes_Percentages
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNotesPercentages returns the old "notes_Percentages" field's value of the Configuration entity.
+// If the Configuration object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationMutation) OldNotesPercentages(ctx context.Context) (v []float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNotesPercentages is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNotesPercentages requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNotesPercentages: %w", err)
+	}
+	return oldValue.NotesPercentages, nil
+}
+
+// AppendNotesPercentages adds f to the "notes_Percentages" field.
+func (m *ConfigurationMutation) AppendNotesPercentages(f []float64) {
+	m.appendnotes_Percentages = append(m.appendnotes_Percentages, f...)
+}
+
+// AppendedNotesPercentages returns the list of values that were appended to the "notes_Percentages" field in this mutation.
+func (m *ConfigurationMutation) AppendedNotesPercentages() ([]float64, bool) {
+	if len(m.appendnotes_Percentages) == 0 {
+		return nil, false
+	}
+	return m.appendnotes_Percentages, true
+}
+
+// ClearNotesPercentages clears the value of the "notes_Percentages" field.
+func (m *ConfigurationMutation) ClearNotesPercentages() {
+	m.notes_Percentages = nil
+	m.appendnotes_Percentages = nil
+	m.clearedFields[configuration.FieldNotesPercentages] = struct{}{}
+}
+
+// NotesPercentagesCleared returns if the "notes_Percentages" field was cleared in this mutation.
+func (m *ConfigurationMutation) NotesPercentagesCleared() bool {
+	_, ok := m.clearedFields[configuration.FieldNotesPercentages]
+	return ok
+}
+
+// ResetNotesPercentages resets all changes to the "notes_Percentages" field.
+func (m *ConfigurationMutation) ResetNotesPercentages() {
+	m.notes_Percentages = nil
+	m.appendnotes_Percentages = nil
+	delete(m.clearedFields, configuration.FieldNotesPercentages)
+}
+
 // SetCycleID sets the "cycle" edge to the Cycle entity by id.
 func (m *ConfigurationMutation) SetCycleID(id int) {
 	m.cycle = &id
@@ -2699,7 +2766,7 @@ func (m *ConfigurationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ConfigurationMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
 	if m.start_registration_subjects != nil {
 		fields = append(fields, configuration.FieldStartRegistrationSubjects)
 	}
@@ -2717,6 +2784,9 @@ func (m *ConfigurationMutation) Fields() []string {
 	}
 	if m.number_notes != nil {
 		fields = append(fields, configuration.FieldNumberNotes)
+	}
+	if m.notes_Percentages != nil {
+		fields = append(fields, configuration.FieldNotesPercentages)
 	}
 	return fields
 }
@@ -2738,6 +2808,8 @@ func (m *ConfigurationMutation) Field(name string) (ent.Value, bool) {
 		return m.NumberFees()
 	case configuration.FieldNumberNotes:
 		return m.NumberNotes()
+	case configuration.FieldNotesPercentages:
+		return m.NotesPercentages()
 	}
 	return nil, false
 }
@@ -2759,6 +2831,8 @@ func (m *ConfigurationMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldNumberFees(ctx)
 	case configuration.FieldNumberNotes:
 		return m.OldNumberNotes(ctx)
+	case configuration.FieldNotesPercentages:
+		return m.OldNotesPercentages(ctx)
 	}
 	return nil, fmt.Errorf("unknown Configuration field %s", name)
 }
@@ -2809,6 +2883,13 @@ func (m *ConfigurationMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetNumberNotes(v)
+		return nil
+	case configuration.FieldNotesPercentages:
+		v, ok := value.([]float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNotesPercentages(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Configuration field %s", name)
@@ -2870,6 +2951,9 @@ func (m *ConfigurationMutation) ClearedFields() []string {
 	if m.FieldCleared(configuration.FieldFeeDates) {
 		fields = append(fields, configuration.FieldFeeDates)
 	}
+	if m.FieldCleared(configuration.FieldNotesPercentages) {
+		fields = append(fields, configuration.FieldNotesPercentages)
+	}
 	return fields
 }
 
@@ -2886,6 +2970,9 @@ func (m *ConfigurationMutation) ClearField(name string) error {
 	switch name {
 	case configuration.FieldFeeDates:
 		m.ClearFeeDates()
+		return nil
+	case configuration.FieldNotesPercentages:
+		m.ClearNotesPercentages()
 		return nil
 	}
 	return fmt.Errorf("unknown Configuration nullable field %s", name)
@@ -2912,6 +2999,9 @@ func (m *ConfigurationMutation) ResetField(name string) error {
 		return nil
 	case configuration.FieldNumberNotes:
 		m.ResetNumberNotes()
+		return nil
+	case configuration.FieldNotesPercentages:
+		m.ResetNotesPercentages()
 		return nil
 	}
 	return fmt.Errorf("unknown Configuration field %s", name)

@@ -89,6 +89,7 @@ var (
 		{Name: "fee_dates", Type: field.TypeJSON, Nullable: true},
 		{Name: "number_fees", Type: field.TypeInt, Default: 0},
 		{Name: "number_notes", Type: field.TypeInt, Default: 3},
+		{Name: "notes_percentages", Type: field.TypeJSON, Nullable: true},
 		{Name: "configuration_cycle", Type: field.TypeInt, Nullable: true},
 	}
 	// ConfigurationsTable holds the schema information for the "configurations" table.
@@ -99,7 +100,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "configurations_cycles_cycle",
-				Columns:    []*schema.Column{ConfigurationsColumns[7]},
+				Columns:    []*schema.Column{ConfigurationsColumns[8]},
 				RefColumns: []*schema.Column{CyclesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

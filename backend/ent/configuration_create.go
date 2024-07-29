@@ -81,6 +81,12 @@ func (cc *ConfigurationCreate) SetNillableNumberNotes(i *int) *ConfigurationCrea
 	return cc
 }
 
+// SetNotesPercentages sets the "notes_Percentages" field.
+func (cc *ConfigurationCreate) SetNotesPercentages(f []float64) *ConfigurationCreate {
+	cc.mutation.SetNotesPercentages(f)
+	return cc
+}
+
 // SetCycleID sets the "cycle" edge to the Cycle entity by ID.
 func (cc *ConfigurationCreate) SetCycleID(id int) *ConfigurationCreate {
 	cc.mutation.SetCycleID(id)
@@ -215,6 +221,10 @@ func (cc *ConfigurationCreate) createSpec() (*Configuration, *sqlgraph.CreateSpe
 	if value, ok := cc.mutation.NumberNotes(); ok {
 		_spec.SetField(configuration.FieldNumberNotes, field.TypeInt, value)
 		_node.NumberNotes = value
+	}
+	if value, ok := cc.mutation.NotesPercentages(); ok {
+		_spec.SetField(configuration.FieldNotesPercentages, field.TypeJSON, value)
+		_node.NotesPercentages = value
 	}
 	if nodes := cc.mutation.CycleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

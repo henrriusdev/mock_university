@@ -132,6 +132,24 @@ func (cu *ConfigurationUpdate) AddNumberNotes(i int) *ConfigurationUpdate {
 	return cu
 }
 
+// SetNotesPercentages sets the "notes_Percentages" field.
+func (cu *ConfigurationUpdate) SetNotesPercentages(f []float64) *ConfigurationUpdate {
+	cu.mutation.SetNotesPercentages(f)
+	return cu
+}
+
+// AppendNotesPercentages appends f to the "notes_Percentages" field.
+func (cu *ConfigurationUpdate) AppendNotesPercentages(f []float64) *ConfigurationUpdate {
+	cu.mutation.AppendNotesPercentages(f)
+	return cu
+}
+
+// ClearNotesPercentages clears the value of the "notes_Percentages" field.
+func (cu *ConfigurationUpdate) ClearNotesPercentages() *ConfigurationUpdate {
+	cu.mutation.ClearNotesPercentages()
+	return cu
+}
+
 // SetCycleID sets the "cycle" edge to the Cycle entity by ID.
 func (cu *ConfigurationUpdate) SetCycleID(id int) *ConfigurationUpdate {
 	cu.mutation.SetCycleID(id)
@@ -229,6 +247,17 @@ func (cu *ConfigurationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := cu.mutation.AddedNumberNotes(); ok {
 		_spec.AddField(configuration.FieldNumberNotes, field.TypeInt, value)
+	}
+	if value, ok := cu.mutation.NotesPercentages(); ok {
+		_spec.SetField(configuration.FieldNotesPercentages, field.TypeJSON, value)
+	}
+	if value, ok := cu.mutation.AppendedNotesPercentages(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, configuration.FieldNotesPercentages, value)
+		})
+	}
+	if cu.mutation.NotesPercentagesCleared() {
+		_spec.ClearField(configuration.FieldNotesPercentages, field.TypeJSON)
 	}
 	if cu.mutation.CycleCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -381,6 +410,24 @@ func (cuo *ConfigurationUpdateOne) AddNumberNotes(i int) *ConfigurationUpdateOne
 	return cuo
 }
 
+// SetNotesPercentages sets the "notes_Percentages" field.
+func (cuo *ConfigurationUpdateOne) SetNotesPercentages(f []float64) *ConfigurationUpdateOne {
+	cuo.mutation.SetNotesPercentages(f)
+	return cuo
+}
+
+// AppendNotesPercentages appends f to the "notes_Percentages" field.
+func (cuo *ConfigurationUpdateOne) AppendNotesPercentages(f []float64) *ConfigurationUpdateOne {
+	cuo.mutation.AppendNotesPercentages(f)
+	return cuo
+}
+
+// ClearNotesPercentages clears the value of the "notes_Percentages" field.
+func (cuo *ConfigurationUpdateOne) ClearNotesPercentages() *ConfigurationUpdateOne {
+	cuo.mutation.ClearNotesPercentages()
+	return cuo
+}
+
 // SetCycleID sets the "cycle" edge to the Cycle entity by ID.
 func (cuo *ConfigurationUpdateOne) SetCycleID(id int) *ConfigurationUpdateOne {
 	cuo.mutation.SetCycleID(id)
@@ -508,6 +555,17 @@ func (cuo *ConfigurationUpdateOne) sqlSave(ctx context.Context) (_node *Configur
 	}
 	if value, ok := cuo.mutation.AddedNumberNotes(); ok {
 		_spec.AddField(configuration.FieldNumberNotes, field.TypeInt, value)
+	}
+	if value, ok := cuo.mutation.NotesPercentages(); ok {
+		_spec.SetField(configuration.FieldNotesPercentages, field.TypeJSON, value)
+	}
+	if value, ok := cuo.mutation.AppendedNotesPercentages(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, configuration.FieldNotesPercentages, value)
+		})
+	}
+	if cuo.mutation.NotesPercentagesCleared() {
+		_spec.ClearField(configuration.FieldNotesPercentages, field.TypeJSON)
 	}
 	if cuo.mutation.CycleCleared() {
 		edge := &sqlgraph.EdgeSpec{

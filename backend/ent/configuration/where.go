@@ -260,6 +260,16 @@ func NumberNotesLTE(v int) predicate.Configuration {
 	return predicate.Configuration(sql.FieldLTE(FieldNumberNotes, v))
 }
 
+// NotesPercentagesIsNil applies the IsNil predicate on the "notes_Percentages" field.
+func NotesPercentagesIsNil() predicate.Configuration {
+	return predicate.Configuration(sql.FieldIsNull(FieldNotesPercentages))
+}
+
+// NotesPercentagesNotNil applies the NotNil predicate on the "notes_Percentages" field.
+func NotesPercentagesNotNil() predicate.Configuration {
+	return predicate.Configuration(sql.FieldNotNull(FieldNotesPercentages))
+}
+
 // HasCycle applies the HasEdge predicate on the "cycle" edge.
 func HasCycle() predicate.Configuration {
 	return predicate.Configuration(func(s *sql.Selector) {
