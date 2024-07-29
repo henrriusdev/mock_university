@@ -14,6 +14,7 @@
     export let endRegSubj = undefined;
     export let cycleStart = undefined;
     export let cycleEnd = undefined;
+    export let percentages = Array.from({length: notesNumber}, () => 0);
     let actual = "#notes";
 
     let paymentDates = Array.from({length: paymentNumber}, () => new CalendarDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()));
@@ -96,7 +97,7 @@
                 <Card.Content>
                     <form class="flex flex-col gap-4" method="post" action="/settings/notes/percentages">
                         {#each Array.from({length: notesNumber}) as _, i}
-                            <Input placeholder="Note {i + 1}" type="number" name="note-{i + 1}"/>
+                            <Input placeholder="Note {i + 1}" type="number" name="note-{i + 1}" min="1" max="100" value="{percentages[i] * 100}"/>
                         {/each}
                         <Button type="submit" class="w-fit m-2 px-4">Save</Button>
                     </form>

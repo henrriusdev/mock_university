@@ -235,6 +235,7 @@ func (h *Handler) SettingsHandler(i *inertia.Inertia) http.Handler {
 			"endRegSubj":    utils.FormatDate(config.EndRegistrationSubjects),
 			"cycleStart":    utils.FormatDate(config.Edges.Cycle.StartDate),
 			"cycleEnd":      utils.FormatDate(config.Edges.Cycle.EndDate),
+			"percentages":   config.NotesPercentages,
 		})
 		if err != nil {
 			HandleServerErr(i, err)
@@ -386,6 +387,47 @@ func (h *Handler) SettingsPaymentsPostHandler(i *inertia.Inertia) http.Handler {
 		if err != nil {
 			HandleServerErr(i, err)
 			return
+		}
+
+		i.Redirect(w, r, "/settings", 302)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			HandleNotFound(i).ServeHTTP(w, r)
+			return
+		}
+
+		err := r.ParseForm()
+		if err != nil {
+			println(err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		config := h.DB.Configuration.Query().WithCycle().Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).OnlyX(r.Context())
+
+		notes := make([]float64, config.NumberNotes)
+		if config.NumberNotes > 0 {
+			for j := 0; j < config.NumberNotes; j++ {
+				note, err := strconv.Atoi(r.FormValue(fmt.Sprintf("note-%d", j+1)))
+				if err != nil {
+					HandleServerErr(i, err).ServeHTTP(w, r)
+					return
+				}
+
+				notes[j] = float64(note) / 100
+			}
+
+			_, err = h.DB.Configuration.Update().Where(configuration.ID(1)).SetNotesPercentages(notes).Save(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
 		}
 
 		i.Redirect(w, r, "/settings", 302)
