@@ -479,3 +479,32 @@ func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) http.Hand
 
 	return http.HandlerFunc(fn)
 }
+
+func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			HandleNotFound(i).ServeHTTP(w, r)
+			return
+		}
+
+		currentCycle := h.DB.Cycle.Query().Where(cycle.ActiveEQ(true)).OnlyX(r.Context())
+
+		newCycle := utils.SplitCycle(currentCycle.Name)
+
+		_, err := h.DB.Cycle.Update().Where(cycle.ID(currentCycle.ID)).SetActive(false).Save(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		_, err = h.DB.Cycle.Create().SetStartDate(time.Now()).SetEndDate(time.Now()).SetActive(true).SetName(newCycle).Save(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		i.Redirect(w, r, "/settings", 302)
+	}
+
+	return http.HandlerFunc(fn)
+}
