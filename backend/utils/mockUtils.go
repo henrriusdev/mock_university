@@ -1,9 +1,12 @@
 package utils
 
 import (
-	"golang.org/x/crypto/bcrypt"
+	"fmt"
 	"regexp"
+	"strconv"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func HashPassword(password string) (string, error) {
@@ -84,4 +87,18 @@ func ParseDate(date string) (time.Time, error) {
 func FormatDate(date time.Time) string {
 	// Formatea la fecha a string
 	return date.Format("2006-01-02")
+}
+
+func SplitCycle(cycle string) string {
+	year := cycle[:4]
+	semester := cycle[5:]
+
+	if semester == "1" {
+		return fmt.Sprintf("%s-%s", year, "2")
+	}
+
+	yearInt, _ := strconv.Atoi(year)
+	yearInt++
+
+	return fmt.Sprintf("%d-%s", yearInt, "1")
 }
