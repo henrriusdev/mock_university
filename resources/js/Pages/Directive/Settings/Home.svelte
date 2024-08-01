@@ -259,6 +259,19 @@
             </form>
           </Card.Content>
         </Card.Root>
+        <Card.Root>
+          <Card.Header>
+            <Card.Title class="text-red-500">Start new cycle</Card.Title>
+            <Card.Description class="text-destructive-foreground">
+              Start a new cycle for the semester. This will change all the configurations for the new cycle to default values. Be careful with this action, it <span class="text-red-500">does not have a confirmation</span>.
+            </Card.Description>
+          </Card.Header>
+          <Card.Content>
+            <form method="post" action="/settings/cycle">
+              <Button variant="destructive" type="submit" class="w-fit m-2 px-4">Start</Button>
+            </form>
+          </Card.Content>
+        </Card.Root>
       </div>
     {:else if actual === "#paids"}
       <div class="grid gap-6" id="paids">
