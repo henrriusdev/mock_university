@@ -3,7 +3,6 @@ package backend
 import (
 	"context"
 	"fmt"
-	inertia "github.com/romsar/gonertia"
 	"log"
 	"mocku/backend/database"
 	"mocku/backend/ent"
@@ -11,6 +10,8 @@ import (
 	"mocku/backend/utils"
 	"net/http"
 	"os"
+
+	inertia "github.com/romsar/gonertia"
 
 	_ "github.com/lib/pq"
 )
@@ -43,6 +44,7 @@ func MountApp() {
 	mux.Handle("/settings/notes/percentages", i.Middleware(handler.SettingsNotesPercentagePostHandler(i)))
 	mux.Handle("/settings/payment", i.Middleware(handler.SettingsPaymentsPostHandler(i)))
 	mux.Handle("/settings/dates", i.Middleware(handler.SettingsDatesPostHandler(i)))
+	mux.Handle("/settings/payment/dates", i.Middleware(handler.SettingsPaymentsDatesPostHandler(i)))
 
 	// API routes
 	mux.Handle("/build/", http.StripPrefix("/build/", http.FileServer(http.Dir("./public/build"))))
