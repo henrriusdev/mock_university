@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"fmt"
-	"mocku/backend/ent/configuration"
-	"mocku/backend/ent/cycle"
 	"net/http"
 	"strconv"
+	"time"
+
+	"mocku/backend/ent/configuration"
+	"mocku/backend/ent/cycle"
 
 	"mocku/backend/ent/users"
 	"mocku/backend/utils"
@@ -236,6 +238,7 @@ func (h *Handler) SettingsHandler(i *inertia.Inertia) http.Handler {
 			"cycleStart":    utils.FormatDate(config.Edges.Cycle.StartDate),
 			"cycleEnd":      utils.FormatDate(config.Edges.Cycle.EndDate),
 			"percentages":   config.NotesPercentages,
+			"paymentDates":  config.FeeDates,
 		})
 		if err != nil {
 			HandleServerErr(i, err)
@@ -428,6 +431,47 @@ func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) http.Ha
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
+		}
+
+		i.Redirect(w, r, "/settings", 302)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			HandleNotFound(i).ServeHTTP(w, r)
+			return
+		}
+
+		err := r.ParseForm()
+		if err != nil {
+			println(err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		config := h.DB.Configuration.Query().WithCycle().Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).OnlyX(r.Context())
+
+		payments := make([]time.Time, config.NumberFees)
+		for j := 0; j < config.NumberFees; j++ {
+			date := r.FormValue(fmt.Sprintf("payment-%d", j+1))
+			payment, err := utils.ParseDate(date)
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			fmt.Println(payment)
+			payments[j] = payment
+		}
+
+		_, err = h.DB.Configuration.Update().Where(configuration.HasCycleWith(cycle.Active(true))).SetFeeDates(payments).Save(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
 		}
 
 		i.Redirect(w, r, "/settings", 302)
