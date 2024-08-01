@@ -30,20 +30,31 @@
   const payments = paymentNumber;
   console.log(payments, paymentNumber);
 
-  let paymentDatesParsed = paymentDates?.map((date) => {
-    let dateStr = date.toString();
-    let dateArr = dateStr.split("-");
-    dateArr[2] = dateArr[2].split("T")[0];
+  let paymentDatesParsed =
+    paymentDates?.map((date) => {
+      let dateStr = date.toString();
+      let dateArr = dateStr.split("-");
+      dateArr[2] = dateArr[2].split("T")[0];
 
-    console.log(dateArr);
-    return new CalendarDate(
-      parseInt(dateArr[0]),
-      parseInt(dateArr[1]),
-      parseInt(dateArr[2])
+      console.log(dateArr);
+      return new CalendarDate(
+        parseInt(dateArr[0]),
+        parseInt(dateArr[1]),
+        parseInt(dateArr[2])
+      );
+    }) ??
+    Array.from(
+      { length: paymentNumber },
+      () =>
+        new CalendarDate(
+          new Date().getFullYear(),
+          new Date().getMonth() + 1,
+          new Date().getDate()
+        )
     );
-  }) ?? [];
 
-  let inputPaymentDates = paymentDatesParsed?.map((date) => date.toString()) ?? [];
+  let inputPaymentDates =
+    paymentDatesParsed?.map((date) => date.toString()) ?? [];
 
   startRegSubj = startRegSubj ? new Date(startRegSubj) : new Date();
   endRegSubj = endRegSubj ? new Date(endRegSubj) : new Date();
@@ -106,11 +117,11 @@
   }
 
   // check if the paymentDatesParsed is updated and then update the inputPaymentDates
-    $: {
-        console.log(paymentDatesParsed);
-        inputPaymentDates = paymentDatesParsed.map((date) => date.toString());
-        console.log(inputPaymentDates);
-    }
+  $: {
+    console.log(paymentDatesParsed);
+    inputPaymentDates = paymentDatesParsed.map((date) => date.toString());
+    console.log(inputPaymentDates);
+  }
 </script>
 
 <DirectiveLayout
@@ -250,12 +261,18 @@
           <Card.Header>
             <Card.Title class="text-red-500">Start new cycle</Card.Title>
             <Card.Description class="text-destructive-foreground">
-              Start a new cycle for the semester. This will change all the configurations for the new cycle to default values. Be careful with this action, it <span class="text-red-500">does not have a confirmation</span>.
+              Start a new cycle for the semester. This will change all the
+              configurations for the new cycle to default values. Be careful
+              with this action, it <span class="text-red-500"
+                >does not have a confirmation</span
+              >.
             </Card.Description>
           </Card.Header>
           <Card.Content>
             <form method="post" action="/settings/cycle">
-              <Button variant="destructive" type="submit" class="w-fit m-2 px-4">Start</Button>
+              <Button variant="destructive" type="submit" class="w-fit m-2 px-4"
+                >Start</Button
+              >
             </form>
           </Card.Content>
         </Card.Root>
