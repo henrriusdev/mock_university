@@ -224,7 +224,8 @@ func (h *Handler) StudentDashHandler(i *inertia.Inertia) http.Handler {
 
 func (h *Handler) SettingsHandler(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		config := h.DB.Configuration.Query().WithCycle().Where(configuration.HasCycleWith(cycle.Name("2024-2"))).OnlyX(r.Context())
+		// Get configuration, if there is no configuration with the active cycle, return empty
+		config := h.DB.Configuration.Query().WithCycle().Where(configuration.HasCycleWith(cycle.Active(true))).OnlyX(r.Context())
 		if config == nil {
 			HandleServerErr(i, fmt.Errorf("config not found")).ServeHTTP(w, r)
 			return
@@ -497,7 +498,13 @@ func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		_, err = h.DB.Cycle.Create().SetStartDate(time.Now()).SetEndDate(time.Now()).SetActive(true).SetName(newCycle).Save(r.Context())
+		currentCycle, err = h.DB.Cycle.Create().SetStartDate(time.Now()).SetEndDate(time.Now()).SetActive(true).SetName(newCycle).Save(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		_, err = h.DB.Configuration.Create().SetNumberNotes(0).SetNumberFees(0).SetStartRegistrationSubjects(time.Now()).SetEndRegistrationSubjects(time.Now()).SetCycle(currentCycle).Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
