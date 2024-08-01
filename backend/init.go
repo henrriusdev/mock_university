@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+
 	"mocku/backend/database"
 	"mocku/backend/ent"
 	"mocku/backend/handlers"
 	"mocku/backend/utils"
-	"net/http"
-	"os"
 
 	inertia "github.com/romsar/gonertia"
 
@@ -45,6 +46,7 @@ func MountApp() {
 	mux.Handle("/settings/payment", i.Middleware(handler.SettingsPaymentsPostHandler(i)))
 	mux.Handle("/settings/dates", i.Middleware(handler.SettingsDatesPostHandler(i)))
 	mux.Handle("/settings/payment/dates", i.Middleware(handler.SettingsPaymentsDatesPostHandler(i)))
+	mux.Handle("/settings/cycle", i.Middleware(handler.SettingsCyclePostHandler(i)))
 
 	// API routes
 	mux.Handle("/build/", http.StripPrefix("/build/", http.FileServer(http.Dir("./public/build"))))
