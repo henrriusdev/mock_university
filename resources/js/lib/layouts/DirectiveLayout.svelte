@@ -29,7 +29,6 @@
         {name: "Careers", href: "/directive.careers",},
         {name: "Payments", href: "/directive/payments",},
         {name: "Requests", href: "/directive/requests",},
-        {name: "Settings", href: "/settings",},
     ];
 </script>
 <svelte:head>
@@ -49,16 +48,12 @@
         <nav
                 class="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6"
         >
-            <a href="/" class="flex items-center gap-2 text-lg font-semibold md:text-base">
-                <Package2 class="h-6 w-6"/>
-                <span class="sr-only">MockU</span>
-            </a>
+            <LightSwitch/>
             {#each routes as {name, href} (href)}
                 <a href={href} class="text-foreground transition-colors hover:text-foreground">
                     {name}
                 </a>
             {/each}
-            <LightSwitch/>
         </nav>
         <Sheet>
             <SheetTrigger asChild let:builder>
@@ -92,8 +87,8 @@
                     <Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"/>
                     <Input
                             type="search"
-                            placeholder="Search products..."
-                            class="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
+                            placeholder="Search students..."
+                            class="pl-8 sm:w-[250px] md:w-[150px] lg:w-[250px]"
                     />
                 </div>
             </form>
@@ -110,11 +105,13 @@
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                    <DropdownMenuItem inset>
+                        <a href="/settings">
+                            Settings
+                        </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator/>
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator/>
-                    <DropdownMenuItem>Settings</DropdownMenuItem>
-                    <DropdownMenuItem>Support</DropdownMenuItem>
-                    <DropdownMenuSeparator/>
                     <DropdownMenuItem>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
