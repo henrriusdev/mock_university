@@ -28,8 +28,9 @@
   let actual = "#notes";
 
   const payments = paymentNumber;
+  console.log(payments, paymentNumber);
 
-  let paymentDatesParsed = paymentDates.map((date) => {
+  let paymentDatesParsed = paymentDates?.map((date) => {
     let dateStr = date.toString();
     let dateArr = dateStr.split("-");
     dateArr[2] = dateArr[2].split("T")[0];
@@ -40,9 +41,9 @@
       parseInt(dateArr[1]),
       parseInt(dateArr[2])
     );
-  });
+  }) ?? [];
 
-  let inputPaymentDates = paymentDatesParsed.map((date) => date.toString());
+  let inputPaymentDates = paymentDatesParsed?.map((date) => date.toString()) ?? [];
 
   startRegSubj = startRegSubj ? new Date(startRegSubj) : new Date();
   endRegSubj = endRegSubj ? new Date(endRegSubj) : new Date();
@@ -102,20 +103,6 @@
   $: notesNumber = notesNumber > 10 ? 10 : notesNumber;
   $: if (paymentNumber != payments) {
     paymentNumber = paymentNumber > 10 ? 10 : paymentNumber;
-    paymentDatesParsed = [
-      ...paymentDatesParsed,
-      ...Array.from(
-        { length: paymentNumber - payments },
-        () =>
-          new CalendarDate(
-            new Date().getFullYear(),
-            new Date().getMonth() + 1,
-            new Date().getDate()
-          )
-      ),
-    ];
-
-    inputPaymentDates = paymentDatesParsed.map((date) => date.toString());
   }
 
   // check if the paymentDatesParsed is updated and then update the inputPaymentDates

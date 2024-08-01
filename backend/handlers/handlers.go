@@ -299,7 +299,7 @@ func (h *Handler) SettingsNotesPostHandler(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		_, err = h.DB.Configuration.Update().Where(configuration.ID(1)).SetNumberNotes(notesNumber).Save(r.Context())
+		_, err = h.DB.Configuration.Update().Where(configuration.HasCycleWith(cycle.Active(true))).SetNumberNotes(notesNumber).Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err)
 			return
@@ -387,7 +387,7 @@ func (h *Handler) SettingsPaymentsPostHandler(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		_, err = h.DB.Configuration.Update().Where(configuration.ID(1)).SetNumberFees(numberFees).Save(r.Context())
+		_, err = h.DB.Configuration.Update().Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).SetNumberFees(numberFees).Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err)
 			return
@@ -427,7 +427,7 @@ func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) http.Ha
 				notes[j] = float64(note) / 100
 			}
 
-			_, err = h.DB.Configuration.Update().Where(configuration.ID(1)).SetNotesPercentages(notes).Save(r.Context())
+			_, err = h.DB.Configuration.Update().Where(configuration.HasCycleWith(cycle.Active(true))).SetNotesPercentages(notes).Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
