@@ -2,15 +2,13 @@ package handlers
 
 import (
 	"fmt"
+	"mocku/backend/ent/configuration"
+	"mocku/backend/ent/cycle"
+	"mocku/backend/ent/users"
+	"mocku/backend/utils"
 	"net/http"
 	"strconv"
 	"time"
-
-	"mocku/backend/ent/configuration"
-	"mocku/backend/ent/cycle"
-
-	"mocku/backend/ent/users"
-	"mocku/backend/utils"
 
 	inertia "github.com/romsar/gonertia"
 )
@@ -224,7 +222,6 @@ func (h *Handler) StudentDashHandler(i *inertia.Inertia) http.Handler {
 
 func (h *Handler) SettingsHandler(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		// Get configuration, if there is no configuration with the active cycle, return empty
 		config := h.DB.Configuration.Query().WithCycle().Where(configuration.HasCycleWith(cycle.Active(true))).OnlyX(r.Context())
 		if config == nil {
 			HandleServerErr(i, fmt.Errorf("config not found")).ServeHTTP(w, r)

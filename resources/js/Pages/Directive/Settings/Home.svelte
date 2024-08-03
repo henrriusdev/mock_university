@@ -15,20 +15,21 @@
   export let cycleStart = undefined;
   export let cycleEnd = undefined;
   export let percentages = Array.from({ length: notesNumber }, () => 0);
+  if (percentages == null) {
+    percentages = Array.from({ length: notesNumber }, () => 0);
+  }
   export let paymentDates = Array.from(
     { length: paymentNumber },
     () =>
       new CalendarDate(
         new Date().getFullYear(),
         new Date().getMonth() + 1,
-        new Date().getDate()
-      )
+        new Date().getDate(),
+      ),
   );
-  console.log(paymentDates);
   let actual = "#notes";
 
   const payments = paymentNumber;
-  console.log(payments, paymentNumber);
 
   let paymentDatesParsed =
     paymentDates?.map((date) => {
@@ -36,11 +37,10 @@
       let dateArr = dateStr.split("-");
       dateArr[2] = dateArr[2].split("T")[0];
 
-      console.log(dateArr);
       return new CalendarDate(
         parseInt(dateArr[0]),
         parseInt(dateArr[1]),
-        parseInt(dateArr[2])
+        parseInt(dateArr[2]),
       );
     }) ??
     Array.from(
@@ -49,8 +49,8 @@
         new CalendarDate(
           new Date().getFullYear(),
           new Date().getMonth() + 1,
-          new Date().getDate()
-        )
+          new Date().getDate(),
+        ),
     );
 
   let inputPaymentDates =
@@ -65,28 +65,28 @@
     ? new CalendarDate(
         startRegSubj.getFullYear(),
         startRegSubj.getMonth() + 1,
-        startRegSubj.getDate()
+        startRegSubj.getDate(),
       )
     : new CalendarDate(2024, 3, 1);
   let subjectInscriptionEnd = endRegSubj
     ? new CalendarDate(
         endRegSubj.getFullYear(),
         endRegSubj.getMonth() + 1,
-        endRegSubj.getDate()
+        endRegSubj.getDate(),
       )
     : new CalendarDate(2024, 3, 1);
   let cycleStartDate = cycleStart
     ? new CalendarDate(
         cycleStart.getFullYear(),
         cycleStart.getMonth() + 1,
-        cycleStart.getDate()
+        cycleStart.getDate(),
       )
     : new CalendarDate(2024, 3, 1);
   let cycleEndDate = cycleEnd
     ? new CalendarDate(
         cycleEnd.getFullYear(),
         cycleEnd.getMonth() + 1,
-        cycleEnd.getDate()
+        cycleEnd.getDate(),
       )
     : new CalendarDate(2024, 3, 1);
 
@@ -119,7 +119,8 @@
   // check if the paymentDatesParsed is updated and then update the inputPaymentDates
   $: {
     console.log(paymentDatesParsed);
-    inputPaymentDates = paymentDatesParsed.map((date) => date.toString());
+    inputPaymentDates =
+      paymentDatesParsed?.map((date) => date.toString()) ?? [];
     console.log(inputPaymentDates);
   }
 </script>
@@ -141,20 +142,18 @@
     >
       <a
         href="#notes"
-        on:click="{() => (actual = '#notes')}"
-        class="{actual === '#notes' ? 'font-semibold text-primary' : ''}"
-        >Notes</a
+        on:click={() => (actual = "#notes")}
+        class={actual === "#notes" ? "font-semibold text-primary" : ""}>Notes</a
       >
       <a
         href="#cycle"
-        on:click="{() => (actual = '#cycle')}"
-        class="{actual === '#cycle' ? 'font-semibold text-primary' : ''}"
-        >Cycle</a
+        on:click={() => (actual = "#cycle")}
+        class={actual === "#cycle" ? "font-semibold text-primary" : ""}>Cycle</a
       >
       <a
         href="#paids"
-        on:click="{() => (actual = '#paids')}"
-        class="{actual === '#paids' ? 'font-semibold text-primary' : ''}"
+        on:click={() => (actual = "#paids")}
+        class={actual === "#paids" ? "font-semibold text-primary" : ""}
         >Payments</a
       >
     </nav>
@@ -173,9 +172,9 @@
                 placeholder="Notes quantity"
                 name="notes"
                 type="number"
-                min="{1}"
-                max="{10}"
-                bind:value="{notesNumber}"
+                min={1}
+                max={10}
+                bind:value={notesNumber}
               />
               <Button type="submit" class="w-fit m-2 px-4">Save</Button>
             </form>
@@ -194,14 +193,14 @@
               method="post"
               action="/settings/notes/percentages"
             >
-              {#each Array.from({ length: notesNumber }) as _, i}
+              {#each percentages as percentage, i}
                 <Input
                   placeholder="Note {i + 1}"
                   type="number"
                   name="note-{i + 1}"
                   min="1"
                   max="100"
-                  value="{percentages[i] * 100}"
+                  value={percentage !== 0 ? percentage * 100 : percentage}
                 />
               {/each}
               <Button type="submit" class="w-fit m-2 px-4">Save</Button>
@@ -227,32 +226,28 @@
             >
               <Label class="my-4">Subject Inscription</Label>
               <DateRangePicker
-                bind:startValue="{subjectInscriptionStart}"
-                bind:endValue="{subjectInscriptionEnd}"
+                bind:startValue={subjectInscriptionStart}
+                bind:endValue={subjectInscriptionEnd}
                 placeholder="Subject Inscription start and end dates"
               />
-              <Label class="my-4">Subject Inscription</Label>
+              <Label class="my-4">Cycle Start and End</Label>
               <DateRangePicker
-                bind:startValue="{cycleStartDate}"
-                bind:endValue="{cycleEndDate}"
+                bind:startValue={cycleStartDate}
+                bind:endValue={cycleEndDate}
                 placeholder="Cycle start and end dates"
               />
               <input
                 type="hidden"
                 name="start_registration_subjects"
-                bind:value="{subjectStart}"
+                bind:value={subjectStart}
               />
               <input
                 type="hidden"
                 name="end_registration_subjects"
-                bind:value="{subjectEnd}"
+                bind:value={subjectEnd}
               />
-              <input
-                type="hidden"
-                name="cycle_start"
-                bind:value="{startCycle}"
-              />
-              <input type="hidden" name="cycle_end" bind:value="{endCycle}" />
+              <input type="hidden" name="cycle_start" bind:value={startCycle} />
+              <input type="hidden" name="cycle_end" bind:value={endCycle} />
               <Button type="submit" class="w-fit m-2 px-4">Save</Button>
             </form>
           </Card.Content>
@@ -292,9 +287,9 @@
                 placeholder="Payments amount"
                 name="payments"
                 type="number"
-                min="{1}"
-                max="{10}"
-                bind:value="{paymentNumber}"
+                min={1}
+                max={10}
+                bind:value={paymentNumber}
               />
               <Button type="submit" class="w-fit m-2 px-4">Save</Button>
             </form>
@@ -314,13 +309,13 @@
               class="flex flex-col gap-4"
             >
               {#each paymentDatesParsed as paymentDate, i}
-                <DatePicker bind:value="{paymentDate}" />
+                <DatePicker bind:value={paymentDate} />
               {/each}
               {#each inputPaymentDates as paymentDate, i}
                 <input
                   type="hidden"
                   name="payment-{i + 1}"
-                  bind:value="{paymentDate}"
+                  bind:value={paymentDate}
                 />
               {/each}
               <Button type="submit" class="w-fit m-2 px-4">Save</Button>
