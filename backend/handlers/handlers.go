@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
-	"net/http"
-	"strconv"
-
 	"mocku/backend/ent/users"
 	"mocku/backend/utils"
+	"net/http"
+	"strconv"
 
 	inertia "github.com/romsar/gonertia"
 )
 
-func (h *Handler) HomeHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) Home(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		careers, err := h.DB.Careers.Query().All(r.Context())
 		if err != nil {
@@ -33,7 +32,7 @@ func (h *Handler) HomeHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) LoginHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) Login(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		careers, err := h.DB.Careers.Query().All(r.Context())
 		if err != nil {
@@ -53,7 +52,7 @@ func (h *Handler) LoginHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) LoginPostHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) LoginPost(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
@@ -118,7 +117,7 @@ func (h *Handler) LoginPostHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) DirectiveDashHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) DirectiveDash(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		careers, err := h.DB.Careers.Query().All(r.Context())
 		fmt.Println(err)
@@ -140,7 +139,7 @@ func (h *Handler) DirectiveDashHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) PaymentsDashHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) PaymentsDash(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		careers, err := h.DB.Careers.Query().All(r.Context())
 		if err != nil {
@@ -160,7 +159,7 @@ func (h *Handler) PaymentsDashHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) ControlDashHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) ControlDash(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		careers, err := h.DB.Careers.Query().All(r.Context())
 		if err != nil {
@@ -180,7 +179,7 @@ func (h *Handler) ControlDashHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) ProfessorDashHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) ProfessorDash(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		careers, err := h.DB.Careers.Query().All(r.Context())
 		if err != nil {
@@ -200,7 +199,7 @@ func (h *Handler) ProfessorDashHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) StudentDashHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) StudentDash(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		careers, err := h.DB.Careers.Query().All(r.Context())
 		if err != nil {
@@ -220,7 +219,7 @@ func (h *Handler) StudentDashHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) SettingsHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) Settings(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		config := h.DB.Configuration.Query().Where(configuration.HasCycleWith(cycle.Name("2024-2"))).OnlyX(r.Context())
 		if config == nil {
@@ -240,7 +239,7 @@ func (h *Handler) SettingsHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) SettingsProfileHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) SettingsProfile(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		err := i.Render(w, r, "Settings/Profile", nil)
 		if err != nil {
@@ -252,7 +251,7 @@ func (h *Handler) SettingsProfileHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) SettingsProfilePostHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) SettingsProfilePost(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
@@ -269,9 +268,8 @@ func (h *Handler) SettingsProfilePostHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) SettingsNotesPostHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) SettingsNotesPost(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
 			return
@@ -302,7 +300,7 @@ func (h *Handler) SettingsNotesPostHandler(i *inertia.Inertia) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (h *Handler) SettingsDatesPostHandler(i *inertia.Inertia) http.Handler {
+func (h *Handler) SettingsDatesPost(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
