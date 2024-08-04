@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
-	"os"
-
 	"mocku/backend/database"
 	"mocku/backend/ent"
 	"mocku/backend/handlers"
 	"mocku/backend/utils"
+	"net/http"
+	"os"
 
 	inertia "github.com/romsar/gonertia"
 
@@ -40,6 +39,7 @@ func MountApp() {
 	mux.Handle("/control", i.Middleware(handler.ControlDashHandler(i)))
 
 	// Directives routes
+	mux.Handle("/directive/students", i.Middleware(handler.Students(i)))
 	mux.Handle("/settings", i.Middleware(handler.SettingsHandler(i)))
 	mux.Handle("/settings/notes", i.Middleware(handler.SettingsNotesPostHandler(i)))
 	mux.Handle("/settings/notes/percentages", i.Middleware(handler.SettingsNotesPercentagePostHandler(i)))

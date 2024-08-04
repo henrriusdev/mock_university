@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
@@ -482,5 +483,44 @@ func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) http.Handler {
 		i.Redirect(w, r, "/settings", 302)
 	}
 
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) Students(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		students, err := h.DB.Student.Query().WithUser().WithCareer().All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		studentDtos := make([]StudentDtoI, len(students))
+		for i, student := range students {
+			studentDtos[i] = StudentDtoI{
+				ID:           student.ID,
+				Name:         student.Edges.User.Name,
+				Avatar:       student.Edges.User.Avatar,
+				Email:        student.Edges.User.Email,
+				Phone:        student.Phone,
+				Career:       student.Edges.Career.Name,
+				TotalAverage: student.TotalAverage,
+			}
+		}
+
+		// convert the dto to json and send it to the frontend
+		studentsPayload, err := json.Marshal(studentDtos)
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		err = i.Render(w, r, "Directive/Students", inertia.Props{
+			"students": string(studentsPayload),
+		})
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+	}
 	return http.HandlerFunc(fn)
 }
