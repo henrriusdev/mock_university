@@ -1,6 +1,11 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "checkJs": true,
     "paths": {
       "$lib": ["./resources/js/lib"],
       "$lib/*": ["./resources/js/lib/*"]
@@ -8,3 +13,4 @@
   },
   "exclude": ["node_modules", "public/build", "bootstrap"]
 }
+
