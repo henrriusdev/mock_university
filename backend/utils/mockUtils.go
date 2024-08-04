@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -101,4 +102,36 @@ func SplitCycle(cycle string) string {
 	yearInt++
 
 	return fmt.Sprintf("%d-%s", yearInt, "1")
+}
+
+func StructToJson(dto interface{}) (map[string]interface{}, error) {
+	// Convertir el DTO a JSON
+	jsonData, err := json.Marshal(dto)
+	if err != nil {
+		return nil, fmt.Errorf("error al convertir a JSON: %w", err)
+	}
+
+	// Convertir el JSON a map[string]interface{}
+	var result map[string]interface{}
+	err = json.Unmarshal(jsonData, &result)
+	if err != nil {
+		return nil, fmt.Errorf("error al convertir JSON a map: %w", err)
+	}
+
+	return result, nil
+}
+
+func StructArrayToJson(dtos []interface{}) ([]map[string]interface{}, error) {
+	var result []map[string]interface{}
+
+	for _, dto := range dtos {
+		res, err := StructToJson(dto)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, res)
+	}
+
+	return result, nil
 }

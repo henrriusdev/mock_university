@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
@@ -507,15 +506,21 @@ func (h *Handler) Students(i *inertia.Inertia) http.Handler {
 			}
 		}
 
-		// convert the dto to json and send it to the frontend
-		studentsPayload, err := json.Marshal(studentDtos)
+		var dtos []interface{}
+		for _, studentDto := range studentDtos {
+			dtos = append(dtos, studentDto)
+		}
+
+		studentsPayload, err := utils.StructArrayToJson(dtos)
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
 		}
 
+		fmt.Println(studentsPayload)
+
 		err = i.Render(w, r, "Directive/Students", inertia.Props{
-			"students": string(studentsPayload),
+			"students": studentsPayload,
 		})
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)

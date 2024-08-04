@@ -10,6 +10,7 @@ import (
 	"mocku/backend/utils"
 	"net/http"
 	"os"
+	"strings"
 
 	inertia "github.com/romsar/gonertia"
 
@@ -89,9 +90,46 @@ func initDatabase() *ent.Client {
 
 // initInertia initializes the inertia.js instance
 func initInertia() *inertia.Inertia {
+	viteHotFile := "./public/hot"
+	rootViewFile := "resources/views/root.html"
+
+	// check if laravel-vite-plugin is running in dev mode (it puts a "hot" file in the public folder)
+	_, err := os.Stat(viteHotFile)
+	if err == nil {
+		i, err := inertia.NewFromFile(
+			rootViewFile,
+			inertia.WithSSR(),
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+		i.ShareTemplateFunc("vite", func(entry string) (string, error) {
+			content, err := os.ReadFile(viteHotFile)
+			if err != nil {
+				return "", err
+			}
+			url := strings.TrimSpace(string(content))
+			if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
+				url = url[strings.Index(url, ":")+1:]
+			} else {
+				url = "//localhost:8080"
+			}
+
+			if entry != "" && !strings.HasPrefix(entry, "/") {
+				entry = "/" + entry
+			}
+			return url + entry, nil
+		})
+		return i
+	}
+
+	// laravel-vite-plugin not running in dev mode, use build manifest file
 	manifestPath := "./public/build/manifest.json"
 
+	// check if the manifest file exists, if not, rename it
 	if _, err := os.Stat(manifestPath); os.IsNotExist(err) {
+		// move the manifest from ./public/build/.vite/manifest.json to ./public/build/manifest.json
+		// so that the vite function can find it
 		err := os.Rename("./public/build/.vite/manifest.json", "./public/build/manifest.json")
 		if err != nil {
 			return nil
@@ -99,7 +137,7 @@ func initInertia() *inertia.Inertia {
 	}
 
 	i, err := inertia.NewFromFile(
-		"resources/views/root.html",
+		rootViewFile,
 		inertia.WithVersionFromFile(manifestPath),
 		inertia.WithSSR(),
 	)
