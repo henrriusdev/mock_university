@@ -12,6 +12,8 @@
   } from "$lib/components/ui/menubar/index.js";
   import LightSwitch from "$lib/components/LightSwitch.svelte";
   import { ChevronRight } from "lucide-svelte";
+
+  /** @type {Array<{name: string}>} */
   export let careers = [];
 </script>
 
