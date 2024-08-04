@@ -21,7 +21,7 @@
 <DirectiveLayout
   title="Students List | Directive | Mock University"
   description="Students List of the Mock University."
-  keywords="students, list"
+  keywords="students, list, directive"
 >
   <div class="rounded-md border">
     <Table.Root {...$tableAttrs}>
@@ -42,17 +42,15 @@
       </Table.Header>
       <Table.Body {...$tableBodyAttrs}>
         {#each $pageRows as row (row.id)}
-          <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-            <Table.Row {...rowAttrs}>
-              {#each row.cells as cell (cell.id)}
-                <Subscribe attrs={cell.attrs()} let:attrs>
-                  <Table.Cell {...attrs}>
-                    <Render of={cell.render()} />
-                  </Table.Cell>
-                </Subscribe>
-              {/each}
-            </Table.Row>
-          </Subscribe>
+          <Table.Row {...row.attrs()}>
+            {#each row.cells as cell (cell.id)}
+              <Subscribe attrs={cell.attrs()} let:attrs>
+                <Table.Cell {...attrs}>
+                  <Render of={cell.render()} />
+                </Table.Cell>
+              </Subscribe>
+            {/each}
+          </Table.Row>
         {/each}
       </Table.Body>
     </Table.Root>
