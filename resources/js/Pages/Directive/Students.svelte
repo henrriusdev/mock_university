@@ -1,16 +1,31 @@
 <script>
   import DataTable from "$lib/components/datatable/data-table.svelte";
   import { createTable, createRender } from "svelte-headless-table";
-  import { addPagination } from "svelte-headless-table/plugins";
+  import {
+    addPagination,
+    addSortBy,
+    addTableFilter,
+    addSelectedRows,
+  } from "svelte-headless-table/plugins";
   import { readable } from "svelte/store";
   import DataTableActions from "$lib/components/datatable/data-table-actions.svelte";
   import Avatar from "$lib/components/Avatar.svelte";
+  import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
+  import DataTableCheckbox from "$lib/components/datatable/data-table-checkbox.svelte";
   /** @type { Array<{id: number, avatar: string, name: string, email: string, phone: string, career: string, totalAverage: number}>} */
   export let students = [];
 
   let table = createTable(readable(students), {
     page: addPagination(),
+    sort: addSortBy(),
+    filter: addTableFilter({
+      /** @param {{filterValue: string, value: string}} param0 */
+      fn: ({ filterValue, value }) =>
+        value.toLowerCase().includes(filterValue.toLowerCase()),
+    }),
+    select: addSelectedRows(),
   });
+
   if (students?.length === 0 || students === null) {
     students = [
       {
@@ -36,20 +51,51 @@
 
   table = createTable(readable(students), {
     page: addPagination(),
+    sort: addSortBy(),
+    filter: addTableFilter({
+      /** @param {{filterValue: string, value: string}} param0 */
+      fn: ({ filterValue, value }) =>
+        value.toLowerCase().includes(filterValue.toLowerCase()),
+    }),
+    select: addSelectedRows(),
   });
+
   const columns = table.createColumns([
     table.column({
       accessor: "id",
-      header: "ID",
+      header: (_, { pluginStates }) => {
+        const { allPageRowsSelected } = pluginStates.select;
+        return createRender(DataTableCheckbox, {
+          checked: allPageRowsSelected,
+        });
+      },
+      cell: ({ row }, { pluginStates }) => {
+        const { getRowState } = pluginStates.select;
+        const { isSelected } = getRowState(row);
+
+        return createRender(DataTableCheckbox, {
+          checked: isSelected,
+        });
+      },
+      plugins: {
+        sort: {
+          disable: true,
+        },
+        filter: {
+          exclude: true,
+        },
+      },
     }),
     table.column({
-      accessor: ({ avatar, name }) => ({ avatar, name }),
+      accessor: ({ avatar, name }) => {
+        return `${avatar} ${name}`;
+      },
       header: "Student",
       cell: ({ value }) => {
         return createRender(Avatar, {
-          src: value.avatar,
+          src: value.split(" ")[0],
           alt: "Avatar",
-          name: value.name,
+          name: value.split(" ").slice(1).join(" "),
         });
       },
     }),
@@ -75,8 +121,33 @@
       cell: ({ value }) => {
         return createRender(DataTableActions, { id: value.toString() });
       },
+      plugins: {
+        sort: {
+          disable: true,
+        },
+        filter: {
+          exclude: true,
+        },
+      },
     }),
   ]);
 </script>
 
-<DataTable {table} {columns} />
+<DirectiveLayout
+  title="Students | Directive | Mock University"
+  description="List of students registered in the system."
+  keywords="Students, List, Table"
+>
+  <section
+    class="flex flex-col !items-center justify-center max-w-full md:max-w-[90%] w-full sm:mx-auto p-3"
+  >
+    <h2
+      class="text-2xl md:text-3xl xl:text-5xl font-bold w-full text-left pb-1 md:pb-3"
+    >
+      Students
+    </h2>
+    <div class="w-full">
+      <DataTable {table} {columns} />
+    </div>
+  </section>
+</DirectiveLayout>

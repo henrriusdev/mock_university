@@ -1,8 +1,10 @@
 <script>
   import * as Table from "$lib/components/ui/table/index";
-  import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
   import { Render, Subscribe } from "svelte-headless-table";
   import { Button } from "$lib/components/ui/button/index.js";
+  import { ArrowUpDown } from "lucide-svelte";
+  import { Input } from "$lib/components/ui/input/index.js";
+  import Checkbox from "../ui/checkbox/checkbox.svelte";
 
   /**
    * @typedef {import('svelte-headless-table').Table<any, any>} DataTable
@@ -19,77 +21,80 @@
     table.createViewModel(columns);
 
   const { hasNextPage, hasPreviousPage, pageIndex } = pluginStates.page;
+  const { filterValue } = pluginStates.filter;
+  const { selectedDataIds } = pluginStates.select;
 </script>
 
-<DirectiveLayout
-  title="Students List | Directive | Mock University"
-  description="Students List of the Mock University."
-  keywords="students, list, directive"
->
-  <div class="rounded-md border">
-    <Table.Root {...$tableAttrs}>
-      <Table.Header>
-        {#each $headerRows as headerRow}
-          <Subscribe rowAttrs={headerRow.attrs()}>
-            <Table.Row>
-              {#each headerRow.cells as cell (cell.id)}
-                <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()}>
-                  <Table.Head {...attrs}>
-                    {#if cell.id === "avatar"}
-                      <div class="!w-8">
-                        <Render of={cell.render()} />
-                      </div>
-                    {:else if cell.id === "totalAverage"}
-                      <div class="text-right">
-                        <Render of={cell.render()} />
-                      </div>
-                    {:else}
+<div class="rounded-md border">
+  <div class="flex items-center p-4">
+    <Input
+      class="max-w-sm"
+      placeholder="Filter names, email, phone, career and average..."
+      type="text"
+      bind:value={$filterValue}
+    />
+  </div>
+  <Table.Root {...$tableAttrs}>
+    <Table.Header>
+      {#each $headerRows as headerRow}
+        <Subscribe rowAttrs={headerRow.attrs()}>
+          <Table.Row>
+            {#each headerRow.cells as cell (cell.id)}
+              <Subscribe
+                attrs={cell.attrs()}
+                let:attrs
+                props={cell.props()}
+                let:props
+              >
+                <Table.Head {...attrs} class="[&:has([role=checkbox])]:pl-4">
+                  {#if !props.sort.disabled}
+                    <Button
+                      variant="ghost"
+                      on:click={props.sort.toggle}
+                      class="flex items-center gap-x-2"
+                    >
+                      <ArrowUpDown class="w-4 h-4" />
                       <Render of={cell.render()} />
-                    {/if}
-                  </Table.Head>
-                </Subscribe>
-              {/each}
-            </Table.Row>
-          </Subscribe>
-        {/each}
-      </Table.Header>
-      <Table.Body {...$tableBodyAttrs}>
-        {#each $pageRows as row (row.id)}
-          <Table.Row {...row.attrs()}>
-            {#each row.cells as cell (cell.id)}
-              <Subscribe attrs={cell.attrs()} let:attrs>
-                <Table.Cell {...attrs}>
-                  {#if cell.id === "avatar"}
-                    <div class="!w-8">
-                      <Render of={cell.render()} />
-                    </div>
-                  {:else if cell.id === "totalAverage"}
-                    <div class="text-right">
-                      <Render of={cell.render()} />
-                    </div>
+                    </Button>
                   {:else}
                     <Render of={cell.render()} />
                   {/if}
-                </Table.Cell>
+                </Table.Head>
               </Subscribe>
             {/each}
           </Table.Row>
-        {/each}
-      </Table.Body>
-    </Table.Root>
-  </div>
-  <div class="flex items-center justify-end space-x-4 py-4">
-    <Button
-      variant="outline"
-      size="sm"
-      on:click={() => ($pageIndex = $pageIndex - 1)}
-      disabled={!$hasPreviousPage}>Previous</Button
-    >
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={!$hasNextPage}
-      on:click={() => ($pageIndex = $pageIndex + 1)}>Next</Button
-    >
-  </div>
-</DirectiveLayout>
+        </Subscribe>
+      {/each}
+    </Table.Header>
+    <Table.Body {...$tableBodyAttrs}>
+      {#each $pageRows as row (row.id)}
+        <Table.Row
+          {...row.attrs()}
+          data-state={$selectedDataIds[row.id] && "selected"}
+        >
+          {#each row.cells as cell (cell.id)}
+            <Subscribe attrs={cell.attrs()} let:attrs>
+              <Table.Cell {...attrs}>
+                <Render of={cell.render()} />
+              </Table.Cell>
+            </Subscribe>
+          {/each}
+        </Table.Row>
+      {/each}
+    </Table.Body>
+  </Table.Root>
+</div>
+<div class="flex items-center justify-end space-x-4 py-4">
+  <Button
+    variant="outline"
+    size="sm"
+    on:click={() => ($pageIndex = $pageIndex - 1)}
+    disabled={!$hasPreviousPage}>Previous</Button
+  >
+  <Button
+    variant="outline"
+    size="sm"
+    disabled={!$hasNextPage}
+    on:click={() => ($pageIndex = $pageIndex + 1)}>Next</Button
+  >
+</div>
