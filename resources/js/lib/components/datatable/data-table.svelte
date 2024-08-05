@@ -2,6 +2,7 @@
   import * as Table from "$lib/components/ui/table/index";
   import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
   import { Render, Subscribe } from "svelte-headless-table";
+  import { Button } from "$lib/components/ui/button/index.js";
 
   /**
    * @typedef {import('svelte-headless-table').Table<any, any>} DataTable
@@ -14,8 +15,10 @@
   /** @type {DataTable} */
   export let table;
 
-  const { headerRows, pageRows, tableAttrs, tableBodyAttrs } =
+  const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } =
     table.createViewModel(columns);
+
+  const { hasNextPage, hasPreviousPage, pageIndex } = pluginStates.page;
 </script>
 
 <DirectiveLayout
@@ -32,7 +35,17 @@
               {#each headerRow.cells as cell (cell.id)}
                 <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()}>
                   <Table.Head {...attrs}>
-                    <Render of={cell.render()} />
+                    {#if cell.id === "avatar"}
+                      <div class="!w-8">
+                        <Render of={cell.render()} />
+                      </div>
+                    {:else if cell.id === "totalAverage"}
+                      <div class="text-right">
+                        <Render of={cell.render()} />
+                      </div>
+                    {:else}
+                      <Render of={cell.render()} />
+                    {/if}
                   </Table.Head>
                 </Subscribe>
               {/each}
@@ -46,7 +59,17 @@
             {#each row.cells as cell (cell.id)}
               <Subscribe attrs={cell.attrs()} let:attrs>
                 <Table.Cell {...attrs}>
-                  <Render of={cell.render()} />
+                  {#if cell.id === "avatar"}
+                    <div class="!w-8">
+                      <Render of={cell.render()} />
+                    </div>
+                  {:else if cell.id === "totalAverage"}
+                    <div class="text-right">
+                      <Render of={cell.render()} />
+                    </div>
+                  {:else}
+                    <Render of={cell.render()} />
+                  {/if}
                 </Table.Cell>
               </Subscribe>
             {/each}
@@ -54,5 +77,19 @@
         {/each}
       </Table.Body>
     </Table.Root>
+  </div>
+  <div class="flex items-center justify-end space-x-4 py-4">
+    <Button
+      variant="outline"
+      size="sm"
+      on:click={() => ($pageIndex = $pageIndex - 1)}
+      disabled={!$hasPreviousPage}>Previous</Button
+    >
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={!$hasNextPage}
+      on:click={() => ($pageIndex = $pageIndex + 1)}>Next</Button
+    >
   </div>
 </DirectiveLayout>

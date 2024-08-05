@@ -1,12 +1,16 @@
 <script>
-  import DataTable from "$lib/datatable/data-table.svelte";
-  import { createTable } from "svelte-headless-table";
+  import DataTable from "$lib/components/datatable/data-table.svelte";
+  import { createTable, createRender } from "svelte-headless-table";
+  import { addPagination } from "svelte-headless-table/plugins";
   import { readable } from "svelte/store";
-
+  import DataTableActions from "$lib/components/datatable/data-table-actions.svelte";
+  import Avatar from "$lib/components/Avatar.svelte";
   /** @type { Array<{id: number, avatar: string, name: string, email: string, phone: string, career: string, totalAverage: number}>} */
   export let students = [];
 
-  let table = createTable(readable(students));
+  let table = createTable(readable(students), {
+    page: addPagination(),
+  });
   if (students?.length === 0 || students === null) {
     students = [
       {
@@ -29,21 +33,25 @@
       },
     ];
   }
-  console.log(students?.length, students);
 
-  table = createTable(readable(students));
+  table = createTable(readable(students), {
+    page: addPagination(),
+  });
   const columns = table.createColumns([
     table.column({
       accessor: "id",
       header: "ID",
     }),
     table.column({
-      accessor: "avatar",
-      header: " ",
-    }),
-    table.column({
-      accessor: "name",
-      header: "Name",
+      accessor: ({ avatar, name }) => ({ avatar, name }),
+      header: "Student",
+      cell: ({ value }) => {
+        return createRender(Avatar, {
+          src: value.avatar,
+          alt: "Avatar",
+          name: value.name,
+        });
+      },
     }),
     table.column({
       accessor: "email",
@@ -64,6 +72,9 @@
     table.column({
       accessor: ({ id }) => id,
       header: "Actions",
+      cell: ({ value }) => {
+        return createRender(DataTableActions, { id: value.toString() });
+      },
     }),
   ]);
 </script>
