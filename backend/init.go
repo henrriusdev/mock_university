@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"strings"
+
 	"mocku/backend/database"
 	"mocku/backend/ent"
 	"mocku/backend/handlers"
 	"mocku/backend/utils"
-	"net/http"
-	"os"
-	"strings"
 
 	inertia "github.com/romsar/gonertia"
 
@@ -41,6 +42,7 @@ func MountApp() {
 
 	// Directives routes
 	mux.Handle("/directive/students", i.Middleware(handler.Students(i)))
+	mux.Handle("/directive/students/view", i.Middleware(handler.Student(i)))
 	mux.Handle("/settings", i.Middleware(handler.SettingsHandler(i)))
 	mux.Handle("/settings/notes", i.Middleware(handler.SettingsNotesPostHandler(i)))
 	mux.Handle("/settings/notes/percentages", i.Middleware(handler.SettingsNotesPercentagePostHandler(i)))
@@ -128,8 +130,6 @@ func initInertia() *inertia.Inertia {
 
 	// check if the manifest file exists, if not, rename it
 	if _, err := os.Stat(manifestPath); os.IsNotExist(err) {
-		// move the manifest from ./public/build/.vite/manifest.json to ./public/build/manifest.json
-		// so that the vite function can find it
 		err := os.Rename("./public/build/.vite/manifest.json", "./public/build/manifest.json")
 		if err != nil {
 			return nil

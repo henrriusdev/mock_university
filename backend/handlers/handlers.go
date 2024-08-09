@@ -2,13 +2,15 @@ package handlers
 
 import (
 	"fmt"
-	"mocku/backend/ent/configuration"
-	"mocku/backend/ent/cycle"
-	"mocku/backend/ent/users"
-	"mocku/backend/utils"
 	"net/http"
 	"strconv"
 	"time"
+
+	"mocku/backend/ent/configuration"
+	"mocku/backend/ent/cycle"
+	"mocku/backend/ent/student"
+	"mocku/backend/ent/users"
+	"mocku/backend/utils"
 
 	inertia "github.com/romsar/gonertia"
 )
@@ -493,9 +495,9 @@ func (h *Handler) Students(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		studentDtos := make([]StudentDtoI, len(students))
+		studentDtos := make([]StudentsTableDto, len(students))
 		for i, student := range students {
-			studentDtos[i] = StudentDtoI{
+			studentDtos[i] = StudentsTableDto{
 				ID:           student.ID,
 				Name:         student.Edges.User.Name,
 				Avatar:       student.Edges.User.Avatar,
@@ -519,8 +521,62 @@ func (h *Handler) Students(i *inertia.Inertia) http.Handler {
 
 		fmt.Println(studentsPayload)
 
-		err = i.Render(w, r, "Directive/Students", inertia.Props{
+		err = i.Render(w, r, "Directive/Students/Home", inertia.Props{
 			"students": studentsPayload,
+		})
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+	}
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) Student(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		// the id is a string, if it is "add" it means that the user wants to add a new student
+		id := r.URL.Query().Get("id")
+		var studentDto StudentDto
+		var userDto UserDto
+		if id != "add" {
+			studentId, err := strconv.Atoi(id)
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			student, err := h.DB.Student.Query().Where(student.ID(studentId)).WithUser().WithCareer().Only(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			studentDto = StudentDto{
+				ID:                     student.ID,
+				Phone:                  student.Phone,
+				Address:                student.Address,
+				District:               student.District,
+				City:                   student.City,
+				PostalCode:             student.PostalCode,
+				IdentityCard:           student.IdentityCard,
+				BirthDate:              student.BirthDate.Format("2006-01-02"),
+				CreditUnitsAccumulated: student.CreditUnitsAccumulated,
+				TotalAverage:           student.TotalAverage,
+			}
+
+			userDto = UserDto{
+				ID:       0,
+				Name:     student.Edges.User.Name,
+				Email:    student.Edges.User.Email,
+				Username: student.Edges.User.Username,
+				Avatar:   student.Edges.User.Avatar,
+				Active:   student.Edges.User.IsActive,
+			}
+		}
+
+		err := i.Render(w, r, "Directive/Students/Upsert", inertia.Props{
+			"student": studentDto,
+			"user":    userDto,
 		})
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
