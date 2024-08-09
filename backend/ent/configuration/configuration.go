@@ -24,6 +24,8 @@ const (
 	FieldNumberFees = "number_fees"
 	// FieldNumberNotes holds the string denoting the number_notes field in the database.
 	FieldNumberNotes = "number_notes"
+	// FieldNotesPercentages holds the string denoting the notes_percentages field in the database.
+	FieldNotesPercentages = "notes_percentages"
 	// EdgeCycle holds the string denoting the cycle edge name in mutations.
 	EdgeCycle = "cycle"
 	// Table holds the table name of the configuration in the database.
@@ -46,6 +48,7 @@ var Columns = []string{
 	FieldFeeDates,
 	FieldNumberFees,
 	FieldNumberNotes,
+	FieldNotesPercentages,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "configurations"

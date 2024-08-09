@@ -31,6 +31,8 @@ type Configuration struct {
 	NumberFees int `json:"number_fees,omitempty"`
 	// NumberNotes holds the value of the "number_notes" field.
 	NumberNotes int `json:"number_notes,omitempty"`
+	// NotesPercentages holds the value of the "notes_Percentages" field.
+	NotesPercentages []float64 `json:"notes_Percentages,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ConfigurationQuery when eager-loading is set.
 	Edges               ConfigurationEdges `json:"edges"`
@@ -63,7 +65,7 @@ func (*Configuration) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case configuration.FieldFeeDates:
+		case configuration.FieldFeeDates, configuration.FieldNotesPercentages:
 			values[i] = new([]byte)
 		case configuration.FieldBlockNotPayInscription:
 			values[i] = new(sql.NullBool)
@@ -132,6 +134,14 @@ func (c *Configuration) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				c.NumberNotes = int(value.Int64)
 			}
+		case configuration.FieldNotesPercentages:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field notes_Percentages", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &c.NotesPercentages); err != nil {
+					return fmt.Errorf("unmarshal field notes_Percentages: %w", err)
+				}
+			}
 		case configuration.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field configuration_cycle", value)
@@ -197,6 +207,9 @@ func (c *Configuration) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("number_notes=")
 	builder.WriteString(fmt.Sprintf("%v", c.NumberNotes))
+	builder.WriteString(", ")
+	builder.WriteString("notes_Percentages=")
+	builder.WriteString(fmt.Sprintf("%v", c.NotesPercentages))
 	builder.WriteByte(')')
 	return builder.String()
 }

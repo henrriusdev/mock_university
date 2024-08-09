@@ -1,9 +1,7 @@
-/node_modules/
-/bootstrap/
-/public/
-/.idea/
-/.env
-/.pnp.loader.mjs
-/.yarn/
-/.pnp.cjs
-/tmp/
+node_modules/
+public/
+bootstrap/
+.env
+.yarn/
+tmp/
+

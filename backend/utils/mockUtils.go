@@ -1,8 +1,13 @@
 package utils
 
 import (
-	"golang.org/x/crypto/bcrypt"
+	"encoding/json"
+	"fmt"
 	"regexp"
+	"strconv"
+	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func HashPassword(password string) (string, error) {
@@ -68,4 +73,65 @@ func ValidatePhone(phone string) bool {
 	}
 
 	return ok
+}
+
+func ParseDate(date string) (time.Time, error) {
+	// Parsea la fecha a time.Time
+	t, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return t, nil
+}
+
+func FormatDate(date time.Time) string {
+	// Formatea la fecha a string
+	return date.Format("2006-01-02")
+}
+
+func SplitCycle(cycle string) string {
+	year := cycle[:4]
+	semester := cycle[5:]
+
+	if semester == "1" {
+		return fmt.Sprintf("%s-%s", year, "2")
+	}
+
+	yearInt, _ := strconv.Atoi(year)
+	yearInt++
+
+	return fmt.Sprintf("%d-%s", yearInt, "1")
+}
+
+func StructToJson(dto interface{}) (map[string]interface{}, error) {
+	// Convertir el DTO a JSON
+	jsonData, err := json.Marshal(dto)
+	if err != nil {
+		return nil, fmt.Errorf("error al convertir a JSON: %w", err)
+	}
+
+	// Convertir el JSON a map[string]interface{}
+	var result map[string]interface{}
+	err = json.Unmarshal(jsonData, &result)
+	if err != nil {
+		return nil, fmt.Errorf("error al convertir JSON a map: %w", err)
+	}
+
+	return result, nil
+}
+
+func StructArrayToJson(dtos []interface{}) ([]map[string]interface{}, error) {
+	var result []map[string]interface{}
+
+	for _, dto := range dtos {
+		res, err := StructToJson(dto)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, res)
+	}
+
+	return result, nil
 }

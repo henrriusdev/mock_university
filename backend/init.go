@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"strings"
+
 	"mocku/backend/database"
 	"mocku/backend/ent"
 	"mocku/backend/handlers"
 	"mocku/backend/utils"
-	"net/http"
-	"os"
+
+	inertia "github.com/romsar/gonertia"
 
 	inertia "github.com/romsar/gonertia"
 
@@ -39,6 +43,12 @@ func MountApp() {
 	mux.Handle("/control", i.Middleware(handler.ControlDash(i)))
 
 	// Directives routes
+	mux.Handle("/directive/students", i.Middleware(handler.Students(i)))
+	mux.Handle("/directive/students/view", i.Middleware(handler.Student(i)))
+	mux.Handle("/settings/notes/percentages", i.Middleware(handler.SettingsNotesPercentagePostHandler(i)))
+	mux.Handle("/settings/payment", i.Middleware(handler.SettingsPaymentsPostHandler(i)))
+	mux.Handle("/settings/payment/dates", i.Middleware(handler.SettingsPaymentsDatesPostHandler(i)))
+	mux.Handle("/settings/cycle", i.Middleware(handler.SettingsCyclePostHandler(i)))
 	mux.Handle("/settings", i.Middleware(handler.Settings(i)))
 	mux.Handle("/settings/notes", i.Middleware(handler.SettingsNotesPost(i)))
 	mux.Handle("/settings/dates", i.Middleware(handler.SettingsDatesPost(i)))
@@ -84,8 +94,43 @@ func initDatabase() *ent.Client {
 
 // initInertia initializes the inertia.js instance
 func initInertia() *inertia.Inertia {
+	viteHotFile := "./public/hot"
+	rootViewFile := "resources/views/root.html"
+
+	// check if laravel-vite-plugin is running in dev mode (it puts a "hot" file in the public folder)
+	_, err := os.Stat(viteHotFile)
+	if err == nil {
+		i, err := inertia.NewFromFile(
+			rootViewFile,
+			inertia.WithSSR(),
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+		i.ShareTemplateFunc("vite", func(entry string) (string, error) {
+			content, err := os.ReadFile(viteHotFile)
+			if err != nil {
+				return "", err
+			}
+			url := strings.TrimSpace(string(content))
+			if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
+				url = url[strings.Index(url, ":")+1:]
+			} else {
+				url = "//localhost:8080"
+			}
+
+			if entry != "" && !strings.HasPrefix(entry, "/") {
+				entry = "/" + entry
+			}
+			return url + entry, nil
+		})
+		return i
+	}
+
+	// laravel-vite-plugin not running in dev mode, use build manifest file
 	manifestPath := "./public/build/manifest.json"
 
+	// check if the manifest file exists, if not, rename it
 	if _, err := os.Stat(manifestPath); os.IsNotExist(err) {
 		err := os.Rename("./public/build/.vite/manifest.json", "./public/build/manifest.json")
 		if err != nil {
@@ -94,7 +139,7 @@ func initInertia() *inertia.Inertia {
 	}
 
 	i, err := inertia.NewFromFile(
-		"resources/views/root.html",
+		rootViewFile,
 		inertia.WithVersionFromFile(manifestPath),
 		inertia.WithSSR(),
 	)
