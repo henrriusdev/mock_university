@@ -12,6 +12,8 @@
   import Avatar from "$lib/components/Avatar.svelte";
   import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
   import DataTableCheckbox from "$lib/components/datatable/data-table-checkbox.svelte";
+  import Button from "$lib/components/ui/button/button.svelte";
+  import { ChevronRight } from "lucide-svelte";
   /** @type { Array<{id: number, avatar: string, name: string, email: string, phone: string, career: string, totalAverage: number}>} */
   export let students = [];
 
@@ -134,18 +136,24 @@
 </script>
 
 <DirectiveLayout
-  title="Students | Directive | Mock University"
+  title="Students | Directive | Mock University" 
   description="List of students registered in the system."
   keywords="Students, List, Table"
 >
   <section
     class="flex flex-col !items-center justify-center max-w-full md:max-w-[90%] w-full sm:mx-auto p-3"
   >
+  <div class="w-full flex justify-between items-center">
     <h2
-      class="text-2xl md:text-3xl xl:text-5xl font-bold w-full text-left pb-1 md:pb-3"
+    class="text-2xl md:text-3xl xl:text-5xl font-bold w-full text-left pb-1 md:pb-3"
     >
-      Students
-    </h2>
+    Students
+  </h2>
+  <Button variant="outline" class="flex justify-center gap-x-3 items-center" href="/directive/students/view?id=add">
+    Add student
+    <ChevronRight class="w-6 h-6" />
+  </Button>
+</div>
     <div class="w-full">
       <DataTable {table} {columns} />
     </div>

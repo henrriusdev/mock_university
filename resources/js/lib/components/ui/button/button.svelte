@@ -3,8 +3,12 @@
 	import { buttonVariants } from "./index.js";
 	import { cn } from "$lib/utils.js";
 	let className = undefined;
+
+	/** @type {"default" | "secondary" | "outline" | "ghost" | "link" | "destructive"} */
 	export let variant = "default";
+	/** @type {"default" | "sm" | "lg" | "icon"} */
 	export let size = "default";
+	/** @type {import("bits-ui").Builder[]} */
 	export let builders = [];
 	export { className as class };
 </script>
