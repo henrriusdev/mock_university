@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"mocku/backend/ent"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/student"
@@ -724,5 +725,73 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 		http.Redirect(w, r, "/directive/students", http.StatusSeeOther)
 	}
 
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) Careers(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		// get leader inside the user name
+		careers, err := h.DB.Careers.Query().WithLeader(func(query *ent.ProfessorQuery) { query.WithUser() }).All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		careerDtos := make([]CareerDto, len(careers))
+		for i, career := range careers {
+			careerDtos[i] = CareerDto{
+				ID:         career.ID,
+				Name:       career.Name,
+				LeaderName: career.Edges.Leader.Edges.User.Name,
+				LeaderId:   career.Edges.Leader.Edges.User.ID,
+			}
+		}
+
+		err = i.Render(w, r, "Directive/Careers", inertia.Props{
+			"careers": careerDtos,
+		})
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+	}
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) Career(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.NotFound(w, r)
+			return
+		}
+
+		err := r.ParseForm()
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		name := r.FormValue("name")
+		leaderId := r.FormValue("leader")
+		var leader int
+		if leaderId != "" {
+			leader, err = strconv.Atoi(leaderId)
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			_, err = h.DB.Careers.Create().SetName(name).SetLeaderID(leader).Save(r.Context())
+		} else {
+			_, err = h.DB.Careers.Create().SetName(name).Save(r.Context())
+		}
+
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		i.Redirect(w, r, "/directive/careers", 302)
+	}
 	return http.HandlerFunc(fn)
 }
