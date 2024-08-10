@@ -28,29 +28,6 @@
     select: addSelectedRows(),
   });
 
-  if (students?.length === 0 || students === null) {
-    students = [
-      {
-        id: 1,
-        avatar: "https://randomuser.me/api/portraits/men/1.jpg",
-        name: "John Doe",
-        email: "johndoe@gmail.com",
-        phone: "1234567890",
-        career: "Computer Science",
-        totalAverage: 90,
-      },
-      {
-        id: 2,
-        avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-        name: "Jane Doe",
-        email: "janedoe@gmail.com",
-        phone: "1234567890",
-        career: "Computer Science",
-        totalAverage: 85,
-      },
-    ];
-  }
-
   table = createTable(readable(students), {
     page: addPagination(),
     sort: addSortBy(),
@@ -136,26 +113,36 @@
 </script>
 
 <DirectiveLayout
-  title="Students | Directive | Mock University" 
+  title="Students | Directive | Mock University"
   description="List of students registered in the system."
   keywords="Students, List, Table"
 >
   <section
     class="flex flex-col !items-center justify-center max-w-full md:max-w-[90%] w-full sm:mx-auto p-3"
   >
-  <div class="w-full flex justify-between items-center">
-    <h2
-    class="text-2xl md:text-3xl xl:text-5xl font-bold w-full text-left pb-1 md:pb-3"
-    >
-    Students
-  </h2>
-  <Button variant="outline" class="flex justify-center gap-x-3 items-center" href="/directive/students/view?id=add">
-    Add student
-    <ChevronRight class="w-6 h-6" />
-  </Button>
-</div>
+    <div class="w-full flex justify-between items-center">
+      <h2
+        class="text-2xl md:text-3xl xl:text-5xl font-bold w-full text-left pb-1 md:pb-3"
+      >
+        Students
+      </h2>
+      <Button
+        variant="outline"
+        class="flex justify-center gap-x-3 items-center"
+        href="/directive/students/view?id=add"
+      >
+        Add student
+        <ChevronRight class="w-6 h-6" />
+      </Button>
+    </div>
     <div class="w-full">
-      <DataTable {table} {columns} />
+      {#if students?.length === 0 || students === null}
+        <p class="text-center text-lg font-semibold text-muted-foreground p-10">
+          No students found. Add one.
+        </p>
+      {:else}
+        <DataTable {table} {columns} />
+      {/if}
     </div>
   </section>
 </DirectiveLayout>
