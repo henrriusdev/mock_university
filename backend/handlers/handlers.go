@@ -502,12 +502,12 @@ func (h *Handler) Students(i *inertia.Inertia) http.Handler {
 		studentDtos := make([]StudentsTableDto, len(students))
 		for i, student := range students {
 			studentDtos[i] = StudentsTableDto{
-				ID:           student.ID,
-				Name:         student.Edges.User.Name,
-				Avatar:       student.Edges.User.Avatar,
-				Email:        student.Edges.User.Email,
-				Phone:        student.Phone,
-				Career:       student.Edges.Career.Name,
+				ID:     student.ID,
+				Name:   student.Edges.User.Name,
+				Avatar: student.Edges.User.Avatar,
+				Email:  student.Edges.User.Email,
+				Phone:  student.Phone,
+				// Career:       student.Edges.Career.Name,
 				TotalAverage: student.TotalAverage,
 			}
 		}
@@ -578,9 +578,24 @@ func (h *Handler) Student(i *inertia.Inertia) http.Handler {
 			}
 		}
 
-		err := i.Render(w, r, "Directive/Students/Upsert", inertia.Props{
+		careers, err := h.DB.Careers.Query().All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		var careerDtos []SelectDto
+		for _, career := range careers {
+			careerDtos = append(careerDtos, SelectDto{
+				ID:   career.ID,
+				Name: career.Name,
+			})
+		}
+
+		err = i.Render(w, r, "Directive/Students/Upsert", inertia.Props{
 			"student": studentDto,
 			"user":    userDto,
+			"careers": careerDtos,
 		})
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
@@ -597,7 +612,12 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		r.ParseForm() // Parse the form to access its values
+		err := r.ParseMultipartForm(10 << 20) // 10 MB max file size
+		if err != nil {
+			err = errors.New(err.Error() + " parse")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
 
 		// Accediendo a los valores enviados por el formulario
 		phone := r.FormValue("phone")
@@ -613,17 +633,13 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 		name := r.FormValue("name")
 		email := r.FormValue("email")
 		username := r.FormValue("username")
-		err := r.ParseMultipartForm(10 << 20) // 10 MB max file size
-		if err != nil {
-			err = errors.New(err.Error() + " parse")
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
+
+		fmt.Println(phone, district, city, postalCode, address, identityCard, birthDate, cuAccumulated, semester, totalAverage, name, email, username)
 
 		// Obtener el archivo subido
 		file, handler, err := r.FormFile("avatar")
 		if err != nil {
-			err = errors.New(err.Error() + " file")
+			err = errors.New(err.Error() + " file 625")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
 		}
@@ -636,7 +652,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 		if err != nil {
 			err = os.MkdirAll("./uploads", os.ModePerm)
 			if err != nil {
-				err = errors.New(err.Error() + " file")
+				err = errors.New(err.Error() + " file 637")
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
@@ -645,7 +661,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 
 		_, err = io.Copy(f, file)
 		if err != nil {
-			err = errors.New(err.Error() + " file")
+			err = errors.New(err.Error() + " file 646")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
 		}

@@ -37,3 +37,8 @@ type UserDto struct {
 	Avatar   string `json:"avatar"`
 	Active   bool   `json:"active"`
 }
+
+type SelectDto struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
