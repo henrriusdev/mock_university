@@ -349,6 +349,7 @@ var (
 		{Name: "postal_code", Type: field.TypeInt},
 		{Name: "credit_units_accumulated", Type: field.TypeInt},
 		{Name: "total_average", Type: field.TypeFloat64},
+		{Name: "semester", Type: field.TypeInt},
 		{Name: "student_user", Type: field.TypeInt, Nullable: true},
 		{Name: "student_career", Type: field.TypeInt, Nullable: true},
 	}
@@ -360,13 +361,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "students_users_user",
-				Columns:    []*schema.Column{StudentsColumns[10]},
+				Columns:    []*schema.Column{StudentsColumns[11]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "students_careers_career",
-				Columns:    []*schema.Column{StudentsColumns[11]},
+				Columns:    []*schema.Column{StudentsColumns[12]},
 				RefColumns: []*schema.Column{CareersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

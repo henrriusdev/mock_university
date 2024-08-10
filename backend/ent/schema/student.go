@@ -23,6 +23,7 @@ func (Student) Fields() []ent.Field {
 		field.Int("postal_code").NonNegative(),
 		field.Int("credit_units_accumulated").NonNegative(),
 		field.Float("total_average").Positive().Max(20),
+		field.Int("semester").NonNegative(),
 	}
 }
 

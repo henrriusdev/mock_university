@@ -78,6 +78,12 @@ func (sc *StudentCreate) SetTotalAverage(f float64) *StudentCreate {
 	return sc
 }
 
+// SetSemester sets the "semester" field.
+func (sc *StudentCreate) SetSemester(i int) *StudentCreate {
+	sc.mutation.SetSemester(i)
+	return sc
+}
+
 // SetUserID sets the "user" edge to the Users entity by ID.
 func (sc *StudentCreate) SetUserID(id int) *StudentCreate {
 	sc.mutation.SetUserID(id)
@@ -247,6 +253,14 @@ func (sc *StudentCreate) check() error {
 			return &ValidationError{Name: "total_average", err: fmt.Errorf(`ent: validator failed for field "Student.total_average": %w`, err)}
 		}
 	}
+	if _, ok := sc.mutation.Semester(); !ok {
+		return &ValidationError{Name: "semester", err: errors.New(`ent: missing required field "Student.semester"`)}
+	}
+	if v, ok := sc.mutation.Semester(); ok {
+		if err := student.SemesterValidator(v); err != nil {
+			return &ValidationError{Name: "semester", err: fmt.Errorf(`ent: validator failed for field "Student.semester": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -308,6 +322,10 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 	if value, ok := sc.mutation.TotalAverage(); ok {
 		_spec.SetField(student.FieldTotalAverage, field.TypeFloat64, value)
 		_node.TotalAverage = value
+	}
+	if value, ok := sc.mutation.Semester(); ok {
+		_spec.SetField(student.FieldSemester, field.TypeInt, value)
+		_node.Semester = value
 	}
 	if nodes := sc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

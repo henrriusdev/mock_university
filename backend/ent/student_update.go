@@ -179,6 +179,27 @@ func (su *StudentUpdate) AddTotalAverage(f float64) *StudentUpdate {
 	return su
 }
 
+// SetSemester sets the "semester" field.
+func (su *StudentUpdate) SetSemester(i int) *StudentUpdate {
+	su.mutation.ResetSemester()
+	su.mutation.SetSemester(i)
+	return su
+}
+
+// SetNillableSemester sets the "semester" field if the given value is not nil.
+func (su *StudentUpdate) SetNillableSemester(i *int) *StudentUpdate {
+	if i != nil {
+		su.SetSemester(*i)
+	}
+	return su
+}
+
+// AddSemester adds i to the "semester" field.
+func (su *StudentUpdate) AddSemester(i int) *StudentUpdate {
+	su.mutation.AddSemester(i)
+	return su
+}
+
 // SetUserID sets the "user" edge to the Users entity by ID.
 func (su *StudentUpdate) SetUserID(id int) *StudentUpdate {
 	su.mutation.SetUserID(id)
@@ -375,6 +396,11 @@ func (su *StudentUpdate) check() error {
 			return &ValidationError{Name: "total_average", err: fmt.Errorf(`ent: validator failed for field "Student.total_average": %w`, err)}
 		}
 	}
+	if v, ok := su.mutation.Semester(); ok {
+		if err := student.SemesterValidator(v); err != nil {
+			return &ValidationError{Name: "semester", err: fmt.Errorf(`ent: validator failed for field "Student.semester": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -425,6 +451,12 @@ func (su *StudentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := su.mutation.AddedTotalAverage(); ok {
 		_spec.AddField(student.FieldTotalAverage, field.TypeFloat64, value)
+	}
+	if value, ok := su.mutation.Semester(); ok {
+		_spec.SetField(student.FieldSemester, field.TypeInt, value)
+	}
+	if value, ok := su.mutation.AddedSemester(); ok {
+		_spec.AddField(student.FieldSemester, field.TypeInt, value)
 	}
 	if su.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -741,6 +773,27 @@ func (suo *StudentUpdateOne) AddTotalAverage(f float64) *StudentUpdateOne {
 	return suo
 }
 
+// SetSemester sets the "semester" field.
+func (suo *StudentUpdateOne) SetSemester(i int) *StudentUpdateOne {
+	suo.mutation.ResetSemester()
+	suo.mutation.SetSemester(i)
+	return suo
+}
+
+// SetNillableSemester sets the "semester" field if the given value is not nil.
+func (suo *StudentUpdateOne) SetNillableSemester(i *int) *StudentUpdateOne {
+	if i != nil {
+		suo.SetSemester(*i)
+	}
+	return suo
+}
+
+// AddSemester adds i to the "semester" field.
+func (suo *StudentUpdateOne) AddSemester(i int) *StudentUpdateOne {
+	suo.mutation.AddSemester(i)
+	return suo
+}
+
 // SetUserID sets the "user" edge to the Users entity by ID.
 func (suo *StudentUpdateOne) SetUserID(id int) *StudentUpdateOne {
 	suo.mutation.SetUserID(id)
@@ -950,6 +1003,11 @@ func (suo *StudentUpdateOne) check() error {
 			return &ValidationError{Name: "total_average", err: fmt.Errorf(`ent: validator failed for field "Student.total_average": %w`, err)}
 		}
 	}
+	if v, ok := suo.mutation.Semester(); ok {
+		if err := student.SemesterValidator(v); err != nil {
+			return &ValidationError{Name: "semester", err: fmt.Errorf(`ent: validator failed for field "Student.semester": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -1017,6 +1075,12 @@ func (suo *StudentUpdateOne) sqlSave(ctx context.Context) (_node *Student, err e
 	}
 	if value, ok := suo.mutation.AddedTotalAverage(); ok {
 		_spec.AddField(student.FieldTotalAverage, field.TypeFloat64, value)
+	}
+	if value, ok := suo.mutation.Semester(); ok {
+		_spec.SetField(student.FieldSemester, field.TypeInt, value)
+	}
+	if value, ok := suo.mutation.AddedSemester(); ok {
+		_spec.AddField(student.FieldSemester, field.TypeInt, value)
 	}
 	if suo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -100,6 +100,11 @@ func TotalAverage(v float64) predicate.Student {
 	return predicate.Student(sql.FieldEQ(FieldTotalAverage, v))
 }
 
+// Semester applies equality check predicate on the "semester" field. It's identical to SemesterEQ.
+func Semester(v int) predicate.Student {
+	return predicate.Student(sql.FieldEQ(FieldSemester, v))
+}
+
 // IdentityCardEQ applies the EQ predicate on the "identity_card" field.
 func IdentityCardEQ(v string) predicate.Student {
 	return predicate.Student(sql.FieldEQ(FieldIdentityCard, v))
@@ -583,6 +588,46 @@ func TotalAverageLT(v float64) predicate.Student {
 // TotalAverageLTE applies the LTE predicate on the "total_average" field.
 func TotalAverageLTE(v float64) predicate.Student {
 	return predicate.Student(sql.FieldLTE(FieldTotalAverage, v))
+}
+
+// SemesterEQ applies the EQ predicate on the "semester" field.
+func SemesterEQ(v int) predicate.Student {
+	return predicate.Student(sql.FieldEQ(FieldSemester, v))
+}
+
+// SemesterNEQ applies the NEQ predicate on the "semester" field.
+func SemesterNEQ(v int) predicate.Student {
+	return predicate.Student(sql.FieldNEQ(FieldSemester, v))
+}
+
+// SemesterIn applies the In predicate on the "semester" field.
+func SemesterIn(vs ...int) predicate.Student {
+	return predicate.Student(sql.FieldIn(FieldSemester, vs...))
+}
+
+// SemesterNotIn applies the NotIn predicate on the "semester" field.
+func SemesterNotIn(vs ...int) predicate.Student {
+	return predicate.Student(sql.FieldNotIn(FieldSemester, vs...))
+}
+
+// SemesterGT applies the GT predicate on the "semester" field.
+func SemesterGT(v int) predicate.Student {
+	return predicate.Student(sql.FieldGT(FieldSemester, v))
+}
+
+// SemesterGTE applies the GTE predicate on the "semester" field.
+func SemesterGTE(v int) predicate.Student {
+	return predicate.Student(sql.FieldGTE(FieldSemester, v))
+}
+
+// SemesterLT applies the LT predicate on the "semester" field.
+func SemesterLT(v int) predicate.Student {
+	return predicate.Student(sql.FieldLT(FieldSemester, v))
+}
+
+// SemesterLTE applies the LTE predicate on the "semester" field.
+func SemesterLTE(v int) predicate.Student {
+	return predicate.Student(sql.FieldLTE(FieldSemester, v))
 }
 
 // HasUser applies the HasEdge predicate on the "user" edge.
