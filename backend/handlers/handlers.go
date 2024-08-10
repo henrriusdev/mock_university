@@ -613,38 +613,41 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 		name := r.FormValue("name")
 		email := r.FormValue("email")
 		username := r.FormValue("username")
-		avatar, header, err := r.FormFile("avatar")
+		err := r.ParseMultipartForm(10 << 20) // 10 MB max file size
 		if err != nil {
+			err = errors.New(err.Error() + " parse")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
 		}
 
-		path := ""
-		// guardar la imagen en el servidor
-		if avatar != nil {
+		// Obtener el archivo subido
+		file, handler, err := r.FormFile("avatar")
+		if err != nil {
+			err = errors.New(err.Error() + " file")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+		defer file.Close()
 
-			filename := username + "_" + "avatar." + header.Header.Get("Content-Type")
-			file, err := os.Create("public/images/" + filename)
+		// Puedes leer el archivo o guardarlo directamente en el servidor
+		// Aquí se lee el archivo y se guarda en el disco
+		filePath := "./uploads/" + username + "_avatar" + filepath.Ext(handler.Filename)
+		f, err := os.Create(filePath)
+		if err != nil {
+			err = os.MkdirAll("./uploads", os.ModePerm)
 			if err != nil {
-				err = errors.New(err.Error() + " avatar")
+				err = errors.New(err.Error() + " file")
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
-			defer file.Close()
+		}
+		defer f.Close()
 
-			path, err = filepath.Abs(file.Name())
-			if err != nil {
-				err = errors.New(err.Error() + " avatar")
-				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
-			}
-
-			_, err = io.Copy(file, avatar)
-			if err != nil {
-				err = errors.New(err.Error() + " avatar")
-				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
-			}
+		_, err = io.Copy(f, file)
+		if err != nil {
+			err = errors.New(err.Error() + " file")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
 		}
 
 		hashedPassword, err := utils.HashPassword(identityCard)
@@ -689,7 +692,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		user, err := h.DB.Users.Create().SetEmail(email).SetUsername(username).SetPassword(hashedPassword).SetName(name).SetAvatar(path).SetIsActive(true).SetRoleID(6).Save(r.Context())
+		user, err := h.DB.Users.Create().SetEmail(email).SetUsername(username).SetPassword(hashedPassword).SetName(name).SetAvatar(filePath).SetIsActive(true).SetRoleID(6).Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return

@@ -1,5 +1,5 @@
 <script>
-  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: Date, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number}} Student */
+  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: import('@internationalized/date').DateValue, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number}} Student */
 
   /** @typedef{{id: number, name: string, email: string, username: string, avatar: string, active: boolean}} User */
   import { Camera, ChevronLeft } from "lucide-svelte";
@@ -19,7 +19,7 @@
   /** @type {User | null} */
   export let user = null;
 
-  let birthDate = student?.birthDate || "";
+  let birthDate = student?.birthDate;
 
   /** @type {string | ArrayBuffer | null} */
   let avatar = user?.avatar || "";
@@ -79,7 +79,7 @@
             {/if}
           </h1>
         </div>
-        <form
+        <form method="post" action="/directive/students/view/submit" enctype="multipart/form-data"
           class="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8"
         >
           <div
