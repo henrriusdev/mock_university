@@ -30,6 +30,8 @@ const (
 	FieldCreditUnitsAccumulated = "credit_units_accumulated"
 	// FieldTotalAverage holds the string denoting the total_average field in the database.
 	FieldTotalAverage = "total_average"
+	// FieldSemester holds the string denoting the semester field in the database.
+	FieldSemester = "semester"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// EdgeNotes holds the string denoting the notes edge name in mutations.
@@ -82,6 +84,7 @@ var Columns = []string{
 	FieldPostalCode,
 	FieldCreditUnitsAccumulated,
 	FieldTotalAverage,
+	FieldSemester,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "students"
@@ -123,6 +126,8 @@ var (
 	CreditUnitsAccumulatedValidator func(int) error
 	// TotalAverageValidator is a validator for the "total_average" field. It is called by the builders before save.
 	TotalAverageValidator func(float64) error
+	// SemesterValidator is a validator for the "semester" field. It is called by the builders before save.
+	SemesterValidator func(int) error
 )
 
 // OrderOption defines the ordering options for the Student queries.
@@ -176,6 +181,11 @@ func ByCreditUnitsAccumulated(opts ...sql.OrderTermOption) OrderOption {
 // ByTotalAverage orders the results by the total_average field.
 func ByTotalAverage(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTotalAverage, opts...).ToFunc()
+}
+
+// BySemester orders the results by the semester field.
+func BySemester(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSemester, opts...).ToFunc()
 }
 
 // ByUserField orders the results by user field.

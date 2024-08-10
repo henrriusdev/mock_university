@@ -9165,6 +9165,8 @@ type StudentMutation struct {
 	addcredit_units_accumulated *int
 	total_average               *float64
 	addtotal_average            *float64
+	semester                    *int
+	addsemester                 *int
 	clearedFields               map[string]struct{}
 	user                        *int
 	cleareduser                 bool
@@ -9663,6 +9665,62 @@ func (m *StudentMutation) ResetTotalAverage() {
 	m.addtotal_average = nil
 }
 
+// SetSemester sets the "semester" field.
+func (m *StudentMutation) SetSemester(i int) {
+	m.semester = &i
+	m.addsemester = nil
+}
+
+// Semester returns the value of the "semester" field in the mutation.
+func (m *StudentMutation) Semester() (r int, exists bool) {
+	v := m.semester
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSemester returns the old "semester" field's value of the Student entity.
+// If the Student object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StudentMutation) OldSemester(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSemester is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSemester requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSemester: %w", err)
+	}
+	return oldValue.Semester, nil
+}
+
+// AddSemester adds i to the "semester" field.
+func (m *StudentMutation) AddSemester(i int) {
+	if m.addsemester != nil {
+		*m.addsemester += i
+	} else {
+		m.addsemester = &i
+	}
+}
+
+// AddedSemester returns the value that was added to the "semester" field in this mutation.
+func (m *StudentMutation) AddedSemester() (r int, exists bool) {
+	v := m.addsemester
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSemester resets all changes to the "semester" field.
+func (m *StudentMutation) ResetSemester() {
+	m.semester = nil
+	m.addsemester = nil
+}
+
 // SetUserID sets the "user" edge to the Users entity by id.
 func (m *StudentMutation) SetUserID(id int) {
 	m.user = &id
@@ -9883,7 +9941,7 @@ func (m *StudentMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *StudentMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.identity_card != nil {
 		fields = append(fields, student.FieldIdentityCard)
 	}
@@ -9911,6 +9969,9 @@ func (m *StudentMutation) Fields() []string {
 	if m.total_average != nil {
 		fields = append(fields, student.FieldTotalAverage)
 	}
+	if m.semester != nil {
+		fields = append(fields, student.FieldSemester)
+	}
 	return fields
 }
 
@@ -9937,6 +9998,8 @@ func (m *StudentMutation) Field(name string) (ent.Value, bool) {
 		return m.CreditUnitsAccumulated()
 	case student.FieldTotalAverage:
 		return m.TotalAverage()
+	case student.FieldSemester:
+		return m.Semester()
 	}
 	return nil, false
 }
@@ -9964,6 +10027,8 @@ func (m *StudentMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldCreditUnitsAccumulated(ctx)
 	case student.FieldTotalAverage:
 		return m.OldTotalAverage(ctx)
+	case student.FieldSemester:
+		return m.OldSemester(ctx)
 	}
 	return nil, fmt.Errorf("unknown Student field %s", name)
 }
@@ -10036,6 +10101,13 @@ func (m *StudentMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetTotalAverage(v)
 		return nil
+	case student.FieldSemester:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSemester(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Student field %s", name)
 }
@@ -10053,6 +10125,9 @@ func (m *StudentMutation) AddedFields() []string {
 	if m.addtotal_average != nil {
 		fields = append(fields, student.FieldTotalAverage)
 	}
+	if m.addsemester != nil {
+		fields = append(fields, student.FieldSemester)
+	}
 	return fields
 }
 
@@ -10067,6 +10142,8 @@ func (m *StudentMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedCreditUnitsAccumulated()
 	case student.FieldTotalAverage:
 		return m.AddedTotalAverage()
+	case student.FieldSemester:
+		return m.AddedSemester()
 	}
 	return nil, false
 }
@@ -10096,6 +10173,13 @@ func (m *StudentMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddTotalAverage(v)
+		return nil
+	case student.FieldSemester:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSemester(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Student numeric field %s", name)
@@ -10150,6 +10234,9 @@ func (m *StudentMutation) ResetField(name string) error {
 		return nil
 	case student.FieldTotalAverage:
 		m.ResetTotalAverage()
+		return nil
+	case student.FieldSemester:
+		m.ResetSemester()
 		return nil
 	}
 	return fmt.Errorf("unknown Student field %s", name)

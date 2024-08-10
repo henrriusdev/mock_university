@@ -541,6 +541,10 @@ func init() {
 			return nil
 		}
 	}()
+	// studentDescSemester is the schema descriptor for semester field.
+	studentDescSemester := studentFields[9].Descriptor()
+	// student.SemesterValidator is a validator for the "semester" field. It is called by the builders before save.
+	student.SemesterValidator = studentDescSemester.Validators[0].(func(int) error)
 	subjectFields := schema.Subject{}.Fields()
 	_ = subjectFields
 	// subjectDescName is the schema descriptor for name field.

@@ -37,6 +37,8 @@ type Student struct {
 	CreditUnitsAccumulated int `json:"credit_units_accumulated,omitempty"`
 	// TotalAverage holds the value of the "total_average" field.
 	TotalAverage float64 `json:"total_average,omitempty"`
+	// Semester holds the value of the "semester" field.
+	Semester int `json:"semester,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the StudentQuery when eager-loading is set.
 	Edges          StudentEdges `json:"edges"`
@@ -107,7 +109,7 @@ func (*Student) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case student.FieldTotalAverage:
 			values[i] = new(sql.NullFloat64)
-		case student.FieldID, student.FieldPostalCode, student.FieldCreditUnitsAccumulated:
+		case student.FieldID, student.FieldPostalCode, student.FieldCreditUnitsAccumulated, student.FieldSemester:
 			values[i] = new(sql.NullInt64)
 		case student.FieldIdentityCard, student.FieldPhone, student.FieldAddress, student.FieldDistrict, student.FieldCity:
 			values[i] = new(sql.NullString)
@@ -191,6 +193,12 @@ func (s *Student) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field total_average", values[i])
 			} else if value.Valid {
 				s.TotalAverage = value.Float64
+			}
+		case student.FieldSemester:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field semester", values[i])
+			} else if value.Valid {
+				s.Semester = int(value.Int64)
 			}
 		case student.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -288,6 +296,9 @@ func (s *Student) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("total_average=")
 	builder.WriteString(fmt.Sprintf("%v", s.TotalAverage))
+	builder.WriteString(", ")
+	builder.WriteString("semester=")
+	builder.WriteString(fmt.Sprintf("%v", s.Semester))
 	builder.WriteByte(')')
 	return builder.String()
 }
