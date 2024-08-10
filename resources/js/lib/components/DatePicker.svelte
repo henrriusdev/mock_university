@@ -1,15 +1,16 @@
 <script>
-  import CalendarIcon from "lucide-svelte/icons/calendar";
+  import {CalendarIcon} from "lucide-svelte";
   import { DateFormatter, getLocalTimeZone } from "@internationalized/date";
   import { cn } from "$lib/utils.js";
   import { Button } from "$lib/components/ui/button/index.js";
-  import { Calendar } from "$lib/components/ui/calendar/index.js";
+  import { Calendar, CalendarSelect } from "$lib/components/ui/calendar/index.js";
   import * as Popover from "$lib/components/ui/popover/index.js";
 
   const df = new DateFormatter("en-US", {
     dateStyle: "long",
   });
 
+  /** @type {import('@internationalized/date').DateValue | undefined} */
   export let value = undefined;
 </script>
 
@@ -28,6 +29,6 @@
     </Button>
   </Popover.Trigger>
   <Popover.Content class="w-auto p-0">
-    <Calendar bind:value initialFocus />
+    <CalendarSelect bind:value initialFocus  />
   </Popover.Content>
 </Popover.Root>
