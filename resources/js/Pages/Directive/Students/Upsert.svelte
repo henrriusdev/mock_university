@@ -1,5 +1,5 @@
 <script>
-  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: string, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number}} Student */
+  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: import('@internationalized/date').DateValue, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number, career: number}} Student */
 
   /** @typedef{{id: number, name: string, email: string, username: string, avatar: string, active: boolean}} User */
   import { Camera, ChevronLeft } from "lucide-svelte";
@@ -11,12 +11,49 @@
   import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
   import DatePicker from "$lib/components/DatePicker.svelte";
   import Textarea from "$lib/components/ui/textarea/textarea.svelte";
+  import { identityMask } from "$lib/utils";
+  import * as Select from "$lib/components/ui/select/index.js";
+  import Combobox from "$lib/components/Combobox.svelte";
 
   /** @type {Student | null} */
   export let student = null;
 
   /** @type {User | null} */
   export let user = null;
+
+  /** @type {Array<{id: number, name: string}>} */
+  export let careers = [];
+
+  let birthDate = student?.birthDate;
+
+  /** @type {string | ArrayBuffer | null} */
+  let avatar = user?.avatar || "";
+
+  /** @type {File | null} */
+  let imageFile = null;
+  /**
+   *
+   * @param event {Event}
+   */
+  function handleImageUpload(event) {
+    // @ts-ignore
+    const file = event.target?.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        avatar = e.target?.result ?? ""; // Actualiza la previsualización
+      };
+      reader.readAsDataURL(file);
+      imageFile = file; // Guarda el archivo seleccionado
+    }
+  }
+
+  function triggerFileInput() {
+    document.getElementById("fileInput")?.click();
+  }
+
+  export let errors;
+  $: console.log(errors);
 </script>
 
 <DirectiveLayout
@@ -47,7 +84,7 @@
             {/if}
           </h1>
         </div>
-        <form
+        <form method="post" action="/directive/students/view/submit" enctype="multipart/form-data"
           class="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8"
         >
           <div
@@ -66,32 +103,59 @@
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
                     <Label for="phone">Phone</Label>
-                    <MaskInput id="phone" type="tel" mask="(000) 000-00-00" value={student?.phone} />
+                    <MaskInput
+                      id="phone"
+                      imask="{{ mask: '(000) 000-00-00' }}"
+                      value="{student?.phone ?? ''}"
+                      name="phone"
+                    />
                   </span>
                   <span
-                  class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
-                  <Label for="district">District</Label>
-                  <Input id="district" type="text" value={student?.district} />
-                </span>
-                <span
-                class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-                >
-                <Label for="city">City</Label>
-                <Input id="city" type="text" value={student?.city} />
-              </span>
-              <span
-              class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-              >
-              <Label for="postalCode">Postal Code</Label>
-              <MaskInput id="postalCode" type="text" mask="00000" value={student?.postalCode} />
-            </span>
-            <span
-              class="text-sm font-semibold text-muted-foreground lg:col-span-4"
-            >
-              <Label for="address">Address</Label>
-              <Textarea id="address" value={student?.address} />
-            </span>
+                    <Label for="district">District</Label>
+                    <Input
+                      id="district"
+                      type="text"
+                      value="{student?.district}"
+                      name="district"
+                    />
+                  </span>
+                  <span
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                  >
+                    <Label for="city">City</Label>
+                    <Input
+                      id="city"
+                      type="text"
+                      value="{student?.city}"
+                      name="city"
+                    />
+                  </span>
+                  <span
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                  >
+                    <Label for="postalCode">Postal Code</Label>
+                    <MaskInput
+                      id="postalCode"
+                      unmask="none"
+                      imask="{{ mask: '00000' }}"
+                      value="{student?.id !== 0
+                        ? student?.postalCode ?? ''
+                        : ''}"
+                      name="postalCode"
+                    />
+                  </span>
+                  <span
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-4"
+                  >
+                    <Label for="address">Address</Label>
+                    <Textarea
+                      id="address"
+                      value="{student?.address}"
+                      name="address"
+                    />
+                  </span>
                 </div>
               </Card.Content>
             </Card.Root>
@@ -110,16 +174,23 @@
                     <Label for="identityCard">Identity Card</Label>
                     <MaskInput
                       id="identityCard"
-                      type="text"
-                      mask="V-000000000"
-                      value={student?.identityCard}
+                      unmask="none"
+                      imask="{identityMask}"
+                      value="{student?.identityCard ?? ''}"
+                      name="identityCard"
                     />
                   </span>
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
                     <Label for="birthDate">Birth Date</Label>
-                    <DatePicker value={student?.birthDate} />
+                    <DatePicker bind:value="{birthDate}" />
+                    <input
+                      type="hidden"
+                      id="birthDate"
+                      name="birthDate"
+                      bind:value="{birthDate}"
+                    />
                   </span>
                 </div>
               </Card.Content>
@@ -139,14 +210,45 @@
                     <Label for="creditUnitsAccumulated"
                       >Credit Units Accumulated</Label
                     >
-                    <Input id="creditUnitsAccumulated" type="number" value={student?.creditUnitsAccumulated}/>
+                    <Input
+                      id="creditUnitsAccumulated"
+                      name="creditUnitsAccumulated"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value="{student?.creditUnitsAccumulated}"
+                    />
+                  </span>
+                  <span
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                  >
+                    <Label for="totalAverage">Total Average</Label>
+                    <Input
+                      id="totalAverage"
+                      type="number"
+                      min="0"
+                      max="20"
+                      value="{student?.totalAverage}"
+                      name="totalAverage"
+                    />
                   </span>
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
                     <Label for="totalAverage">Semester</Label>
-                    <Input id="semester" type="number" min="1" max="10" value={student?.semester} />
+                    <Input
+                      id="semester"
+                      type="number"
+                      min="1"
+                      max="10"
+                      value="{student?.semester}"
+                      name="semester"
+                    />
                   </span>
+                  <span
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2">
+                    <Label for="career">Career</Label>
+                    <Combobox options={careers.map((c) => ({ value: c.id.toString(), label: c.name }))} value={student?.career?.toString() ?? ''} />
                 </div>
               </Card.Content>
             </Card.Root>
@@ -162,33 +264,69 @@
               <Card.Content>
                 <!-- Make a image rounded of the avatar with a button for change it -->
                 <div class="flex flex-col gap-4">
-                  <div class="flex flex-col gap-4 items-start justify-start">
-                    <img
-                      src="{user?.avatar ??
-                        'https://avatars.dicebear.com/api/avatars/1.svg'}"
-                      alt="Avatar"
-                      class="rounded-full w-24 h-24"
-                    />
-                    <Button
-                      variant="default"
-                      class="flex justify-center gap-x-3 items-center rounded-full"
-                      size="icon"
+                  <div class="flex flex-col items-center">
+                    <div
+                      class="relative {avatar
+                        ? 'w-24 md:w-full h-24 md:h-60 rounded-full'
+                        : 'w-full'}"
                     >
-                      <Camera class="w-8 h-8 p-1" />
-                    </Button>
+                      {#if avatar}
+                        <img
+                          src="{avatar}"
+                          alt="Avatar"
+                          class="rounded-full w-24 md:w-full h-24 md:h-60"
+                        />
+                      {/if}
+                      <Button
+                        variant="default"
+                        class="{avatar
+                          ? 'absolute'
+                          : 'mt-4 ml-6 -mb-3'} bottom-0 right-0 rounded-full p-2 shadow-lg -translate-x-4 -translate-y-4 w-fit flex justify-center items-center gap-x-3"
+                        size="icon"
+                        on:click="{triggerFileInput}"
+                      >
+                        {#if !avatar}
+                          Load image
+                        {/if}
+                        <Camera class="w-6 md:w-18 h-6 md:h-18" />
+                      </Button>
+                    </div>
+                    <input
+                      id="fileInput"
+                      type="file"
+                      accept="image/*"
+                      on:change="{handleImageUpload}"
+                      class="sr-only"
+                      name="avatar"
+                    />
                   </div>
                   <div class="grid gap-4 w-full">
                     <span class="text-sm font-semibold text-muted-foreground">
                       <Label for="name">Name</Label>
-                      <Input id="name" type="text" value={user?.name} />
+                      <Input
+                        id="name"
+                        type="text"
+                        value="{user?.name}"
+                        name="name"
+                      />
                     </span>
                     <span class="text-sm font-semibold text-muted-foreground">
                       <Label for="email">Email</Label>
-                      <Input id="email" type="email" value={user?.email} />
+                      <Input
+                        id="email"
+                        type="email"
+                        value="{user?.email}"
+                        name="email"
+                      />
                     </span>
                     <span class="text-sm font-semibold text-muted-foreground">
                       <Label for="username">Username</Label>
-                      <Input id="username" type="text" value={user?.username} />
+                      <Input
+                        id="username"
+                        type="text"
+                        value="{user?.username}"
+                        name="username"
+                      />
                     </span>
                   </div>
                 </div>

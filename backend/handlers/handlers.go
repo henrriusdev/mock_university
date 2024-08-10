@@ -1,11 +1,16 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
+	"mocku/backend/ent"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/student"
@@ -498,12 +503,12 @@ func (h *Handler) Students(i *inertia.Inertia) http.Handler {
 		studentDtos := make([]StudentsTableDto, len(students))
 		for i, student := range students {
 			studentDtos[i] = StudentsTableDto{
-				ID:           student.ID,
-				Name:         student.Edges.User.Name,
-				Avatar:       student.Edges.User.Avatar,
-				Email:        student.Edges.User.Email,
-				Phone:        student.Phone,
-				Career:       student.Edges.Career.Name,
+				ID:     student.ID,
+				Name:   student.Edges.User.Name,
+				Avatar: student.Edges.User.Avatar,
+				Email:  student.Edges.User.Email,
+				Phone:  student.Phone,
+				// Career:       student.Edges.Career.Name,
 				TotalAverage: student.TotalAverage,
 			}
 		}
@@ -574,14 +579,219 @@ func (h *Handler) Student(i *inertia.Inertia) http.Handler {
 			}
 		}
 
-		err := i.Render(w, r, "Directive/Students/Upsert", inertia.Props{
+		careers, err := h.DB.Careers.Query().All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		var careerDtos []SelectDto
+		for _, career := range careers {
+			careerDtos = append(careerDtos, SelectDto{
+				ID:   career.ID,
+				Name: career.Name,
+			})
+		}
+
+		err = i.Render(w, r, "Directive/Students/Upsert", inertia.Props{
 			"student": studentDto,
 			"user":    userDto,
+			"careers": careerDtos,
 		})
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
 		}
+	}
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.NotFound(w, r)
+			return
+		}
+
+		err := r.ParseMultipartForm(10 << 20) // 10 MB max file size
+		if err != nil {
+			err = errors.New(err.Error() + " parse")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		// Accediendo a los valores enviados por el formulario
+		phone := r.FormValue("phone")
+		district := r.FormValue("district")
+		city := r.FormValue("city")
+		postalCode := r.FormValue("postalCode")
+		address := r.FormValue("address")
+		identityCard := r.FormValue("identityCard")
+		birthDate := r.FormValue("birthDate")
+		cuAccumulated := r.FormValue("creditUnitsAccumulated")
+		semester := r.FormValue("semester")
+		totalAverage := r.FormValue("totalAverage")
+		name := r.FormValue("name")
+		email := r.FormValue("email")
+		username := r.FormValue("username")
+
+		fmt.Println(phone, district, city, postalCode, address, identityCard, birthDate, cuAccumulated, semester, totalAverage, name, email, username)
+
+		// Obtener el archivo subido
+		file, handler, err := r.FormFile("avatar")
+		if err != nil {
+			err = errors.New(err.Error() + " file 625")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+		defer file.Close()
+
+		// Puedes leer el archivo o guardarlo directamente en el servidor
+		// Aquí se lee el archivo y se guarda en el disco
+		filePath := "./uploads/" + username + "_avatar" + filepath.Ext(handler.Filename)
+		f, err := os.Create(filePath)
+		if err != nil {
+			err = os.MkdirAll("./uploads", os.ModePerm)
+			if err != nil {
+				err = errors.New(err.Error() + " file 637")
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+		}
+		defer f.Close()
+
+		_, err = io.Copy(f, file)
+		if err != nil {
+			err = errors.New(err.Error() + " file 646")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		hashedPassword, err := utils.HashPassword(identityCard)
+		if err != nil {
+			err = errors.New(err.Error() + " password")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		postalCodeInt, err := strconv.Atoi(postalCode)
+		if err != nil {
+			err = errors.New(err.Error() + " postalCode")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		birthDateTime, err := utils.ParseDate(birthDate)
+		if err != nil {
+			err = errors.New(err.Error() + " birthDate")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		creditUnitsAccumulated, err := strconv.Atoi(cuAccumulated)
+		if err != nil {
+			err = errors.New(err.Error() + " creditUnitsAccumulated")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		semesterInt, err := strconv.Atoi(semester)
+		if err != nil {
+			err = errors.New(err.Error() + " semester")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		totalAverageFloat, err := strconv.ParseFloat(totalAverage, 64)
+		if err != nil {
+			err = errors.New(err.Error() + " totalAverage")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		user, err := h.DB.Users.Create().SetEmail(email).SetUsername(username).SetPassword(hashedPassword).SetName(name).SetAvatar(filePath).SetIsActive(true).SetRoleID(6).Save(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		_, err = h.DB.Student.Create().SetPhone(phone).SetDistrict(district).SetCity(city).SetPostalCode(postalCodeInt).SetAddress(address).SetIdentityCard(identityCard).SetBirthDate(birthDateTime).SetCreditUnitsAccumulated(creditUnitsAccumulated).SetSemester(semesterInt).SetTotalAverage(totalAverageFloat).SetUser(user).Save(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		// Redirigir o responder al cliente
+		http.Redirect(w, r, "/directive/students", http.StatusSeeOther)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) Careers(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		// get leader inside the user name
+		careers, err := h.DB.Careers.Query().WithLeader(func(query *ent.ProfessorQuery) { query.WithUser() }).All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		careerDtos := make([]CareerDto, len(careers))
+		for i, career := range careers {
+			careerDtos[i] = CareerDto{
+				ID:         career.ID,
+				Name:       career.Name,
+				LeaderName: career.Edges.Leader.Edges.User.Name,
+				LeaderId:   career.Edges.Leader.Edges.User.ID,
+			}
+		}
+
+		err = i.Render(w, r, "Directive/Careers", inertia.Props{
+			"careers": careerDtos,
+		})
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+	}
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) Career(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.NotFound(w, r)
+			return
+		}
+
+		err := r.ParseForm()
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		name := r.FormValue("name")
+		leaderId := r.FormValue("leader")
+		var leader int
+		if leaderId != "" {
+			leader, err = strconv.Atoi(leaderId)
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			_, err = h.DB.Careers.Create().SetName(name).SetLeaderID(leader).Save(r.Context())
+		} else {
+			_, err = h.DB.Careers.Create().SetName(name).Save(r.Context())
+		}
+
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		i.Redirect(w, r, "/directive/careers", 302)
 	}
 	return http.HandlerFunc(fn)
 }

@@ -37,3 +37,15 @@ type UserDto struct {
 	Avatar   string `json:"avatar"`
 	Active   bool   `json:"active"`
 }
+
+type SelectDto struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type CareerDto struct {
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	LeaderName string `json:"leader"`
+	LeaderId   int    `json:"leaderId"`
+}

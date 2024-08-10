@@ -43,6 +43,9 @@ func MountApp() {
 	// Directives routes
 	mux.Handle("/directive/students", i.Middleware(handler.Students(i)))
 	mux.Handle("/directive/students/view", i.Middleware(handler.Student(i)))
+	mux.Handle("/directive/students/view/submit", i.Middleware(handler.StudentPost(i)))
+	mux.Handle("/directive/careers", i.Middleware(handler.Careers(i)))
+	mux.Handle("/directive/careers/submit", i.Middleware(handler.Career(i)))
 	mux.Handle("/settings/notes/percentages", i.Middleware(handler.SettingsNotesPercentagePostHandler(i)))
 	mux.Handle("/settings/payment", i.Middleware(handler.SettingsPaymentsPostHandler(i)))
 	mux.Handle("/settings/payment/dates", i.Middleware(handler.SettingsPaymentsDatesPostHandler(i)))
