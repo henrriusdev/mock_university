@@ -10,7 +10,7 @@
 
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
-  import { Input } from "$lib/components/ui/input/index.js";
+  import { Input, MaskInput } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
 
@@ -52,22 +52,28 @@ description="Add or update a student of the MockUniversity" keywords="add, updat
                 </Card.Description>
               </Card.Header>
               <Card.Content>
-                <div class="grid gap-4 md:grid-cols-2">
-                  <div class="grid gap-4 md:col-span-2 md:grid-cols-3">
+                <div class="grid gap-4 lg:grid-cols-4">
+                    <span class="text-sm font-semibold text-muted-foreground lg:col-span-2">
                       <Label for="phone">Phone</Label>
-                      <Input id="phone" type="tel" />
-                  </div>
-                  <div class="grid gap-4 md:col-span-2 md:grid-cols-3">
+                      <MaskInput id="phone" type="tel" mask="(000) 000-00-00" />
+                    </span>
+                    <span class="text-sm font-semibold text-muted-foreground lg:col-span-2">
                       <Label for="address">Address</Label>
                       <Input id="address" type="text" />
+                    </span>
+                    <span class="text-sm font-semibold text-muted-foreground lg:col-span-2">
                       <Label for="district">District</Label>
                       <Input id="district" type="text" />
+                    </span>
+                    <span class="text-sm font-semibold text-muted-foreground lg:col-span-2">
                       <Label for="city">City</Label>
                       <Input id="city" type="text" />
+                    </span>
+                    <span class="text-sm font-semibold text-muted-foreground lg:col-span-2">
                       <Label for="postalCode">Postal Code</Label>
-                      <Input id="postalCode" type="text" />
+                      <MaskInput id="postalCode" type="text" mask="00000" />
+                    </span>
                   </div>
-                </div>
               </Card.Content>
             </Card.Root>
             <Card.Root>
