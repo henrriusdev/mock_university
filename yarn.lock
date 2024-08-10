@@ -715,7 +715,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bits-ui@npm:^0.21.12":
+"bits-ui@npm:^0.21.13":
   version: 0.21.13
   resolution: "bits-ui@npm:0.21.13"
   dependencies:
@@ -2787,7 +2787,7 @@ __metadata:
     "@sveltejs/vite-plugin-svelte": "npm:^3.1.1"
     "@tailwindcss/typography": "npm:^0.5.13"
     autoprefixer: "npm:^10.4.19"
-    bits-ui: "npm:^0.21.12"
+    bits-ui: "npm:^0.21.13"
     clsx: "npm:^2.1.1"
     cmdk-sv: "npm:^0.0.17"
     laravel-vite-plugin: "npm:^1.0.4"

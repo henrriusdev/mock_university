@@ -15,8 +15,6 @@ import (
 
 	inertia "github.com/romsar/gonertia"
 
-	inertia "github.com/romsar/gonertia"
-
 	_ "github.com/lib/pq"
 )
 
