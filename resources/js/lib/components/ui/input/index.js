@@ -1,2 +1,3 @@
 import Root from "./input.svelte";
-export { Root as Input };
+import MaskInput from "./maskInput.svelte";
+export { Root as Input, MaskInput };
