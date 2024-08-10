@@ -161,8 +161,8 @@
                 </Card.Header>
                 <Card.Content>
                   <!-- Make a image rounded of the avatar with a button for change it -->
-                  <div class="grid gap-4">
-                    <div class="grid gap-4 md:col-span-2 md:grid-cols-3">
+                  <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-4 items-start justify-start">
                       <img
                         src="{user?.avatar ??
                           'https://avatars.dicebear.com/api/avatars/1.svg'}"
@@ -178,27 +178,44 @@
                       </Button>
                     </div>
                     <div class="grid gap-4 w-full">
-                      <span
-                        class="text-sm font-semibold text-muted-foreground"
-                      >
+                      <span class="text-sm font-semibold text-muted-foreground">
                         <Label for="name">Name</Label>
                         <Input id="name" type="text" />
                       </span>
-                      <span
-                        class="text-sm font-semibold text-muted-foreground"
-                      >
+                      <span class="text-sm font-semibold text-muted-foreground">
                         <Label for="email">Email</Label>
                         <Input id="email" type="email" />
                       </span>
-                      <span
-                        class="text-sm font-semibold text-muted-foreground"
-                      >
+                      <span class="text-sm font-semibold text-muted-foreground">
                         <Label for="username">Username</Label>
                         <Input id="username" type="text" />
                       </span>
                     </div>
                   </div>
-                  </Card.Content>
+                </Card.Content>
+              </Card.Root>
+              <Card.Root>
+                <Card.Header>
+                  <Card.Title>Actions</Card.Title>
+                  <Card.Description>
+                    Save or cancel the changes made to the student. Also inactive the student.
+                  </Card.Description>
+                </Card.Header>
+                <Card.Content>
+                  <div class="flex flex-col gap-4">
+                    <Button variant="ghost" type="reset">
+                      Cancel
+                    </Button>
+                    <Button variant="default" type="submit">
+                      {student?.id ? "Update" : "Add"} student
+                    </Button>
+                    {#if student?.id}
+                    <Button variant="destructive" type="button">
+                      Inactive student
+                    </Button>
+                    {/if}
+                  </div>
+                </Card.Content>
               </Card.Root>
             </div>
           </form>
