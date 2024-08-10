@@ -102,6 +102,7 @@
                       id="phone"
                       imask="{{ mask: '(000) 000-00-00' }}"
                       value="{student?.phone ?? ''}"
+                      name="phone"
                     />
                   </span>
                   <span
@@ -112,13 +113,19 @@
                       id="district"
                       type="text"
                       value="{student?.district}"
+                      name="district"
                     />
                   </span>
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
                     <Label for="city">City</Label>
-                    <Input id="city" type="text" value="{student?.city}" />
+                    <Input
+                      id="city"
+                      type="text"
+                      value="{student?.city}"
+                      name="city"
+                    />
                   </span>
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
@@ -131,13 +138,18 @@
                       value="{student?.id !== 0
                         ? student?.postalCode ?? ''
                         : ''}"
+                      name="postalCode"
                     />
                   </span>
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-4"
                   >
                     <Label for="address">Address</Label>
-                    <Textarea id="address" value="{student?.address}" />
+                    <Textarea
+                      id="address"
+                      value="{student?.address}"
+                      name="address"
+                    />
                   </span>
                 </div>
               </Card.Content>
@@ -160,6 +172,7 @@
                       unmask="none"
                       imask="{identityMask}"
                       value="{student?.identityCard ?? ''}"
+                      name="identityCard"
                     />
                   </span>
                   <span
@@ -195,7 +208,22 @@
                     <Input
                       id="creditUnitsAccumulated"
                       type="number"
+                      min="0"
+                      max="100"
                       value="{student?.creditUnitsAccumulated}"
+                    />
+                  </span>
+                  <span
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                  >
+                    <Label for="totalAverage">Total Average</Label>
+                    <Input
+                      id="totalAverage"
+                      type="number"
+                      min="0"
+                      max="20"
+                      value="{student?.totalAverage}"
+                      name="totalAverage"
                     />
                   </span>
                   <span
@@ -208,6 +236,7 @@
                       min="1"
                       max="10"
                       value="{student?.semester}"
+                      name="semester"
                     />
                   </span>
                 </div>
@@ -227,24 +256,28 @@
                 <div class="flex flex-col gap-4">
                   <div class="flex flex-col items-center">
                     <div
-                      class="relative {avatar ? 'w-24 md:w-full h-24 md:h-60 rounded-full' : 'w-full'}"
+                      class="relative {avatar
+                        ? 'w-24 md:w-full h-24 md:h-60 rounded-full'
+                        : 'w-full'}"
                     >
-                    {#if avatar}
-                      <img
-                        src="{avatar}"
-                        alt="Avatar"
-                        class="rounded-full w-24 md:w-full h-24 md:h-60"
-                      />
-                    {/if}
+                      {#if avatar}
+                        <img
+                          src="{avatar}"
+                          alt="Avatar"
+                          class="rounded-full w-24 md:w-full h-24 md:h-60"
+                        />
+                      {/if}
                       <Button
                         variant="default"
-                        class="{avatar ? "absolute" : "mt-4 ml-6 -mb-3"} bottom-0 right-0 rounded-full p-2 shadow-lg -translate-x-4 -translate-y-4 w-fit flex justify-center items-center gap-x-3"
+                        class="{avatar
+                          ? 'absolute'
+                          : 'mt-4 ml-6 -mb-3'} bottom-0 right-0 rounded-full p-2 shadow-lg -translate-x-4 -translate-y-4 w-fit flex justify-center items-center gap-x-3"
                         size="icon"
                         on:click="{triggerFileInput}"
                       >
-                      {#if !avatar}
-                      Load image
-                      {/if}
+                        {#if !avatar}
+                          Load image
+                        {/if}
                         <Camera class="w-6 md:w-18 h-6 md:h-18" />
                       </Button>
                     </div>
@@ -254,16 +287,27 @@
                       accept="image/*"
                       on:change="{handleImageUpload}"
                       class="sr-only"
+                      name="avatar"
                     />
                   </div>
                   <div class="grid gap-4 w-full">
                     <span class="text-sm font-semibold text-muted-foreground">
                       <Label for="name">Name</Label>
-                      <Input id="name" type="text" value="{user?.name}" />
+                      <Input
+                        id="name"
+                        type="text"
+                        value="{user?.name}"
+                        name="name"
+                      />
                     </span>
                     <span class="text-sm font-semibold text-muted-foreground">
                       <Label for="email">Email</Label>
-                      <Input id="email" type="email" value="{user?.email}" />
+                      <Input
+                        id="email"
+                        type="email"
+                        value="{user?.email}"
+                        name="email"
+                      />
                     </span>
                     <span class="text-sm font-semibold text-muted-foreground">
                       <Label for="username">Username</Label>
@@ -271,6 +315,7 @@
                         id="username"
                         type="text"
                         value="{user?.username}"
+                        name="username"
                       />
                     </span>
                   </div>
