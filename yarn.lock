@@ -1441,6 +1441,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"input-core@npm:2.0.1":
+  version: 2.0.1
+  resolution: "input-core@npm:2.0.1"
+  checksum: 10c0/40454f9e27db22701ee4bb50243c4b9dc8871d07cca6e5a6f157c3c4f2c26523061d88e66705a5eea98ad3ba90cfc4599521fed539531b7a38ce1bd51c653a02
+  languageName: node
+  linkType: hard
+
 "ip-address@npm:^9.0.5":
   version: 9.0.5
   resolution: "ip-address@npm:9.0.5"
@@ -2513,6 +2520,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"svelte-input-mask@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "svelte-input-mask@npm:1.1.0"
+  dependencies:
+    input-core: "npm:2.0.1"
+  peerDependencies:
+    svelte: ">=3.20.0"
+  checksum: 10c0/423acc353cde2d3396d6a3bdd403812f288d962f01662cad8df6e593325f8178fd07958d6beb4ec781581c48c6fd5d2dc81feef889b4fea0b012e49ac2556feb
+  languageName: node
+  linkType: hard
+
 "svelte-keyed@npm:^2.0.0":
   version: 2.0.0
   resolution: "svelte-keyed@npm:2.0.0"
@@ -2796,6 +2814,7 @@ __metadata:
     postcss: "npm:^8.4.38"
     svelte: "npm:^4.2.18"
     svelte-headless-table: "npm:^0.18.2"
+    svelte-input-mask: "npm:^1.1.0"
     tailwind-merge: "npm:^2.3.0"
     tailwind-variants: "npm:^0.2.1"
     tailwindcss: "npm:^3.4.4"
