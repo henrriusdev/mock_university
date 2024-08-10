@@ -1,5 +1,5 @@
 <script>
-  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: string, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number}} Student */
+  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: string, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number}} Student */
 
   /** @typedef{{id: number, name: string, email: string, username: string, avatar: string, active: boolean}} User */
   import { Camera, ChevronLeft } from "lucide-svelte";
@@ -10,6 +10,7 @@
   import { Label } from "$lib/components/ui/label/index.js";
   import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
   import DatePicker from "$lib/components/DatePicker.svelte";
+  import Textarea from "$lib/components/ui/textarea/textarea.svelte";
 
   /** @type {Student | null} */
   export let student = null;
@@ -65,32 +66,32 @@
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
                     <Label for="phone">Phone</Label>
-                    <MaskInput id="phone" type="tel" mask="(000) 000-00-00" />
+                    <MaskInput id="phone" type="tel" mask="(000) 000-00-00" value={student?.phone} />
                   </span>
                   <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                  class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
-                    <Label for="address">Address</Label>
-                    <Input id="address" type="text" />
-                  </span>
-                  <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-                  >
-                    <Label for="district">District</Label>
-                    <Input id="district" type="text" />
-                  </span>
-                  <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-                  >
-                    <Label for="city">City</Label>
-                    <Input id="city" type="text" />
-                  </span>
-                  <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-                  >
-                    <Label for="postalCode">Postal Code</Label>
-                    <MaskInput id="postalCode" type="text" mask="00000" />
-                  </span>
+                  <Label for="district">District</Label>
+                  <Input id="district" type="text" value={student?.district} />
+                </span>
+                <span
+                class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                >
+                <Label for="city">City</Label>
+                <Input id="city" type="text" value={student?.city} />
+              </span>
+              <span
+              class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+              >
+              <Label for="postalCode">Postal Code</Label>
+              <MaskInput id="postalCode" type="text" mask="00000" value={student?.postalCode} />
+            </span>
+            <span
+              class="text-sm font-semibold text-muted-foreground lg:col-span-4"
+            >
+              <Label for="address">Address</Label>
+              <Textarea id="address" value={student?.address} />
+            </span>
                 </div>
               </Card.Content>
             </Card.Root>
@@ -111,13 +112,14 @@
                       id="identityCard"
                       type="text"
                       mask="V-000000000"
+                      value={student?.identityCard}
                     />
                   </span>
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
                     <Label for="birthDate">Birth Date</Label>
-                    <DatePicker />
+                    <DatePicker value={student?.birthDate} />
                   </span>
                 </div>
               </Card.Content>
@@ -137,19 +139,13 @@
                     <Label for="creditUnitsAccumulated"
                       >Credit Units Accumulated</Label
                     >
-                    <Input id="creditUnitsAccumulated" type="number" />
-                  </span>
-                  <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-                  >
-                    <Label for="totalAverage">Total Average</Label>
-                    <Input id="totalAverage" type="number" />
+                    <Input id="creditUnitsAccumulated" type="number" value={student?.creditUnitsAccumulated}/>
                   </span>
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
                     <Label for="totalAverage">Semester</Label>
-                    <Input id="semester" type="number" min="1" max="10" />
+                    <Input id="semester" type="number" min="1" max="10" value={student?.semester} />
                   </span>
                 </div>
               </Card.Content>
@@ -184,15 +180,15 @@
                   <div class="grid gap-4 w-full">
                     <span class="text-sm font-semibold text-muted-foreground">
                       <Label for="name">Name</Label>
-                      <Input id="name" type="text" />
+                      <Input id="name" type="text" value={user?.name} />
                     </span>
                     <span class="text-sm font-semibold text-muted-foreground">
                       <Label for="email">Email</Label>
-                      <Input id="email" type="email" />
+                      <Input id="email" type="email" value={user?.email} />
                     </span>
                     <span class="text-sm font-semibold text-muted-foreground">
                       <Label for="username">Username</Label>
-                      <Input id="username" type="text" />
+                      <Input id="username" type="text" value={user?.username} />
                     </span>
                   </div>
                 </div>
