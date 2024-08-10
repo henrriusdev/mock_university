@@ -32,7 +32,7 @@
     { name: "Students", href: "/directive/students" },
     { name: "Subjects", href: "/directive/subjects" },
     { name: "Professors", href: "/directive/professors" },
-    { name: "Careers", href: "/directive.careers" },
+    { name: "Careers", href: "/directive/careers" },
     { name: "Payments", href: "/directive/payments" },
     { name: "Requests", href: "/directive/requests" },
   ];

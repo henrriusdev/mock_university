@@ -1,5 +1,5 @@
 <script>
-  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: import('@internationalized/date').DateValue, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number}} Student */
+  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: import('@internationalized/date').DateValue, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number, career: number}} Student */
 
   /** @typedef{{id: number, name: string, email: string, username: string, avatar: string, active: boolean}} User */
   import { Camera, ChevronLeft } from "lucide-svelte";
@@ -12,12 +12,17 @@
   import DatePicker from "$lib/components/DatePicker.svelte";
   import Textarea from "$lib/components/ui/textarea/textarea.svelte";
   import { identityMask } from "$lib/utils";
+  import * as Select from "$lib/components/ui/select/index.js";
+  import Combobox from "$lib/components/Combobox.svelte";
 
   /** @type {Student | null} */
   export let student = null;
 
   /** @type {User | null} */
   export let user = null;
+
+  /** @type {Array<{id: number, name: string}>} */
+  export let careers = [];
 
   let birthDate = student?.birthDate;
 
@@ -207,6 +212,7 @@
                     >
                     <Input
                       id="creditUnitsAccumulated"
+                      name="creditUnitsAccumulated"
                       type="number"
                       min="0"
                       max="100"
@@ -239,6 +245,10 @@
                       name="semester"
                     />
                   </span>
+                  <span
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2">
+                    <Label for="career">Career</Label>
+                    <Combobox options={careers.map((c) => ({ value: c.id.toString(), label: c.name }))} value={student?.career?.toString() ?? ''} />
                 </div>
               </Card.Content>
             </Card.Root>
