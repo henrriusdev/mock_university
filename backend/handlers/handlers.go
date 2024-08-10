@@ -1,8 +1,12 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -583,5 +587,123 @@ func (h *Handler) Student(i *inertia.Inertia) http.Handler {
 			return
 		}
 	}
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.NotFound(w, r)
+			return
+		}
+
+		r.ParseForm() // Parse the form to access its values
+
+		// Accediendo a los valores enviados por el formulario
+		phone := r.FormValue("phone")
+		district := r.FormValue("district")
+		city := r.FormValue("city")
+		postalCode := r.FormValue("postalCode")
+		address := r.FormValue("address")
+		identityCard := r.FormValue("identityCard")
+		birthDate := r.FormValue("birthDate")
+		cuAccumulated := r.FormValue("creditUnitsAccumulated")
+		semester := r.FormValue("semester")
+		totalAverage := r.FormValue("totalAverage")
+		name := r.FormValue("name")
+		email := r.FormValue("email")
+		username := r.FormValue("username")
+		avatar, header, err := r.FormFile("avatar")
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		path := ""
+		// guardar la imagen en el servidor
+		if avatar != nil {
+
+			filename := username + "_" + "avatar." + header.Header.Get("Content-Type")
+			file, err := os.Create("public/images/" + filename)
+			if err != nil {
+				err = errors.New(err.Error() + " avatar")
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+			defer file.Close()
+
+			path, err = filepath.Abs(file.Name())
+			if err != nil {
+				err = errors.New(err.Error() + " avatar")
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			_, err = io.Copy(file, avatar)
+			if err != nil {
+				err = errors.New(err.Error() + " avatar")
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+		}
+
+		hashedPassword, err := utils.HashPassword(identityCard)
+		if err != nil {
+			err = errors.New(err.Error() + " password")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		postalCodeInt, err := strconv.Atoi(postalCode)
+		if err != nil {
+			err = errors.New(err.Error() + " postalCode")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		birthDateTime, err := utils.ParseDate(birthDate)
+		if err != nil {
+			err = errors.New(err.Error() + " birthDate")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		creditUnitsAccumulated, err := strconv.Atoi(cuAccumulated)
+		if err != nil {
+			err = errors.New(err.Error() + " creditUnitsAccumulated")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		semesterInt, err := strconv.Atoi(semester)
+		if err != nil {
+			err = errors.New(err.Error() + " semester")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		totalAverageFloat, err := strconv.ParseFloat(totalAverage, 64)
+		if err != nil {
+			err = errors.New(err.Error() + " totalAverage")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		user, err := h.DB.Users.Create().SetEmail(email).SetUsername(username).SetPassword(hashedPassword).SetName(name).SetAvatar(path).SetIsActive(true).SetRoleID(6).Save(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		_, err = h.DB.Student.Create().SetPhone(phone).SetDistrict(district).SetCity(city).SetPostalCode(postalCodeInt).SetAddress(address).SetIdentityCard(identityCard).SetBirthDate(birthDateTime).SetCreditUnitsAccumulated(creditUnitsAccumulated).SetSemester(semesterInt).SetTotalAverage(totalAverageFloat).SetUser(user).Save(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		// Redirigir o responder al cliente
+		http.Redirect(w, r, "/directive/students", http.StatusSeeOther)
+	}
+
 	return http.HandlerFunc(fn)
 }
