@@ -23,13 +23,12 @@
   description="Add or update a student of the MockUniversity"
   keywords="add, update, inactive, mocku"
 >
-  <div class="bg-muted/40 flex min-h-screen w-full flex-col">
-    <div class="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+  <section class="bg-muted/40 flex w-full flex-col p-4">
       <main class="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div class="mx-auto grid max-w-[59rem] flex-1 auto-rows-max gap-4">
-          <div class="flex items-center gap-4">
-            <Button variant="outline" size="icon" class="h-7 w-7">
-              <ChevronLeft class="h-4 w-4" />
+          <div class="flex items-center gap-4 py-1">
+            <Button variant="ghost" size="icon" class="h-7 w-7" href="/directive/students">
+              <ChevronLeft class="h-5 w-5" />
               <span class="sr-only">Back</span>
             </Button>
             <h1
@@ -198,21 +197,20 @@
                 <Card.Header>
                   <Card.Title>Actions</Card.Title>
                   <Card.Description>
-                    Save or cancel the changes made to the student. Also inactive the student.
+                    Save or cancel the changes made to the student. Also
+                    inactive the student.
                   </Card.Description>
                 </Card.Header>
                 <Card.Content>
                   <div class="flex flex-col gap-4">
-                    <Button variant="ghost" type="reset">
-                      Cancel
-                    </Button>
+                    <Button variant="ghost" type="reset">Cancel</Button>
                     <Button variant="default" type="submit">
                       {student?.id ? "Update" : "Add"} student
                     </Button>
                     {#if student?.id}
-                    <Button variant="destructive" type="button">
-                      Inactive student
-                    </Button>
+                      <Button variant="destructive" type="button">
+                        Inactive student
+                      </Button>
                     {/if}
                   </div>
                 </Card.Content>
@@ -221,6 +219,5 @@
           </form>
         </div>
       </main>
-    </div>
-  </div>
+  </section>
 </DirectiveLayout>
