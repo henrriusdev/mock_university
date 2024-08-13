@@ -6,10 +6,8 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import Checkbox from "../ui/checkbox/checkbox.svelte";
 
-  /**
-   * @typedef {import('svelte-headless-table').Table<any, any>} DataTable
-   * @typedef {import('svelte-headless-table').Column<any, any>} DataTableColumn
-   */
+  /** @typedef {import('svelte-headless-table').Table<any, any>} DataTable */
+  /** @typedef {import('svelte-headless-table').Column<any, any>} DataTableColumn */
 
   /** @type {DataTableColumn[]} */
   export let columns;
@@ -20,19 +18,23 @@
   const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates } =
     table.createViewModel(columns);
 
-  const { hasNextPage, hasPreviousPage, pageIndex } = pluginStates.page;
-  const { filterValue } = pluginStates.filter;
-  const { selectedDataIds } = pluginStates.select;
+  const hasNextPage = pluginStates.page?.hasNextPage;
+  const hasPreviousPage = pluginStates.page?.hasPreviousPage;
+  let pageIndex = pluginStates.page?.pageIndex;
+  const filterValue = pluginStates.filter?.filterValue;
+  const selectedDataIds = pluginStates.select?.selectedDataIds;
 </script>
 
 <div class="rounded-md border">
   <div class="flex items-center p-4">
-    <Input
-      class="max-w-sm"
-      placeholder="Filter names, email, phone, career and average..."
-      type="text"
-      bind:value={$filterValue}
-    />
+    {#if filterValue !== undefined}
+      <Input
+        class="max-w-sm"
+        placeholder="Filter names, email, phone, career and average..."
+        type="text"
+        bind:value={$filterValue}
+      />
+    {/if}
   </div>
   <Table.Root {...$tableAttrs}>
     <Table.Header>
@@ -70,7 +72,7 @@
       {#each $pageRows as row (row.id)}
         <Table.Row
           {...row.attrs()}
-          data-state={$selectedDataIds[row.id] && "selected"}
+          data-state={selectedDataIds?.[row.id] && "selected"}
         >
           {#each row.cells as cell (cell.id)}
             <Subscribe attrs={cell.attrs()} let:attrs>
@@ -85,16 +87,22 @@
   </Table.Root>
 </div>
 <div class="flex items-center justify-end space-x-4 py-4">
-  <Button
-    variant="outline"
-    size="sm"
-    on:click={() => ($pageIndex = $pageIndex - 1)}
-    disabled={!$hasPreviousPage}>Previous</Button
-  >
-  <Button
-    variant="outline"
-    size="sm"
-    disabled={!$hasNextPage}
-    on:click={() => ($pageIndex = $pageIndex + 1)}>Next</Button
-  >
+  {#if hasPreviousPage !== undefined && hasNextPage !== undefined && pageIndex !== undefined}
+    <Button
+      variant="outline"
+      size="sm"
+      on:click={() => ($pageIndex = $pageIndex - 1)}
+      disabled={!hasPreviousPage}
+    >
+      Previous
+    </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={!hasNextPage}
+      on:click={() => ($pageIndex = $pageIndex + 1)}
+    >
+      Next
+    </Button>
+  {/if}
 </div>
