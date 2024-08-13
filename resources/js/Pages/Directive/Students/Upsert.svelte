@@ -109,6 +109,9 @@
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
+                  {#if student?.id}
+                    <input type="hidden" name="id" value="{student?.id}" />
+                  {/if}
                     <Label for="phone">Phone</Label>
                     <MaskInput
                       id="phone"
