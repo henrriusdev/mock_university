@@ -56,6 +56,7 @@ func MountApp() {
 
 	// API routes
 	mux.Handle("/build/", http.StripPrefix("/build/", http.FileServer(http.Dir("./public/build"))))
+	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 
 	http.ListenAndServe(":3000", mux)
 }

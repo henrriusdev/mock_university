@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"mocku/backend/ent"
@@ -574,7 +575,7 @@ func (h *Handler) Student(i *inertia.Inertia) http.Handler {
 				Name:     student.Edges.User.Name,
 				Email:    student.Edges.User.Email,
 				Username: student.Edges.User.Username,
-				Avatar:   student.Edges.User.Avatar,
+				Avatar:   strings.Replace(student.Edges.User.Avatar, "./", "/", 1),
 				Active:   student.Edges.User.IsActive,
 			}
 		}
