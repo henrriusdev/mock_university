@@ -739,6 +739,15 @@ func (h *Handler) Careers(i *inertia.Inertia) http.Handler {
 
 		careerDtos := make([]CareerDto, len(careers))
 		for i, career := range careers {
+			if career.Edges.Leader == nil {
+				careerDtos[i] = CareerDto{
+					ID:         career.ID,
+					Name:       career.Name,
+					LeaderName: "",
+					LeaderId:   0,
+				}
+				continue
+			}
 			careerDtos[i] = CareerDto{
 				ID:         career.ID,
 				Name:       career.Name,
@@ -772,6 +781,7 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 		}
 
 		name := r.FormValue("name")
+		description := r.FormValue("description")
 		leaderId := r.FormValue("leader")
 		var leader int
 		if leaderId != "" {
@@ -781,9 +791,9 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 				return
 			}
 
-			_, err = h.DB.Careers.Create().SetName(name).SetLeaderID(leader).Save(r.Context())
+			_, err = h.DB.Careers.Create().SetName(name).SetDescription(description).SetLeaderID(leader).Save(r.Context())
 		} else {
-			_, err = h.DB.Careers.Create().SetName(name).Save(r.Context())
+			_, err = h.DB.Careers.Create().SetName(name).SetDescription(description).Save(r.Context())
 		}
 
 		if err != nil {
