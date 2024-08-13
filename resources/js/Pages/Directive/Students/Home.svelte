@@ -28,6 +28,37 @@
     select: addSelectedRows(),
   });
 
+  const actions = [
+    {
+      label: "Copy student name",
+      /** @param {{name: string}} param0 */
+      onClick: ({name}) => {
+        window.navigator.clipboard.writeText(name);
+      },
+    },
+    {
+      label: "Copy student email",
+      /** @param {{email: string}} param0 */
+      onClick: ({email}) => {
+        window.navigator.clipboard.writeText(email);
+      },
+    },
+    {
+      label: "Copy student phone",
+      /** @param {{phone: string}} param0 */
+      onClick: ({phone}) => {
+        window.navigator.clipboard.writeText(phone);
+      },
+    },
+    {
+      label: "Edit",
+      /** @param {{id: number}} param0 */
+      onClick: ({id}) => {
+        window.location.href = `/directive/students/view?id=${id}`;
+      },
+    }
+  ];
+
   table = createTable(readable(students), {
     page: addPagination(),
     sort: addSortBy(),
@@ -95,10 +126,10 @@
       header: "Total Average",
     }),
     table.column({
-      accessor: ({ id }) => id,
+      accessor: (row) => row,
       header: "Actions",
       cell: ({ value }) => {
-        return createRender(DataTableActions, { id: value.toString() });
+        return createRender(DataTableActions, { row: value, actions });
       },
       plugins: {
         sort: {

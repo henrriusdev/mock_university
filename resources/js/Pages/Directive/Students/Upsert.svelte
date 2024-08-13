@@ -1,5 +1,5 @@
 <script>
-  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: import('@internationalized/date').DateValue, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number, career: number}} Student */
+  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: string, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number, career: number}} Student */
 
   /** @typedef{{id: number, name: string, email: string, username: string, avatar: string, active: boolean}} User */
   import { Camera, ChevronLeft } from "lucide-svelte";
@@ -14,6 +14,7 @@
   import { identityMask } from "$lib/utils";
   import * as Select from "$lib/components/ui/select/index.js";
   import Combobox from "$lib/components/Combobox.svelte";
+  import { CalendarDate } from "@internationalized/date";
 
   /** @type {Student | null} */
   export let student = null;
@@ -24,10 +25,16 @@
   /** @type {Array<{id: number, name: string}>} */
   export let careers = [];
 
-  let birthDate = student?.birthDate;
+  // birth date is a string, so, parse it to a CalendarDate object, its format is 'YYYY-MM-DD'
+  let year = new Date(student?.birthDate ?? "").getFullYear();
+  let month = new Date(student?.birthDate ?? "").getMonth();
+  let day = new Date(student?.birthDate ?? "").getDate();
+  let birthDate = new CalendarDate(year, month, day);
 
   /** @type {string | ArrayBuffer | null} */
   let avatar = user?.avatar || "";
+
+  console.log("avatar", avatar);
 
   /** @type {File | null} */
   let imageFile = null;
@@ -246,9 +253,10 @@
                     />
                   </span>
                   <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2">
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2 flex flex-col justify-end gap-y-2">
                     <Label for="career">Career</Label>
                     <Combobox options={careers.map((c) => ({ value: c.id.toString(), label: c.name }))} value={student?.career?.toString() ?? ''} />
+                  </span>
                 </div>
               </Card.Content>
             </Card.Root>
