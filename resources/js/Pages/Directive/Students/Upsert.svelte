@@ -33,6 +33,7 @@
 
   /** @type {string | ArrayBuffer | null} */
   let avatar = user?.avatar || "";
+  let career = student?.career?.toString() ?? ''
 
   console.log("avatar", avatar);
 
@@ -60,7 +61,6 @@
   }
 
   export let errors;
-  $: console.log(errors);
 </script>
 
 <DirectiveLayout
@@ -258,7 +258,8 @@
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2 flex flex-col justify-end gap-y-2">
                     <Label for="career">Career</Label>
-                    <Combobox options={careers.map((c) => ({ value: c.id.toString(), label: c.name }))} value={student?.career?.toString() ?? ''} />
+                    <Combobox options={careers.map((c) => ({ value: c.id.toString(), label: c.name }))} bind:value={career} />
+                    <input type="hidden" id="career" name="career" bind:value={career} />
                   </span>
                 </div>
               </Card.Content>
