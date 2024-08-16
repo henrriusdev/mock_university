@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"mocku/backend/ent"
+	"mocku/backend/ent/careers"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/student"
@@ -813,22 +814,57 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 		name := r.FormValue("name")
 		description := r.FormValue("description")
 		leaderId := r.FormValue("leader")
-		var leader int
-		if leaderId != "" {
-			leader, err = strconv.Atoi(leaderId)
+		id := r.FormValue("id")
+		fmt.Println(id)
+
+		if id == "" {
+			var leader int
+			if leaderId != "" {
+				leader, err = strconv.Atoi(leaderId)
+				if err != nil {
+					HandleServerErr(i, err).ServeHTTP(w, r)
+					return
+				}
+
+				_, err = h.DB.Careers.Create().SetName(name).SetDescription(description).SetLeaderID(leader).Save(r.Context())
+			} else {
+				_, err = h.DB.Careers.Create().SetName(name).SetDescription(description).Save(r.Context())
+			}
+
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+		} else {
+			careerId, err := strconv.Atoi(id)
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
 
-			_, err = h.DB.Careers.Create().SetName(name).SetDescription(description).SetLeaderID(leader).Save(r.Context())
-		} else {
-			_, err = h.DB.Careers.Create().SetName(name).SetDescription(description).Save(r.Context())
-		}
+			oldCareer, err := h.DB.Careers.Query().Where(careers.ID(careerId)).Only(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
 
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			var leader int
+			if leaderId != "" {
+				leader, err = strconv.Atoi(leaderId)
+				if err != nil {
+					HandleServerErr(i, err).ServeHTTP(w, r)
+					return
+				}
+
+				_, err = h.DB.Careers.UpdateOne(oldCareer).SetName(name).SetDescription(description).SetLeaderID(leader).Save(r.Context())
+			} else {
+				_, err = h.DB.Careers.UpdateOne(oldCareer).SetName(name).SetDescription(description).Save(r.Context())
+			}
+
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
 		}
 
 		i.Redirect(w, r, "/directive/careers", 302)

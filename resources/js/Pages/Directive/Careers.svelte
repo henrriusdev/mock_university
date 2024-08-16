@@ -206,7 +206,11 @@
           variant="default"
           class="w-full"
           on:click={() => (checked = !checked)}>
-          Add Career
+          {#if !edit}
+          Add
+          {:else}
+          Modify
+          {/if}
         </Button>
       </form>
     </div>
