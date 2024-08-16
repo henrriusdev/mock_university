@@ -44,8 +44,9 @@ type SelectDto struct {
 }
 
 type CareerDto struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	LeaderName string `json:"leader"`
-	LeaderId   int    `json:"leaderId"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	LeaderName  string `json:"leader"`
+	LeaderId    int    `json:"leaderId"`
 }
