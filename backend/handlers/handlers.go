@@ -769,18 +769,20 @@ func (h *Handler) Careers(i *inertia.Inertia) http.Handler {
 		for i, career := range careers {
 			if career.Edges.Leader == nil {
 				careerDtos[i] = CareerDto{
-					ID:         career.ID,
-					Name:       career.Name,
-					LeaderName: "",
-					LeaderId:   0,
+					ID:          career.ID,
+					Name:        career.Name,
+					Description: career.Description,
+					LeaderName:  "",
+					LeaderId:    0,
 				}
 				continue
 			}
 			careerDtos[i] = CareerDto{
-				ID:         career.ID,
-				Name:       career.Name,
-				LeaderName: career.Edges.Leader.Edges.User.Name,
-				LeaderId:   career.Edges.Leader.Edges.User.ID,
+				ID:          career.ID,
+				Name:        career.Name,
+				Description: career.Description,
+				LeaderName:  career.Edges.Leader.Edges.User.Name,
+				LeaderId:    career.Edges.Leader.Edges.User.ID,
 			}
 		}
 

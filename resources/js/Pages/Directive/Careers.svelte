@@ -15,7 +15,7 @@
     addTableFilter
   } from "svelte-headless-table/plugins";
   import { readable } from "svelte/store";
-  /** @type { Array<{id: number, name: string, leader?: string}>} */
+  /** @type { Array<{id: number, name: string, leader?: string, description: string}>} */
   export let careers = [];
 
   let table = createTable(readable(careers), {
@@ -61,14 +61,22 @@
       header: "Name",
     }),
     table.column({
+      accessor: ({ description }) => description,
+      header: "Description",
+      cell: ({ value }) => {
+        // only 50 characters, then add ...
+        return value.length > 50 ? value.slice(0, 50) + "..." : value;
+      },
+    }),
+    table.column({
       accessor: "leader",
       header: "Leader",
     }),
     table.column({
-      accessor: ({ id }) => id,
+      accessor: (row) => row,
       header: "Actions",
       cell: ({ value }) => {
-        return createRender(DataTableActions, { id: value.toString() });
+        return createRender(DataTableActions, { row: value, actions });
       },
       plugins: {
         sort: {
