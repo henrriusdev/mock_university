@@ -26,16 +26,16 @@
   export let careers = [];
 
   // birth date is a string, so, parse it to a CalendarDate object, its format is 'YYYY-MM-DD'
-  let year = new Date(student?.birthDate ?? "").getFullYear();
-  let month = new Date(student?.birthDate ?? "").getMonth();
-  let day = new Date(student?.birthDate ?? "").getDate();
+  let year = student?.birthDate ? new Date(student?.birthDate).getFullYear() : new Date(2003, 1, 16).getFullYear();
+  let month = student?.birthDate ? new Date(student?.birthDate).getMonth() : new Date(2003, 1, 16).getMonth();
+  let day = student?.birthDate ? new Date(student?.birthDate).getDate() : new Date(2003, 1, 16).getDate();
   let birthDate = new CalendarDate(year, month, day);
 
   /** @type {string | ArrayBuffer | null} */
   let avatar = user?.avatar || "";
   let career = student?.career?.toString() ?? ''
 
-  console.log("avatar", avatar);
+  console.log(student);
 
   /** @type {File | null} */
   let imageFile = null;
