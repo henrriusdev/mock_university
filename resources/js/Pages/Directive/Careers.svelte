@@ -15,7 +15,7 @@
     addTableFilter
   } from "svelte-headless-table/plugins";
   import { readable } from "svelte/store";
-  /** @type { Array<{id: number, name: string, leader?: string, description: string}>} */
+  /** @type { Array<{id: number, name: string, leader?: string, leaderId?: number, description: string}>} */
   export let careers = [];
 
   let table = createTable(readable(careers), {
@@ -28,11 +28,33 @@
     }),
   });
 
+  /** @type {number | null} */
+  let leaderId = null;
+
+  /** @type {string | null}*/
+  let name = null;
+
+  /** @type {string | null}*/
+  let description = null;
+
+  /** @type {number | null}*/
+  let id = null;
+
+
   const actions = [
     {
       label: "Edit",
-      onClick: () => {
-        console.log("Edit");
+      /** @param {{id: number, name: string, leader?: string, description: string}} row */
+      onClick: (row) => {
+        name = row.name;
+        description = row.description;
+        id = row.id;
+        if (row.leader){
+          leaderId = careers.find((career) => career.id === row.id)?.leaderId ?? null;
+          checked = true;
+        }
+
+        edit = true;
       },
     },
     {
@@ -42,6 +64,7 @@
       },
     },
   ];
+  let edit = false;
 
   const columns = table.createColumns([
     table.column({
@@ -124,7 +147,16 @@
         action="/directive/careers/submit"
         class="w-1/3 p-10 flex flex-col gap-y-4 border-l-2 border-l-gray-300 dark:border-l-gray-800"
       >
-        <h2 class="text-2xl font-bold text-center pb-3">Add Career</h2>
+        {#if edit}
+          <input type="hidden" name="id" value={id} />
+        {/if}
+        <h2 class="text-2xl font-bold text-center pb-3">
+          {#if !edit}
+          Add Career
+          {:else}
+          Modify {name}
+          {/if}
+        </h2>
         <div class="flex flex-col gap-3">
           <Label for="name">Name</Label>
           <Input
@@ -133,6 +165,7 @@
             name="name"
             class="input"
             placeholder="Career name"
+            value={name}
           />
         </div>
         <div class="flex flex-col gap-3">
@@ -142,6 +175,7 @@
             name="description"
             class="input"
             placeholder="Career description"
+            value={description}
           />
         </div>
         <div class="flex flex-col gap-3">
@@ -163,6 +197,7 @@
               name="leader"
               class="input"
               placeholder="Leader name"
+              value={leaderId}
             />
           {/if}
         </div>
