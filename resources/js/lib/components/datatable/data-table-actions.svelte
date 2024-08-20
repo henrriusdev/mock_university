@@ -3,8 +3,11 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { Button } from "$lib/components/ui/button";
 
-  /** @type {string} */
-  export let id;
+
+  /** @type {Array<{label: string, onClick: (row: any) => void}>} */
+  export let actions = [];
+
+  export let row;
 </script>
 
 <DropdownMenu.Root>
@@ -21,13 +24,9 @@
   </DropdownMenu.Trigger>
   <DropdownMenu.Content>
     <DropdownMenu.Group>
-      <DropdownMenu.Label>Actions</DropdownMenu.Label>
-      <DropdownMenu.Item on:click={() => navigator.clipboard.writeText(id)}>
-        Copy payment ID
-      </DropdownMenu.Item>
+      {#each actions as { label, onClick }}
+        <DropdownMenu.Item on:click={() => onClick(row)}>{label}</DropdownMenu.Item>
+      {/each}
     </DropdownMenu.Group>
-    <DropdownMenu.Separator />
-    <DropdownMenu.Item>View customer</DropdownMenu.Item>
-    <DropdownMenu.Item>View payment details</DropdownMenu.Item>
   </DropdownMenu.Content>
 </DropdownMenu.Root>

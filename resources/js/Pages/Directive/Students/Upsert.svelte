@@ -1,5 +1,5 @@
 <script>
-  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: import('@internationalized/date').DateValue, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number, career: number}} Student */
+  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: string, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number, career: number}} Student */
 
   /** @typedef{{id: number, name: string, email: string, username: string, avatar: string, active: boolean}} User */
   import { Camera, ChevronLeft } from "lucide-svelte";
@@ -14,6 +14,7 @@
   import { identityMask } from "$lib/utils";
   import * as Select from "$lib/components/ui/select/index.js";
   import Combobox from "$lib/components/Combobox.svelte";
+  import { CalendarDate } from "@internationalized/date";
 
   /** @type {Student | null} */
   export let student = null;
@@ -24,10 +25,17 @@
   /** @type {Array<{id: number, name: string}>} */
   export let careers = [];
 
-  let birthDate = student?.birthDate;
+  // birth date is a string, so, parse it to a CalendarDate object, its format is 'YYYY-MM-DD'
+  let year = student?.birthDate ? new Date(student?.birthDate).getFullYear() : new Date(2003, 1, 16).getFullYear();
+  let month = student?.birthDate ? new Date(student?.birthDate).getMonth() : new Date(2003, 1, 16).getMonth();
+  let day = student?.birthDate ? new Date(student?.birthDate).getDate() : new Date(2003, 1, 16).getDate();
+  let birthDate = new CalendarDate(year, month, day);
 
   /** @type {string | ArrayBuffer | null} */
   let avatar = user?.avatar || "";
+  let career = student?.career?.toString() ?? ''
+
+  console.log(student);
 
   /** @type {File | null} */
   let imageFile = null;
@@ -53,7 +61,6 @@
   }
 
   export let errors;
-  $: console.log(errors);
 </script>
 
 <DirectiveLayout
@@ -102,6 +109,9 @@
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
+                  {#if student?.id}
+                    <input type="hidden" name="id" value="{student?.id}" />
+                  {/if}
                     <Label for="phone">Phone</Label>
                     <MaskInput
                       id="phone"
@@ -246,9 +256,11 @@
                     />
                   </span>
                   <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2">
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2 flex flex-col justify-end gap-y-2">
                     <Label for="career">Career</Label>
-                    <Combobox options={careers.map((c) => ({ value: c.id.toString(), label: c.name }))} value={student?.career?.toString() ?? ''} />
+                    <Combobox options={careers.map((c) => ({ value: c.id.toString(), label: c.name }))} bind:value={career} />
+                    <input type="hidden" id="career" name="career" bind:value={career} />
+                  </span>
                 </div>
               </Card.Content>
             </Card.Root>

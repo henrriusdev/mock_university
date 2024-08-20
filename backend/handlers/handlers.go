@@ -8,9 +8,11 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"mocku/backend/ent"
+	"mocku/backend/ent/careers"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/student"
@@ -503,12 +505,12 @@ func (h *Handler) Students(i *inertia.Inertia) http.Handler {
 		studentDtos := make([]StudentsTableDto, len(students))
 		for i, student := range students {
 			studentDtos[i] = StudentsTableDto{
-				ID:     student.ID,
-				Name:   student.Edges.User.Name,
-				Avatar: student.Edges.User.Avatar,
-				Email:  student.Edges.User.Email,
-				Phone:  student.Phone,
-				// Career:       student.Edges.Career.Name,
+				ID:           student.ID,
+				Name:         student.Edges.User.Name,
+				Avatar:       student.Edges.User.Avatar,
+				Email:        student.Edges.User.Email,
+				Phone:        student.Phone,
+				Career:       student.Edges.Career.Name,
 				TotalAverage: student.TotalAverage,
 			}
 		}
@@ -574,7 +576,7 @@ func (h *Handler) Student(i *inertia.Inertia) http.Handler {
 				Name:     student.Edges.User.Name,
 				Email:    student.Edges.User.Email,
 				Username: student.Edges.User.Username,
-				Avatar:   student.Edges.User.Avatar,
+				Avatar:   strings.Replace(student.Edges.User.Avatar, "./", "/", 1),
 				Active:   student.Edges.User.IsActive,
 			}
 		}
@@ -621,6 +623,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 		}
 
 		// Accediendo a los valores enviados por el formulario
+		id := r.FormValue("id")
 		phone := r.FormValue("phone")
 		district := r.FormValue("district")
 		city := r.FormValue("city")
@@ -634,37 +637,32 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 		name := r.FormValue("name")
 		email := r.FormValue("email")
 		username := r.FormValue("username")
+		career := r.FormValue("career")
 
-		fmt.Println(phone, district, city, postalCode, address, identityCard, birthDate, cuAccumulated, semester, totalAverage, name, email, username)
-
-		// Obtener el archivo subido
+		filePath := ""
 		file, handler, err := r.FormFile("avatar")
-		if err != nil {
-			err = errors.New(err.Error() + " file 625")
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-		defer file.Close()
+		if err == nil {
+			defer file.Close()
 
-		// Puedes leer el archivo o guardarlo directamente en el servidor
-		// Aquí se lee el archivo y se guarda en el disco
-		filePath := "./uploads/" + username + "_avatar" + filepath.Ext(handler.Filename)
-		f, err := os.Create(filePath)
-		if err != nil {
-			err = os.MkdirAll("./uploads", os.ModePerm)
+			// Guarda el archivo si se ha subido
+			filePath = "./uploads/" + username + "_avatar" + filepath.Ext(handler.Filename)
+			f, err := os.Create(filePath)
 			if err != nil {
-				err = errors.New(err.Error() + " file 637")
+				err = os.MkdirAll("./uploads", os.ModePerm)
+				if err != nil {
+					err = errors.New(err.Error() + " file 637")
+					HandleServerErr(i, err).ServeHTTP(w, r)
+					return
+				}
+			}
+			defer f.Close()
+
+			_, err = io.Copy(f, file)
+			if err != nil {
+				err = errors.New(err.Error() + " file 646")
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
-		}
-		defer f.Close()
-
-		_, err = io.Copy(f, file)
-		if err != nil {
-			err = errors.New(err.Error() + " file 646")
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
 		}
 
 		hashedPassword, err := utils.HashPassword(identityCard)
@@ -709,19 +707,51 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		user, err := h.DB.Users.Create().SetEmail(email).SetUsername(username).SetPassword(hashedPassword).SetName(name).SetAvatar(filePath).SetIsActive(true).SetRoleID(6).Save(r.Context())
+		careerId, err := strconv.Atoi(career)
 		if err != nil {
+			err = errors.New(err.Error() + " career")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
 		}
 
-		_, err = h.DB.Student.Create().SetPhone(phone).SetDistrict(district).SetCity(city).SetPostalCode(postalCodeInt).SetAddress(address).SetIdentityCard(identityCard).SetBirthDate(birthDateTime).SetCreditUnitsAccumulated(creditUnitsAccumulated).SetSemester(semesterInt).SetTotalAverage(totalAverageFloat).SetUser(user).Save(r.Context())
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+		if id == "" {
+			user, err := h.DB.Users.Create().SetEmail(email).SetUsername(username).SetPassword(hashedPassword).SetName(name).SetAvatar(filePath).SetIsActive(true).SetRoleID(6).Save(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			_, err = h.DB.Student.Create().SetPhone(phone).SetDistrict(district).SetCity(city).SetPostalCode(postalCodeInt).SetAddress(address).SetIdentityCard(identityCard).SetBirthDate(birthDateTime).SetCreditUnitsAccumulated(creditUnitsAccumulated).SetSemester(semesterInt).SetTotalAverage(totalAverageFloat).SetUser(user).SetCareerID(careerId).Save(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+		} else {
+			studentId, err := strconv.Atoi(id)
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			student, err := h.DB.Student.Query().Where(student.ID(studentId)).WithUser().Only(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			_, err = h.DB.Users.UpdateOne(student.Edges.User).SetEmail(email).SetUsername(username).SetName(name).SetAvatar(filePath).Save(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			_, err = h.DB.Student.UpdateOne(student).SetPhone(phone).SetDistrict(district).SetCity(city).SetPostalCode(postalCodeInt).SetAddress(address).SetIdentityCard(identityCard).SetBirthDate(birthDateTime).SetCreditUnitsAccumulated(creditUnitsAccumulated).SetSemester(semesterInt).SetTotalAverage(totalAverageFloat).SetCareerID(careerId).Save(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
 		}
 
-		// Redirigir o responder al cliente
 		http.Redirect(w, r, "/directive/students", http.StatusSeeOther)
 	}
 
@@ -730,7 +760,6 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 
 func (h *Handler) Careers(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		// get leader inside the user name
 		careers, err := h.DB.Careers.Query().WithLeader(func(query *ent.ProfessorQuery) { query.WithUser() }).All(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
@@ -739,11 +768,22 @@ func (h *Handler) Careers(i *inertia.Inertia) http.Handler {
 
 		careerDtos := make([]CareerDto, len(careers))
 		for i, career := range careers {
+			if career.Edges.Leader == nil {
+				careerDtos[i] = CareerDto{
+					ID:          career.ID,
+					Name:        career.Name,
+					Description: career.Description,
+					LeaderName:  "",
+					LeaderId:    0,
+				}
+				continue
+			}
 			careerDtos[i] = CareerDto{
-				ID:         career.ID,
-				Name:       career.Name,
-				LeaderName: career.Edges.Leader.Edges.User.Name,
-				LeaderId:   career.Edges.Leader.Edges.User.ID,
+				ID:          career.ID,
+				Name:        career.Name,
+				Description: career.Description,
+				LeaderName:  career.Edges.Leader.Edges.User.Name,
+				LeaderId:    career.Edges.Leader.Edges.User.ID,
 			}
 		}
 
@@ -772,23 +812,59 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 		}
 
 		name := r.FormValue("name")
+		description := r.FormValue("description")
 		leaderId := r.FormValue("leader")
-		var leader int
-		if leaderId != "" {
-			leader, err = strconv.Atoi(leaderId)
+		id := r.FormValue("id")
+		fmt.Println(id)
+
+		if id == "" {
+			var leader int
+			if leaderId != "" {
+				leader, err = strconv.Atoi(leaderId)
+				if err != nil {
+					HandleServerErr(i, err).ServeHTTP(w, r)
+					return
+				}
+
+				_, err = h.DB.Careers.Create().SetName(name).SetDescription(description).SetLeaderID(leader).Save(r.Context())
+			} else {
+				_, err = h.DB.Careers.Create().SetName(name).SetDescription(description).Save(r.Context())
+			}
+
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+		} else {
+			careerId, err := strconv.Atoi(id)
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
 
-			_, err = h.DB.Careers.Create().SetName(name).SetLeaderID(leader).Save(r.Context())
-		} else {
-			_, err = h.DB.Careers.Create().SetName(name).Save(r.Context())
-		}
+			oldCareer, err := h.DB.Careers.Query().Where(careers.ID(careerId)).Only(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
 
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			var leader int
+			if leaderId != "" {
+				leader, err = strconv.Atoi(leaderId)
+				if err != nil {
+					HandleServerErr(i, err).ServeHTTP(w, r)
+					return
+				}
+
+				_, err = h.DB.Careers.UpdateOne(oldCareer).SetName(name).SetDescription(description).SetLeaderID(leader).Save(r.Context())
+			} else {
+				_, err = h.DB.Careers.UpdateOne(oldCareer).SetName(name).SetDescription(description).Save(r.Context())
+			}
+
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
 		}
 
 		i.Redirect(w, r, "/directive/careers", 302)

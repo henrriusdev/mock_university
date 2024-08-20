@@ -44,8 +44,8 @@
   </Popover.Trigger>
   <Popover.Content class="w-[200px] p-0">
     <Command.Root>
-      <Command.Input placeholder="Search framework..." />
-      <Command.Empty>No framework found.</Command.Empty>
+      <Command.Input {placeholder} />
+      <Command.Empty>No item found.</Command.Empty>
       <Command.Group>
         {#each options as option}
           <Command.Item
