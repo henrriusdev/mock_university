@@ -2,12 +2,13 @@ package database
 
 import (
 	"context"
+	"time"
+
 	"mocku/backend/ent"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/role"
 	"mocku/backend/ent/users"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
