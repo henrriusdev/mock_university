@@ -32,21 +32,21 @@
 
   const actions = [
     {
-      label: "Copy student name",
+      label: "Copy professor name",
       /** @param {Professor} param0 */
       onClick: ({name}) => {
         window.navigator.clipboard.writeText(name);
       },
     },
     {
-      label: "Copy student email",
+      label: "Copy professor email",
       /** @param {Professor} param0 */
       onClick: ({email}) => {
         window.navigator.clipboard.writeText(email);
       },
     },
     {
-      label: "Copy student phone",
+      label: "Copy professor phone",
       /** @param {Professor} param0 */
       onClick: ({phone}) => {
         window.navigator.clipboard.writeText(phone);
@@ -56,7 +56,7 @@
       label: "Edit",
       /** @param {Professor} param0 */
       onClick: ({id}) => {
-        window.location.href = `/directive/students/view?id=${id}`;
+        window.location.href = `/directive/professors/view?id=${id}`;
       },
     }
   ];
@@ -102,8 +102,9 @@
       accessor: ({ avatar, name }) => {
         return `${avatar} ${name}`;
       },
-      header: "Student",
+      header: "Name",
       cell: ({ value }) => {
+        console.log(value.split(" ")[0]);
         return createRender(Avatar, {
           src: value.split(" ")[0],
           alt: "Avatar",
@@ -154,7 +155,7 @@
       <Button
         variant="outline"
         class="flex justify-center gap-x-3 items-center"
-        href="/directive/professor/view?id=add"
+        href="/directive/professors/view?id=add"
       >
         Add professor
         <ChevronRight class="w-6 h-6" />
