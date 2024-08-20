@@ -871,3 +871,34 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 	}
 	return http.HandlerFunc(fn)
 }
+
+func (h *Handler) Professors(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		professors, err := h.DB.Professor.Query().WithUser().All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		professorDtos := make([]ProfessorDto, len(professors))
+		for i, professor := range professors {
+			professorDtos[i] = ProfessorDto{
+				ID:           professor.ID,
+				Name:         professor.Edges.User.Name,
+				Email:        professor.Edges.User.Email,
+				Avatar:       professor.Edges.User.Avatar,
+				IdentityCard: professor.IdentityCard,
+				Phone:        professor.Phone,
+			}
+		}
+
+		err = i.Render(w, r, "Directive/Professor/Home", inertia.Props{
+			"professors": professorDtos,
+		})
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+	}
+	return http.HandlerFunc(fn)
+}
