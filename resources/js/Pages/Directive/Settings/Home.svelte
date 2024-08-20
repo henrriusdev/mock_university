@@ -118,10 +118,8 @@
 
   // check if the paymentDatesParsed is updated and then update the inputPaymentDates
   $: {
-    console.log(paymentDatesParsed);
     inputPaymentDates =
       paymentDatesParsed?.map((date) => date.toString()) ?? [];
-    console.log(inputPaymentDates);
   }
 </script>
 

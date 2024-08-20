@@ -50,3 +50,12 @@ type CareerDto struct {
 	LeaderName  string `json:"leader"`
 	LeaderId    int    `json:"leaderId"`
 }
+
+type ProfessorDto struct {
+	ID           int    `json:"id"`
+	IdentityCard string `json:"identityCard"`
+	Avatar       string `json:"avatar"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+}

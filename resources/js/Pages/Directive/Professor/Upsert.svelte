@@ -1,5 +1,5 @@
 <script>
-  /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: string, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number, career: number}} Student */
+  /** @typedef {{id: number, identityCard: string, phone: string, birthDate: string, address: string}} Professor */
 
   /** @typedef{{id: number, name: string, email: string, username: string, avatar: string, active: boolean}} User */
   import { Camera, ChevronLeft } from "lucide-svelte";
@@ -16,31 +16,24 @@
   import Combobox from "$lib/components/Combobox.svelte";
   import { CalendarDate } from "@internationalized/date";
 
-  /** @type {Student | null} */
-  export let student = null;
+  /** @type {Professor | null} */
+  export let professor = null;
 
   /** @type {User | null} */
   export let user = null;
 
-  /** @type {Array<{id: number, name: string}>} */
-  export let careers = [];
-
-  // birth date is a string, so, parse it to a CalendarDate object, its format is 'YYYY-MM-DD'
-  let year = student?.birthDate ? new Date(student?.birthDate).getFullYear() : new Date(2003, 1, 16).getFullYear();
-  let month = student?.birthDate ? new Date(student?.birthDate).getMonth() : new Date(2003, 1, 16).getMonth();
-  let day = student?.birthDate ? new Date(student?.birthDate).getDate() : new Date(2003, 1, 16).getDate();
+  let year = professor?.birthDate ? new Date(professor?.birthDate).getFullYear() : new Date(2003, 1, 16).getFullYear();
+  let month = professor?.birthDate ? new Date(professor?.birthDate).getMonth() : new Date(2003, 1, 16).getMonth();
+  let day = professor?.birthDate ? new Date(professor?.birthDate).getDate() : new Date(2003, 1, 16).getDate();
   let birthDate = new CalendarDate(year, month, day);
 
   /** @type {string | ArrayBuffer | null} */
   let avatar = user?.avatar || "";
-  let career = student?.career?.toString() ?? ''
 
   /** @type {File | null} */
   let imageFile = null;
-  /**
-   *
-   * @param event {Event}
-   */
+
+  /**  @param event {Event} */
   function handleImageUpload(event) {
     // @ts-ignore
     const file = event.target?.files[0];
@@ -57,13 +50,11 @@
   function triggerFileInput() {
     document.getElementById("fileInput")?.click();
   }
-
-  export let errors;
 </script>
 
 <DirectiveLayout
-  title="{student?.id ? `Update ${user?.name}` : 'Add Student'}"
-  description="Add or update a student of the MockUniversity"
+  title="{professor?.id ? `Update ${user?.name}` : 'Add Professor'}"
+  description="Add or update a professor of the MockUniversity"
   keywords="add, update, inactive, mocku"
 >
   <section class="bg-muted/40 flex w-full flex-col p-4">
@@ -74,7 +65,7 @@
             variant="ghost"
             size="icon"
             class="h-7 w-7"
-            href="/directive/students"
+            href="/directive/professors"
           >
             <ChevronLeft class="h-5 w-5" />
             <span class="sr-only">Back</span>
@@ -82,14 +73,14 @@
           <h1
             class="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0"
           >
-            {#if student?.id}
+            {#if professor?.id}
               Update {user?.name}
             {:else}
-              Add Student
+              Add Professor
             {/if}
           </h1>
         </div>
-        <form method="post" action="/directive/students/view/submit" enctype="multipart/form-data"
+        <form method="post" action="/directive/professors/view/submit" enctype="multipart/form-data"
           class="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8"
         >
           <div
@@ -99,7 +90,7 @@
               <Card.Header>
                 <Card.Title>Contact information</Card.Title>
                 <Card.Description>
-                  Fill the form with the student's contact information.
+                  Fill the form with the professor's contact information.
                 </Card.Description>
               </Card.Header>
               <Card.Content>
@@ -107,51 +98,15 @@
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
-                  {#if student?.id}
-                    <input type="hidden" name="id" value="{student?.id}" />
+                  {#if professor?.id}
+                    <input type="hidden" name="id" value="{professor?.id}" />
                   {/if}
                     <Label for="phone">Phone</Label>
                     <MaskInput
                       id="phone"
                       imask="{{ mask: '(000) 000-00-00' }}"
-                      value="{student?.phone ?? ''}"
+                      value="{professor?.phone ?? ''}"
                       name="phone"
-                    />
-                  </span>
-                  <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-                  >
-                    <Label for="district">District</Label>
-                    <Input
-                      id="district"
-                      type="text"
-                      value="{student?.district}"
-                      name="district"
-                    />
-                  </span>
-                  <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-                  >
-                    <Label for="city">City</Label>
-                    <Input
-                      id="city"
-                      type="text"
-                      value="{student?.city}"
-                      name="city"
-                    />
-                  </span>
-                  <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-                  >
-                    <Label for="postalCode">Postal Code</Label>
-                    <MaskInput
-                      id="postalCode"
-                      unmask="none"
-                      imask="{{ mask: '00000' }}"
-                      value="{student?.id !== 0
-                        ? student?.postalCode ?? ''
-                        : ''}"
-                      name="postalCode"
                     />
                   </span>
                   <span
@@ -160,7 +115,7 @@
                     <Label for="address">Address</Label>
                     <Textarea
                       id="address"
-                      value="{student?.address}"
+                      value="{professor?.address}"
                       name="address"
                     />
                   </span>
@@ -171,7 +126,7 @@
               <Card.Header>
                 <Card.Title>Personal information</Card.Title>
                 <Card.Description>
-                  Fill the form with the student's personal information.
+                  Fill the form with the professor's personal information.
                 </Card.Description>
               </Card.Header>
               <Card.Content>
@@ -184,7 +139,7 @@
                       id="identityCard"
                       unmask="none"
                       imask="{identityMask}"
-                      value="{student?.identityCard ?? ''}"
+                      value="{professor?.identityCard ?? ''}"
                       name="identityCard"
                     />
                   </span>
@@ -205,60 +160,23 @@
             </Card.Root>
             <Card.Root>
               <Card.Header>
-                <Card.Title>Academic information</Card.Title>
+                <Card.Title>Actions</Card.Title>
                 <Card.Description>
-                  Fill the form with the student's academic information.
+                  Save or cancel the changes made to the professor. Also inactive
+                  the professor.
                 </Card.Description>
               </Card.Header>
               <Card.Content>
-                <div class="grid gap-4 lg:grid-cols-4">
-                  <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-                  >
-                    <Label for="creditUnitsAccumulated"
-                      >Credit Units Accumulated</Label
-                    >
-                    <Input
-                      id="creditUnitsAccumulated"
-                      name="creditUnitsAccumulated"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value="{student?.creditUnitsAccumulated}"
-                    />
-                  </span>
-                  <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-                  >
-                    <Label for="totalAverage">Total Average</Label>
-                    <Input
-                      id="totalAverage"
-                      type="number"
-                      min="0"
-                      max="20"
-                      value="{student?.totalAverage}"
-                      name="totalAverage"
-                    />
-                  </span>
-                  <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2"
-                  >
-                    <Label for="totalAverage">Semester</Label>
-                    <Input
-                      id="semester"
-                      type="number"
-                      min="1"
-                      max="10"
-                      value="{student?.semester}"
-                      name="semester"
-                    />
-                  </span>
-                  <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2 flex flex-col justify-end gap-y-2">
-                    <Label for="career">Career</Label>
-                    <Combobox options={careers.map((c) => ({ value: c.id.toString(), label: c.name }))} bind:value={career} />
-                    <input type="hidden" id="career" name="career" bind:value={career} />
-                  </span>
+                <div class="flex flex-col md:flex-row w-full gap-4">
+                  <Button variant="ghost" type="reset">Cancel</Button>
+                  <Button variant="default" type="submit">
+                    {professor?.id ? "Update" : "Add"} professor
+                  </Button>
+                  {#if professor?.id}
+                    <Button variant="destructive" type="button">
+                      Inactive professor
+                    </Button>
+                  {/if}
                 </div>
               </Card.Content>
             </Card.Root>
@@ -268,7 +186,7 @@
               <Card.Header>
                 <Card.Title>Student details</Card.Title>
                 <Card.Description>
-                  Fill the form with the student's details.
+                  Fill the form with the professor's details.
                 </Card.Description>
               </Card.Header>
               <Card.Content>
@@ -339,28 +257,6 @@
                       />
                     </span>
                   </div>
-                </div>
-              </Card.Content>
-            </Card.Root>
-            <Card.Root>
-              <Card.Header>
-                <Card.Title>Actions</Card.Title>
-                <Card.Description>
-                  Save or cancel the changes made to the student. Also inactive
-                  the student.
-                </Card.Description>
-              </Card.Header>
-              <Card.Content>
-                <div class="flex flex-col gap-4">
-                  <Button variant="ghost" type="reset">Cancel</Button>
-                  <Button variant="default" type="submit">
-                    {student?.id ? "Update" : "Add"} student
-                  </Button>
-                  {#if student?.id}
-                    <Button variant="destructive" type="button">
-                      Inactive student
-                    </Button>
-                  {/if}
                 </div>
               </Card.Content>
             </Card.Root>
