@@ -81,13 +81,17 @@ func (h *Handler) LoginPost(i *inertia.Inertia) http.Handler {
 
 		formData.Email = r.FormValue("email")
 		formData.Password = r.FormValue("password")
-		user, err := h.DB.Users.Query().Where(users.EmailEQ(formData.Email)).WithRole().First(r.Context())
+		user, err := h.DB.Users.Query().
+			Where(users.EmailEQ(formData.Email)).
+			WithRole().
+			First(r.Context())
 		if err != nil {
 			HandleServerErr(i, err)
 			return
 		}
 
-		careers, err := h.DB.Careers.Query().All(r.Context())
+		careers, err := h.DB.Careers.Query().
+			All(r.Context())
 		if err != nil {
 			HandleServerErr(i, err)
 			return
@@ -120,8 +124,6 @@ func (h *Handler) LoginPost(i *inertia.Inertia) http.Handler {
 			view = "/student"
 		}
 
-		println(view)
-
 		i.Redirect(w, r, view, 302)
 	}
 
@@ -131,7 +133,6 @@ func (h *Handler) LoginPost(i *inertia.Inertia) http.Handler {
 func (h *Handler) DirectiveDash(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		careers, err := h.DB.Careers.Query().All(r.Context())
-		fmt.Println(err)
 		if err != nil {
 			HandleServerErr(i, err)
 			return
@@ -232,8 +233,11 @@ func (h *Handler) StudentDash(i *inertia.Inertia) http.Handler {
 
 func (h *Handler) Settings(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		// Get configuration, if there is no configuration with the active cycle, return empty
-		config := h.DB.Configuration.Query().WithCycle().Where(configuration.HasCycleWith(cycle.Active(true))).OnlyX(r.Context())
+		config := h.DB.Configuration.Query().
+			WithCycle().
+			Where(configuration.HasCycleWith(cycle.Active(true))).
+			OnlyX(r.Context())
+
 		if config == nil {
 			HandleServerErr(i, fmt.Errorf("config not found")).ServeHTTP(w, r)
 			return
@@ -278,7 +282,10 @@ func (h *Handler) SettingsNotesPost(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		_, err = h.DB.Configuration.Update().Where(configuration.HasCycleWith(cycle.Active(true))).SetNumberNotes(notesNumber).Save(r.Context())
+		_, err = h.DB.Configuration.Update().
+			Where(configuration.HasCycleWith(cycle.Active(true))).
+			SetNumberNotes(notesNumber).
+			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err)
 			return
@@ -328,13 +335,21 @@ func (h *Handler) SettingsDatesPost(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		_, err = h.DB.Cycle.Update().Where(cycle.ActiveEQ(true)).SetStartDate(cycleStart).SetEndDate(cycleEnd).Save(r.Context())
+		_, err = h.DB.Cycle.Update().
+			Where(cycle.ActiveEQ(true)).
+			SetStartDate(cycleStart).
+			SetEndDate(cycleEnd).
+			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
 		}
 
-		_, err = h.DB.Configuration.Update().Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).SetStartRegistrationSubjects(startRegistrationSubjects).SetEndRegistrationSubjects(endRegistrationSubjects).Save(r.Context())
+		_, err = h.DB.Configuration.Update().
+			Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).
+			SetStartRegistrationSubjects(startRegistrationSubjects).
+			SetEndRegistrationSubjects(endRegistrationSubjects).
+			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
@@ -366,7 +381,10 @@ func (h *Handler) SettingsPaymentsPostHandler(i *inertia.Inertia) http.Handler {
 			return
 		}
 
-		_, err = h.DB.Configuration.Update().Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).SetNumberFees(numberFees).Save(r.Context())
+		_, err = h.DB.Configuration.Update().
+			Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).
+			SetNumberFees(numberFees).
+			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err)
 			return
@@ -392,7 +410,9 @@ func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) http.Ha
 			return
 		}
 
-		config := h.DB.Configuration.Query().WithCycle().Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).OnlyX(r.Context())
+		config := h.DB.Configuration.Query().
+			WithCycle().Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).
+			OnlyX(r.Context())
 
 		notes := make([]float64, config.NumberNotes)
 		if config.NumberNotes > 0 {
@@ -406,7 +426,10 @@ func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) http.Ha
 				notes[j] = float64(note) / 100
 			}
 
-			_, err = h.DB.Configuration.Update().Where(configuration.HasCycleWith(cycle.Active(true))).SetNotesPercentages(notes).Save(r.Context())
+			_, err = h.DB.Configuration.Update().
+				Where(configuration.HasCycleWith(cycle.Active(true))).
+				SetNotesPercentages(notes).
+				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
@@ -433,7 +456,10 @@ func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) http.Hand
 			return
 		}
 
-		config := h.DB.Configuration.Query().WithCycle().Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).OnlyX(r.Context())
+		config := h.DB.Configuration.Query().
+			WithCycle().
+			Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).
+			OnlyX(r.Context())
 
 		payments := make([]time.Time, config.NumberFees)
 		for j := 0; j < config.NumberFees; j++ {
@@ -448,7 +474,10 @@ func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) http.Hand
 			payments[j] = payment
 		}
 
-		_, err = h.DB.Configuration.Update().Where(configuration.HasCycleWith(cycle.Active(true))).SetFeeDates(payments).Save(r.Context())
+		_, err = h.DB.Configuration.Update().
+			Where(configuration.HasCycleWith(cycle.Active(true))).
+			SetFeeDates(payments).
+			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
@@ -471,19 +500,32 @@ func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) http.Handler {
 
 		newCycle := utils.SplitCycle(currentCycle.Name)
 
-		_, err := h.DB.Cycle.Update().Where(cycle.ID(currentCycle.ID)).SetActive(false).Save(r.Context())
+		_, err := h.DB.Cycle.Update().
+			Where(cycle.ID(currentCycle.ID)).
+			SetActive(false).
+			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
 		}
 
-		currentCycle, err = h.DB.Cycle.Create().SetStartDate(time.Now()).SetEndDate(time.Now()).SetActive(true).SetName(newCycle).Save(r.Context())
+		currentCycle, err = h.DB.Cycle.Create().
+			SetStartDate(time.Now()).
+			SetEndDate(time.Now()).
+			SetActive(true).
+			SetName(newCycle).
+			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
 		}
 
-		_, err = h.DB.Configuration.Create().SetNumberNotes(0).SetNumberFees(0).SetStartRegistrationSubjects(time.Now()).SetEndRegistrationSubjects(time.Now()).SetCycle(currentCycle).Save(r.Context())
+		_, err = h.DB.Configuration.Create().
+			SetNumberNotes(0).
+			SetNumberFees(0).
+			SetStartRegistrationSubjects(time.Now()).
+			SetEndRegistrationSubjects(time.Now()).
+			SetCycle(currentCycle).Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
@@ -553,7 +595,10 @@ func (h *Handler) Student(i *inertia.Inertia) http.Handler {
 				return
 			}
 
-			student, err := h.DB.Student.Query().Where(student.ID(studentId)).WithUser().WithCareer().Only(r.Context())
+			student, err := h.DB.Student.Query().
+				Where(student.ID(studentId)).
+				WithUser().WithCareer().
+				Only(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
@@ -716,13 +761,34 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 		}
 
 		if id == "" {
-			user, err := h.DB.Users.Create().SetEmail(email).SetUsername(username).SetPassword(hashedPassword).SetName(name).SetAvatar(filePath).SetIsActive(true).SetRoleID(6).Save(r.Context())
+			user, err := h.DB.Users.Create().
+				SetEmail(email).
+				SetUsername(username).
+				SetPassword(hashedPassword).
+				SetName(name).
+				SetAvatar(filePath).
+				SetIsActive(true).
+				SetRoleID(6).
+				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
 
-			_, err = h.DB.Student.Create().SetPhone(phone).SetDistrict(district).SetCity(city).SetPostalCode(postalCodeInt).SetAddress(address).SetIdentityCard(identityCard).SetBirthDate(birthDateTime).SetCreditUnitsAccumulated(creditUnitsAccumulated).SetSemester(semesterInt).SetTotalAverage(totalAverageFloat).SetUser(user).SetCareerID(careerId).Save(r.Context())
+			_, err = h.DB.Student.Create().
+				SetPhone(phone).
+				SetDistrict(district).
+				SetCity(city).
+				SetPostalCode(postalCodeInt).
+				SetAddress(address).
+				SetIdentityCard(identityCard).
+				SetBirthDate(birthDateTime).
+				SetCreditUnitsAccumulated(creditUnitsAccumulated).
+				SetSemester(semesterInt).
+				SetTotalAverage(totalAverageFloat).
+				SetUser(user).
+				SetCareerID(careerId).
+				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
@@ -734,19 +800,39 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 				return
 			}
 
-			student, err := h.DB.Student.Query().Where(student.ID(studentId)).WithUser().Only(r.Context())
+			student, err := h.DB.Student.Query().
+				Where(student.ID(studentId)).
+				WithUser().
+				Only(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
 
-			_, err = h.DB.Users.UpdateOne(student.Edges.User).SetEmail(email).SetUsername(username).SetName(name).SetAvatar(filePath).Save(r.Context())
+			_, err = h.DB.Users.UpdateOne(student.Edges.User).
+				SetEmail(email).
+				SetUsername(username).
+				SetName(name).
+				SetAvatar(filePath).
+				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
 
-			_, err = h.DB.Student.UpdateOne(student).SetPhone(phone).SetDistrict(district).SetCity(city).SetPostalCode(postalCodeInt).SetAddress(address).SetIdentityCard(identityCard).SetBirthDate(birthDateTime).SetCreditUnitsAccumulated(creditUnitsAccumulated).SetSemester(semesterInt).SetTotalAverage(totalAverageFloat).SetCareerID(careerId).Save(r.Context())
+			_, err = h.DB.Student.UpdateOne(student).
+				SetPhone(phone).
+				SetDistrict(district).
+				SetCity(city).
+				SetPostalCode(postalCodeInt).
+				SetAddress(address).
+				SetIdentityCard(identityCard).
+				SetBirthDate(birthDateTime).
+				SetCreditUnitsAccumulated(creditUnitsAccumulated).
+				SetSemester(semesterInt).
+				SetTotalAverage(totalAverageFloat).
+				SetCareerID(careerId).
+				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
@@ -761,7 +847,9 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 
 func (h *Handler) Careers(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		careers, err := h.DB.Careers.Query().WithLeader(func(query *ent.ProfessorQuery) { query.WithUser() }).All(r.Context())
+		careers, err := h.DB.Careers.Query().
+			WithLeader(func(query *ent.ProfessorQuery) { query.WithUser() }).
+			All(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return
@@ -827,9 +915,16 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 					return
 				}
 
-				_, err = h.DB.Careers.Create().SetName(name).SetDescription(description).SetLeaderID(leader).Save(r.Context())
+				_, err = h.DB.Careers.Create().
+					SetName(name).
+					SetDescription(description).
+					SetLeaderID(leader).
+					Save(r.Context())
 			} else {
-				_, err = h.DB.Careers.Create().SetName(name).SetDescription(description).Save(r.Context())
+				_, err = h.DB.Careers.Create().
+					SetName(name).
+					SetDescription(description).
+					Save(r.Context())
 			}
 
 			if err != nil {
@@ -843,7 +938,9 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 				return
 			}
 
-			oldCareer, err := h.DB.Careers.Query().Where(careers.ID(careerId)).Only(r.Context())
+			oldCareer, err := h.DB.Careers.Query().
+				Where(careers.ID(careerId)).
+				Only(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
@@ -857,9 +954,16 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 					return
 				}
 
-				_, err = h.DB.Careers.UpdateOne(oldCareer).SetName(name).SetDescription(description).SetLeaderID(leader).Save(r.Context())
+				_, err = h.DB.Careers.UpdateOne(oldCareer).
+					SetName(name).
+					SetDescription(description).
+					SetLeaderID(leader).
+					Save(r.Context())
 			} else {
-				_, err = h.DB.Careers.UpdateOne(oldCareer).SetName(name).SetDescription(description).Save(r.Context())
+				_, err = h.DB.Careers.UpdateOne(oldCareer).
+					SetName(name).
+					SetDescription(description).
+					Save(r.Context())
 			}
 
 			if err != nil {
@@ -1015,13 +1119,27 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
 		}
 
 		if id == "" {
-			user, err := h.DB.Users.Create().SetEmail(email).SetUsername(username).SetPassword(hashedPassword).SetName(name).SetAvatar(filePath).SetIsActive(true).SetRoleID(4).Save(r.Context())
+			user, err := h.DB.Users.Create().
+				SetEmail(email).
+				SetUsername(username).
+				SetPassword(hashedPassword).
+				SetName(name).
+				SetAvatar(filePath).
+				SetIsActive(true).
+				SetRoleID(4).
+				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
 
-			_, err = h.DB.Professor.Create().SetPhone(phone).SetIdentityCard(identityCard).SetAddress(address).SetBirthDate(birthDateTime).SetUser(user).Save(r.Context())
+			_, err = h.DB.Professor.Create().
+				SetPhone(phone).
+				SetIdentityCard(identityCard).
+				SetAddress(address).
+				SetBirthDate(birthDateTime).
+				SetUser(user).
+				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
@@ -1033,19 +1151,32 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
 				return
 			}
 
-			professor, err := h.DB.Professor.Query().Where(professor.ID(professorId)).WithUser().Only(r.Context())
+			professor, err := h.DB.Professor.Query().
+				Where(professor.ID(professorId)).
+				WithUser().
+				Only(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
 
-			_, err = h.DB.Users.UpdateOne(professor.Edges.User).SetEmail(email).SetUsername(username).SetName(name).SetAvatar(filePath).Save(r.Context())
+			_, err = h.DB.Users.UpdateOne(professor.Edges.User).
+				SetEmail(email).
+				SetUsername(username).
+				SetName(name).
+				SetAvatar(filePath).
+				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return
 			}
 
-			_, err = h.DB.Professor.UpdateOne(professor).SetPhone(phone).SetIdentityCard(identityCard).SetAddress(address).SetBirthDate(birthDateTime).Save(r.Context())
+			_, err = h.DB.Professor.UpdateOne(professor).
+				SetPhone(phone).
+				SetIdentityCard(identityCard).
+				SetAddress(address).
+				SetBirthDate(birthDateTime).
+				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return

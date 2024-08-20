@@ -35,8 +35,6 @@
   let avatar = user?.avatar || "";
   let career = student?.career?.toString() ?? ''
 
-  console.log(student);
-
   /** @type {File | null} */
   let imageFile = null;
   /**
