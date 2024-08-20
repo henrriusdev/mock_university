@@ -825,7 +825,7 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 		description := r.FormValue("description")
 		leaderId := r.FormValue("leader")
 		id := r.FormValue("id")
-		fmt.Println(id)
+		fmt.Println(leaderId)
 
 		if id == "" {
 			var leader int
