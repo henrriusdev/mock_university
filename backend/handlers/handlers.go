@@ -787,8 +787,18 @@ func (h *Handler) Careers(i *inertia.Inertia) http.Handler {
 			}
 		}
 
+		professors := h.DB.Professor.Query().WithUser().AllX(r.Context())
+		professorsDto := make([]SelectDto, len(professors))
+		for i, professor := range professors {
+			professorsDto[i] = SelectDto{
+				ID:   professor.ID,
+				Name: professor.Edges.User.Name,
+			}
+		}
+
 		err = i.Render(w, r, "Directive/Careers", inertia.Props{
-			"careers": careerDtos,
+			"careers":    careerDtos,
+			"professors": professorsDto,
 		})
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
