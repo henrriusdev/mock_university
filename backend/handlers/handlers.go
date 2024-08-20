@@ -887,7 +887,7 @@ func (h *Handler) Professors(i *inertia.Inertia) http.Handler {
 				ID:           professor.ID,
 				Name:         professor.Edges.User.Name,
 				Email:        professor.Edges.User.Email,
-				Avatar:       professor.Edges.User.Avatar,
+				Avatar:       strings.Replace(professor.Edges.User.Avatar, "./", "/", 1),
 				IdentityCard: professor.IdentityCard,
 				Phone:        professor.Phone,
 			}
@@ -947,5 +947,113 @@ func (h *Handler) Professor(i *inertia.Inertia) http.Handler {
 			return
 		}
 	}
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.NotFound(w, r)
+			return
+		}
+
+		err := r.ParseMultipartForm(10 << 20) // 10 MB max file size
+		if err != nil {
+			err = errors.New(err.Error() + " parse")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		// Accediendo a los valores enviados por el formulario
+		id := r.FormValue("id")
+		phone := r.FormValue("phone")
+		identityCard := r.FormValue("identityCard")
+		name := r.FormValue("name")
+		email := r.FormValue("email")
+		username := r.FormValue("username")
+		birthDate := r.FormValue("birthDate")
+		address := r.FormValue("address")
+
+		filePath := ""
+		file, handler, err := r.FormFile("avatar")
+		if err == nil {
+			defer file.Close()
+
+			// Guarda el archivo si se ha subido
+			filePath = "./uploads/" + username + "_avatar" + filepath.Ext(handler.Filename)
+			f, err := os.Create(filePath)
+			if err != nil {
+				err = os.MkdirAll("./uploads", os.ModePerm)
+				if err != nil {
+					err = errors.New(err.Error() + " file 637")
+					HandleServerErr(i, err).ServeHTTP(w, r)
+					return
+				}
+			}
+			defer f.Close()
+
+			_, err = io.Copy(f, file)
+			if err != nil {
+				err = errors.New(err.Error() + " file 646")
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+		}
+
+		hashedPassword, err := utils.HashPassword(identityCard)
+		if err != nil {
+			err = errors.New(err.Error() + " password")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		birthDateTime, err := utils.ParseDate(birthDate)
+		if err != nil {
+			err = errors.New(err.Error() + " birthDate")
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		if id == "" {
+			user, err := h.DB.Users.Create().SetEmail(email).SetUsername(username).SetPassword(hashedPassword).SetName(name).SetAvatar(filePath).SetIsActive(true).SetRoleID(4).Save(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			_, err = h.DB.Professor.Create().SetPhone(phone).SetIdentityCard(identityCard).SetAddress(address).SetBirthDate(birthDateTime).SetUser(user).Save(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+		} else {
+			professorId, err := strconv.Atoi(id)
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			professor, err := h.DB.Professor.Query().Where(professor.ID(professorId)).WithUser().Only(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			_, err = h.DB.Users.UpdateOne(professor.Edges.User).SetEmail(email).SetUsername(username).SetName(name).SetAvatar(filePath).Save(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			_, err = h.DB.Professor.UpdateOne(professor).SetPhone(phone).SetIdentityCard(identityCard).SetAddress(address).SetBirthDate(birthDateTime).Save(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+		}
+
+		http.Redirect(w, r, "/directive/professors", http.StatusSeeOther)
+	}
+
 	return http.HandlerFunc(fn)
 }
