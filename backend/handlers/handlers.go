@@ -15,6 +15,7 @@ import (
 	"mocku/backend/ent/careers"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
+	"mocku/backend/ent/professor"
 	"mocku/backend/ent/student"
 	"mocku/backend/ent/users"
 	"mocku/backend/utils"
@@ -894,6 +895,52 @@ func (h *Handler) Professors(i *inertia.Inertia) http.Handler {
 
 		err = i.Render(w, r, "Directive/Professor/Home", inertia.Props{
 			"professors": professorDtos,
+		})
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+	}
+	return http.HandlerFunc(fn)
+}
+
+func (h *Handler) Professor(i *inertia.Inertia) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		id := r.URL.Query().Get("id")
+		var professorDto ProfessorDto
+		var userDto UserDto
+		if id != "add" {
+			professorId, err := strconv.Atoi(id)
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			professor, err := h.DB.Professor.Query().Where(professor.ID(professorId)).WithUser().Only(r.Context())
+			if err != nil {
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return
+			}
+
+			professorDto = ProfessorDto{
+				ID:           professor.ID,
+				IdentityCard: professor.IdentityCard,
+				Phone:        professor.Phone,
+			}
+
+			userDto = UserDto{
+				ID:       0,
+				Name:     professor.Edges.User.Name,
+				Email:    professor.Edges.User.Email,
+				Username: professor.Edges.User.Username,
+				Avatar:   strings.Replace(professor.Edges.User.Avatar, "./", "/", 1),
+				Active:   professor.Edges.User.IsActive,
+			}
+		}
+
+		err := i.Render(w, r, "Directive/Professor/Upsert", inertia.Props{
+			"professor": professorDto,
+			"user":      userDto,
 		})
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
