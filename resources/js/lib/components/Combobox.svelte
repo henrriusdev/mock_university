@@ -13,6 +13,8 @@
   export let value = "";
 
   export let placeholder = "Select an item...";
+
+  export let {class: className = ""} = $$props;
  
   $: selectedValue =
     options.find((f) => f.value === value)?.label ?? placeholder;
@@ -36,7 +38,7 @@
       variant="outline"
       role="combobox"
       aria-expanded={open}
-      class="w-[200px] justify-between"
+      class="w-[200px] justify-between {className}"
     >
       {selectedValue}
       <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />

@@ -22,6 +22,9 @@
   /** @type {User | null} */
   export let user = null;
 
+  /** @type {Array<{id: number, name: string}>} */
+  export let bosses = [];
+
   let year = professor?.birthDate ? new Date(professor?.birthDate).getFullYear() : new Date(2003, 1, 16).getFullYear();
   let month = professor?.birthDate ? new Date(professor?.birthDate).getMonth() : new Date(2003, 1, 16).getMonth();
   let day = professor?.birthDate ? new Date(professor?.birthDate).getDate() : new Date(2003, 1, 16).getDate();
@@ -110,6 +113,16 @@
                     />
                   </span>
                   <span
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2 flex flex-col justify-between"
+                  >
+                  <Label for="boss">Boss</Label>
+                  <Combobox
+                  placeholder="Select the boss"
+                  options="{bosses.map(({ id, name }) => ({ value: id.toString(), label: name }))}"
+                  class="w-full"
+                  />
+                  </span>
+                  <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-4"
                   >
                     <Label for="address">Address</Label>
@@ -119,18 +132,6 @@
                       name="address"
                     />
                   </span>
-                </div>
-              </Card.Content>
-            </Card.Root>
-            <Card.Root>
-              <Card.Header>
-                <Card.Title>Personal information</Card.Title>
-                <Card.Description>
-                  Fill the form with the professor's personal information.
-                </Card.Description>
-              </Card.Header>
-              <Card.Content>
-                <div class="grid gap-4 lg:grid-cols-4">
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >

@@ -1052,9 +1052,28 @@ func (h *Handler) Professor(i *inertia.Inertia) http.Handler {
 			}
 		}
 
-		err := i.Render(w, r, "Directive/Professor/Upsert", inertia.Props{
+		// get all professors that don't have a boss, without BossID, use Boss Edge
+		professors, err := h.DB.Professor.Query().
+			WithUser().
+			Where(professor.Not(professor.HasBoss())).
+			All(r.Context())
+		if err != nil {
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return
+		}
+
+		bossesDto := make([]SelectDto, len(professors))
+		for i, professor := range professors {
+			bossesDto[i] = SelectDto{
+				ID:   professor.ID,
+				Name: professor.Edges.User.Name,
+			}
+		}
+
+		err = i.Render(w, r, "Directive/Professor/Upsert", inertia.Props{
 			"professor": professorDto,
 			"user":      userDto,
+			"bosses":    bossesDto,
 		})
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
