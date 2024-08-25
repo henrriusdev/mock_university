@@ -1,5 +1,4 @@
 <script>
-  import Avatar from "$lib/components/Avatar.svelte";
   import Combobox from "$lib/components/Combobox.svelte";
   import DataTableActions from "$lib/components/datatable/data-table-actions.svelte";
   import DataTable from "$lib/components/datatable/data-table.svelte";
@@ -18,7 +17,6 @@
   import { readable } from "svelte/store";
   /** @type { Array<{id: number, name: string, leader?: string, leaderId?: number, description: string}>} */
   export let careers = [];
-
   /** @type {Array<{id: number,name: string}>} */
   export let professors = [];
 
@@ -44,6 +42,9 @@
   /** @type {number | null}*/
   let id = null;
 
+  let checked = false;
+  let edit = false;
+
   const actions = [
     {
       label: "Edit",
@@ -65,12 +66,9 @@
     },
     {
       label: "Delete",
-      onClick: () => {
-        console.log("Delete");
-      },
+      onClick: () => {},
     },
   ];
-  let edit = false;
 
   const columns = table.createColumns([
     table.column({
@@ -117,9 +115,6 @@
       },
     }),
   ]);
-
-  let checked = false;
-  $: console.log(leaderId);
 </script>
 
 <DirectiveLayout
