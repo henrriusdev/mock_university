@@ -49,7 +49,8 @@ func MountApp() {
 	app.Any("/login_post", handler.LoginPost(i))
 
 	// Directives routes
-	directive := app.Group("/directive", nil)
+	directive := app.Group("/directive", inertia)
+	directive.GET("", handler.DirectiveDash(i))
 	directive.GET("/students", handler.Students(i))
 	directive.GET("/students/view", handler.Student(i))
 	directive.Any("/students/view/submit", handler.StudentPost(i))
@@ -60,7 +61,7 @@ func MountApp() {
 	directive.Any("/professors/view/submit", handler.ProfessorPost(i))
 
 	// Settings routes
-	settings := app.Group("/settings", nil)
+	settings := app.Group("/settings", inertia)
 	settings.GET("", handler.Settings(i))
 	settings.Any("/notes", handler.SettingsNotesPost(i))
 	settings.Any("/notes/percentages", handler.SettingsNotesPercentage(i))
