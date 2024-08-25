@@ -40,39 +40,42 @@ func MountApp() {
 
 	// Routes
 	app.GET("/", handler.Home(i))
-	// mux.Handle("/", i.Middleware(handler.Home(i)))
-	// mux.Handle("/login", i.Middleware(handler.Login(i)))
-	// mux.Handle("/login_post", i.Middleware(handler.LoginPost(i)))
+	app.GET("/login", handler.Login(i))
+	app.POST("/login_post", handler.LoginPost(i))
 
-	// // Dashboard routes
-	// mux.Handle("/directive", i.Middleware(handler.DirectiveDash(i)))
+	// Directives routes
+	directive := app.Group("/directive", nil)
+	directive.GET("/students", handler.Students(i))
+	directive.GET("/students/view", handler.Student(i))
+	directive.POST("/students/view/submit", handler.StudentPost(i))
+	directive.GET("/careers", handler.Careers(i))
+	directive.POST("/careers/submit", handler.Career(i))
+	directive.GET("/professors", handler.Professors(i))
+	directive.GET("/professors/view", handler.Professor(i))
+	directive.POST("/professors/view/submit", handler.ProfessorPost(i))
+
+	// Settings routes
+	settings := app.Group("/settings", nil)
+	settings.GET("", handler.Settings(i))
+	settings.POST("/notes", handler.SettingsNotesPost(i))
+	settings.POST("/notes/percentages", handler.SettingsNotesPercentage(i))
+	settings.POST("/payment", handler.SettingsPayments(i))
+	settings.POST("/payment/dates", handler.SettingsPaymentsDates(i))
+	settings.POST("/cycle", handler.SettingsCycle(i))
+	settings.POST("/dates", handler.SettingsDates(i))
+
+	// Dashboard routes
 	// mux.Handle("/payment", i.Middleware(handler.PaymentsDash(i)))
 	// mux.Handle("/student", i.Middleware(handler.StudentDash(i)))
 	// mux.Handle("/professor", i.Middleware(handler.ProfessorDash(i)))
 	// mux.Handle("/control", i.Middleware(handler.ControlDash(i)))
 
-	// // Directives routes
-	// mux.Handle("/directive/students", i.Middleware(handler.Students(i)))
-	// mux.Handle("/directive/students/view", i.Middleware(handler.Student(i)))
-	// mux.Handle("/directive/students/view/submit", i.Middleware(handler.StudentPost(i)))
-	// mux.Handle("/directive/careers", i.Middleware(handler.Careers(i)))
-	// mux.Handle("/directive/careers/submit", i.Middleware(handler.Career(i)))
-	// mux.Handle("/directive/professors", i.Middleware(handler.Professors(i)))
-	// mux.Handle("/directive/professors/view", i.Middleware(handler.Professor(i)))
-	// mux.Handle("/directive/professors/view/submit", i.Middleware(handler.ProfessorPost(i)))
-	// mux.Handle("/settings/notes/percentages", i.Middleware(handler.SettingsNotesPercentagePostHandler(i)))
-	// mux.Handle("/settings/payment", i.Middleware(handler.SettingsPaymentsPostHandler(i)))
-	// mux.Handle("/settings/payment/dates", i.Middleware(handler.SettingsPaymentsDatesPostHandler(i)))
-	// mux.Handle("/settings/cycle", i.Middleware(handler.SettingsCyclePostHandler(i)))
-	// mux.Handle("/settings", i.Middleware(handler.Settings(i)))
-	// mux.Handle("/settings/notes", i.Middleware(handler.SettingsNotesPost(i)))
-	// mux.Handle("/settings/dates", i.Middleware(handler.SettingsDatesPost(i)))
-
 	// // API routes
-	// mux.Handle("/build/", http.StripPrefix("/build/", http.FileServer(http.Dir("./public/build"))))
-	// mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
+	app.Static("/build", "./public/build")
+	app.Static("/uploads", "./uploads")
 
-	// http.ListenAndServe(":3000", mux)
+	// Start server
+	app.Start(":3000")
 }
 
 func (cv *CustomValidator) Validate(i interface{}) error {

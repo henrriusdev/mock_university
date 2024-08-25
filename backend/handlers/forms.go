@@ -34,12 +34,12 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 		err := c.Bind(&formData)
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
-			return err
+			return nil
 		}
 
 		if err = c.Validate(formData); err != nil {
 			HandleBadRequest(i, err).ServeHTTP(c.Response().Writer, c.Request())
-			return err
+			return nil
 		}
 
 		user, err := h.DB.Users.Query().
@@ -48,14 +48,14 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 			First(c.Request().Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
-			return err
+			return nil
 		}
 
 		careers, err := h.DB.Careers.Query().
 			All(c.Request().Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
-			return err
+			return nil
 		}
 		if !utils.CheckPassword(user.Password, formData.Password) {
 			err = i.Render(c.Response().Writer, c.Request(), "Auth/Login", inertia.Props{
@@ -64,7 +64,7 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 			})
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
-				return err
+				return nil
 			}
 
 			return nil
@@ -105,13 +105,13 @@ func (h *Handler) SettingsNotesPost(i *inertia.Inertia) echo.HandlerFunc {
 		if err != nil {
 			println(err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		notesNumber, err := strconv.Atoi(r.FormValue("notes"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		_, err = h.DB.Configuration.Update().
@@ -120,7 +120,7 @@ func (h *Handler) SettingsNotesPost(i *inertia.Inertia) echo.HandlerFunc {
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err)
-			return err
+			return nil
 		}
 
 		i.Redirect(w, r, "/settings", 302)
@@ -131,7 +131,7 @@ func (h *Handler) SettingsNotesPost(i *inertia.Inertia) echo.HandlerFunc {
 	return fn
 }
 
-func (h *Handler) SettingsDatesPost(i *inertia.Inertia) echo.HandlerFunc {
+func (h *Handler) SettingsDates(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
@@ -143,31 +143,31 @@ func (h *Handler) SettingsDatesPost(i *inertia.Inertia) echo.HandlerFunc {
 		if err != nil {
 			println(err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		startRegistrationSubjects, err := utils.ParseDate(r.FormValue("start_registration_subjects"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		endRegistrationSubjects, err := utils.ParseDate(r.FormValue("end_registration_subjects"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		cycleStart, err := utils.ParseDate(r.FormValue("cycle_start"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		cycleEnd, err := utils.ParseDate(r.FormValue("cycle_end"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		_, err = h.DB.Cycle.Update().
@@ -177,7 +177,7 @@ func (h *Handler) SettingsDatesPost(i *inertia.Inertia) echo.HandlerFunc {
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		_, err = h.DB.Configuration.Update().
@@ -187,7 +187,7 @@ func (h *Handler) SettingsDatesPost(i *inertia.Inertia) echo.HandlerFunc {
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		i.Redirect(w, r, "/settings", 302)
@@ -198,7 +198,7 @@ func (h *Handler) SettingsDatesPost(i *inertia.Inertia) echo.HandlerFunc {
 	return fn
 }
 
-func (h *Handler) SettingsPaymentsPostHandler(i *inertia.Inertia) echo.HandlerFunc {
+func (h *Handler) SettingsPayments(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
@@ -209,13 +209,13 @@ func (h *Handler) SettingsPaymentsPostHandler(i *inertia.Inertia) echo.HandlerFu
 		err := r.ParseForm()
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		numberFees, err := strconv.Atoi(r.FormValue("payments"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		_, err = h.DB.Configuration.Update().
@@ -224,7 +224,7 @@ func (h *Handler) SettingsPaymentsPostHandler(i *inertia.Inertia) echo.HandlerFu
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		i.Redirect(w, r, "/settings", 302)
@@ -235,7 +235,7 @@ func (h *Handler) SettingsPaymentsPostHandler(i *inertia.Inertia) echo.HandlerFu
 	return fn
 }
 
-func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) echo.HandlerFunc {
+func (h *Handler) SettingsNotesPercentage(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
@@ -247,7 +247,7 @@ func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) echo.Ha
 		if err != nil {
 			println(err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		config := h.DB.Configuration.Query().
@@ -260,7 +260,7 @@ func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) echo.Ha
 				note, err := strconv.Atoi(r.FormValue(fmt.Sprintf("note-%d", j+1)))
 				if err != nil {
 					HandleServerErr(i, err).ServeHTTP(w, r)
-					return err
+					return nil
 				}
 
 				notes[j] = float64(note) / 100
@@ -272,7 +272,7 @@ func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) echo.Ha
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 		}
 
@@ -284,7 +284,7 @@ func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) echo.Ha
 	return fn
 }
 
-func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) echo.HandlerFunc {
+func (h *Handler) SettingsPaymentsDates(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
@@ -296,7 +296,7 @@ func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) echo.Hand
 		if err != nil {
 			println(err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		config := h.DB.Configuration.Query().
@@ -310,7 +310,7 @@ func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) echo.Hand
 			payment, err := utils.ParseDate(date)
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 
 			fmt.Println(payment)
@@ -323,7 +323,7 @@ func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) echo.Hand
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		i.Redirect(w, r, "/settings", 302)
@@ -333,7 +333,7 @@ func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) echo.Hand
 	return fn
 }
 
-func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) echo.HandlerFunc {
+func (h *Handler) SettingsCycle(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
@@ -351,7 +351,7 @@ func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) echo.HandlerFunc 
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		currentCycle, err = h.DB.Cycle.Create().
@@ -362,7 +362,7 @@ func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) echo.HandlerFunc 
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		_, err = h.DB.Configuration.Create().
@@ -373,7 +373,7 @@ func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) echo.HandlerFunc 
 			SetCycle(currentCycle).Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		i.Redirect(w, r, "/settings", 302)
@@ -396,7 +396,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 		if err != nil {
 			err = errors.New(err.Error() + " parse")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		// Accediendo a los valores enviados por el formulario
@@ -429,7 +429,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 				if err != nil {
 					err = errors.New(err.Error() + " file 637")
 					HandleServerErr(i, err).ServeHTTP(w, r)
-					return err
+					return nil
 				}
 			}
 			defer f.Close()
@@ -438,7 +438,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 			if err != nil {
 				err = errors.New(err.Error() + " file 646")
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 		}
 
@@ -446,49 +446,49 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 		if err != nil {
 			err = errors.New(err.Error() + " password")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		postalCodeInt, err := strconv.Atoi(postalCode)
 		if err != nil {
 			err = errors.New(err.Error() + " postalCode")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		birthDateTime, err := utils.ParseDate(birthDate)
 		if err != nil {
 			err = errors.New(err.Error() + " birthDate")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		creditUnitsAccumulated, err := strconv.Atoi(cuAccumulated)
 		if err != nil {
 			err = errors.New(err.Error() + " creditUnitsAccumulated")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		semesterInt, err := strconv.Atoi(semester)
 		if err != nil {
 			err = errors.New(err.Error() + " semester")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		totalAverageFloat, err := strconv.ParseFloat(totalAverage, 64)
 		if err != nil {
 			err = errors.New(err.Error() + " totalAverage")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		careerId, err := strconv.Atoi(career)
 		if err != nil {
 			err = errors.New(err.Error() + " career")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		if id == "" {
@@ -503,7 +503,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 
 			_, err = h.DB.Student.Create().
@@ -522,13 +522,13 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 		} else {
 			studentId, err := strconv.Atoi(id)
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 
 			student, err := h.DB.Student.Query().
@@ -537,7 +537,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 				Only(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 
 			_, err = h.DB.Users.UpdateOne(student.Edges.User).
@@ -548,7 +548,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 
 			_, err = h.DB.Student.UpdateOne(student).
@@ -566,7 +566,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 		}
 
@@ -589,7 +589,7 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 		err := r.ParseForm()
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		name := r.FormValue("name")
@@ -604,7 +604,7 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 				leader, err = strconv.Atoi(leaderId)
 				if err != nil {
 					HandleServerErr(i, err).ServeHTTP(w, r)
-					return err
+					return nil
 				}
 
 				_, err = h.DB.Careers.Create().
@@ -621,13 +621,13 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 		} else {
 			careerId, err := strconv.Atoi(id)
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 
 			oldCareer, err := h.DB.Careers.Query().
@@ -635,7 +635,7 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 				Only(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 
 			var leader int
@@ -643,7 +643,7 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 				leader, err = strconv.Atoi(leaderId)
 				if err != nil {
 					HandleServerErr(i, err).ServeHTTP(w, r)
-					return err
+					return nil
 				}
 
 				_, err = h.DB.Careers.UpdateOne(oldCareer).
@@ -660,7 +660,7 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 		}
 
@@ -683,7 +683,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 		if err != nil {
 			err = errors.New(err.Error() + " parse")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		// Accediendo a los valores enviados por el formulario
@@ -709,7 +709,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 				if err != nil {
 					err = errors.New(err.Error() + " file 637")
 					HandleServerErr(i, err).ServeHTTP(w, r)
-					return err
+					return nil
 				}
 			}
 			defer f.Close()
@@ -718,7 +718,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 			if err != nil {
 				err = errors.New(err.Error() + " file 646")
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 		}
 
@@ -726,14 +726,14 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 		if err != nil {
 			err = errors.New(err.Error() + " password")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		birthDateTime, err := utils.ParseDate(birthDate)
 		if err != nil {
 			err = errors.New(err.Error() + " birthDate")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return err
+			return nil
 		}
 
 		if id == "" {
@@ -748,7 +748,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 
 			_, err = h.DB.Professor.Create().
@@ -760,13 +760,13 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 		} else {
 			professorId, err := strconv.Atoi(id)
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 
 			professor, err := h.DB.Professor.Query().
@@ -775,7 +775,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 				Only(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 
 			_, err = h.DB.Users.UpdateOne(professor.Edges.User).
@@ -786,7 +786,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 
 			_, err = h.DB.Professor.UpdateOne(professor).
@@ -797,7 +797,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return err
+				return nil
 			}
 		}
 
