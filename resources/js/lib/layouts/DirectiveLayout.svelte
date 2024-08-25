@@ -43,10 +43,10 @@
     <title>{title}</title>
   {/if}
   {#if description}
-    <meta name="description" content={description} />
+    <meta name="description" content="{description}" />
   {/if}
   {#if keywords}
-    <meta name="keywords" content={keywords} />
+    <meta name="keywords" content="{keywords}" />
   {/if}
 </svelte:head>
 <div class="flex min-h-screen w-full flex-col">
@@ -73,7 +73,7 @@
           variant="outline"
           size="icon"
           class="shrink-0 md:hidden"
-          builders={[builder]}
+          builders="{[builder]}"
         >
           <Menu class="h-5 w-5" />
           <span class="sr-only">Toggle navigation menu</span>
@@ -112,7 +112,7 @@
       <DropdownMenu>
         <DropdownMenuTrigger asChild let:builder>
           <Button
-            builders={[builder]}
+            builders="{[builder]}"
             variant="secondary"
             size="icon"
             class="rounded-full"
