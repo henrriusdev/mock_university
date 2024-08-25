@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	inertia "github.com/romsar/gonertia"
 )
+
+var methodNotAllowed = errors.New("Method not allowed")
 
 func HandleServerErr(i *inertia.Inertia, err error) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
