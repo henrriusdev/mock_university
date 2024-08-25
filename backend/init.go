@@ -15,6 +15,7 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	inertia "github.com/romsar/gonertia"
 
 	_ "github.com/lib/pq"
@@ -35,34 +36,38 @@ func MountApp() {
 	}
 
 	app := echo.New()
-	middleware := echo.WrapMiddleware(i.Middleware)
-	app.Use(middleware)
+	inertia := echo.WrapMiddleware(i.Middleware)
+	app.Use(inertia)
+	app.Use(middleware.Logger())
+	app.Use(middleware.Recover())
+
+	app.Validator = &CustomValidator{validator: validator.New()}
 
 	// Routes
 	app.GET("/", handler.Home(i))
 	app.GET("/login", handler.Login(i))
-	app.POST("/login_post", handler.LoginPost(i))
+	app.Any("/login_post", handler.LoginPost(i))
 
 	// Directives routes
 	directive := app.Group("/directive", nil)
 	directive.GET("/students", handler.Students(i))
 	directive.GET("/students/view", handler.Student(i))
-	directive.POST("/students/view/submit", handler.StudentPost(i))
+	directive.Any("/students/view/submit", handler.StudentPost(i))
 	directive.GET("/careers", handler.Careers(i))
-	directive.POST("/careers/submit", handler.Career(i))
+	directive.Any("/careers/submit", handler.Career(i))
 	directive.GET("/professors", handler.Professors(i))
 	directive.GET("/professors/view", handler.Professor(i))
-	directive.POST("/professors/view/submit", handler.ProfessorPost(i))
+	directive.Any("/professors/view/submit", handler.ProfessorPost(i))
 
 	// Settings routes
 	settings := app.Group("/settings", nil)
 	settings.GET("", handler.Settings(i))
-	settings.POST("/notes", handler.SettingsNotesPost(i))
-	settings.POST("/notes/percentages", handler.SettingsNotesPercentage(i))
-	settings.POST("/payment", handler.SettingsPayments(i))
-	settings.POST("/payment/dates", handler.SettingsPaymentsDates(i))
-	settings.POST("/cycle", handler.SettingsCycle(i))
-	settings.POST("/dates", handler.SettingsDates(i))
+	settings.Any("/notes", handler.SettingsNotesPost(i))
+	settings.Any("/notes/percentages", handler.SettingsNotesPercentage(i))
+	settings.Any("/payment", handler.SettingsPayments(i))
+	settings.Any("/payment/dates", handler.SettingsPaymentsDates(i))
+	settings.Any("/cycle", handler.SettingsCycle(i))
+	settings.Any("/dates", handler.SettingsDates(i))
 
 	// Dashboard routes
 	// mux.Handle("/payment", i.Middleware(handler.PaymentsDash(i)))
@@ -79,6 +84,9 @@ func MountApp() {
 }
 
 func (cv *CustomValidator) Validate(i interface{}) error {
+	if cv.validator == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Validator is not initialized")
+	}
 	if err := cv.validator.Struct(i); err != nil {
 		// Optionally, you could return the error to give each route more control over the status code
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())

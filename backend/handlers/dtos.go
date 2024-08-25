@@ -1,8 +1,8 @@
 package handlers
 
 type LoginDto struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Email    string `form:"email" json:"email" validate:"required,email"`
+	Password string `form:"password" json:"password" validate:"required"`
 }
 
 type StudentDto struct {
