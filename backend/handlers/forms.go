@@ -8,10 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
-	"mocku/backend/ent"
 	"mocku/backend/ent/careers"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
@@ -20,93 +18,56 @@ import (
 	"mocku/backend/ent/users"
 	"mocku/backend/utils"
 
+	"github.com/labstack/echo/v4"
 	inertia "github.com/romsar/gonertia"
 )
 
-func (h *Handler) Home(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		careers, err := h.DB.Careers.Query().All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-
-		err = i.Render(w, r, "Home/Index", inertia.Props{
-			"careers": careers,
-		})
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-	}
-
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) Login(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		careers, err := h.DB.Careers.Query().All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-
-		err = i.Render(w, r, "Auth/Login", inertia.Props{
-			"careers": careers,
-		})
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-	}
-
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) LoginPost(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			HandleNotFound(i).ServeHTTP(w, r)
-			return
+func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		if c.Request().Method != http.MethodPost {
+			HandleNotFound(i).ServeHTTP(c.Response().Writer, c.Request())
+			return methodNotAllowed
 		}
 
 		var formData LoginDto
-		// get formData from request instead of json
-		err := r.ParseForm()
+
+		err := c.Bind(&formData)
 		if err != nil {
-			println(err)
-			HandleServerErr(i, err)
-			return
+			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
+			return nil
 		}
 
-		formData.Email = r.FormValue("email")
-		formData.Password = r.FormValue("password")
+		if err = c.Validate(formData); err != nil {
+			HandleBadRequest(i, err).ServeHTTP(c.Response().Writer, c.Request())
+			return nil
+		}
+
 		user, err := h.DB.Users.Query().
 			Where(users.EmailEQ(formData.Email)).
 			WithRole().
-			First(r.Context())
+			First(c.Request().Context())
 		if err != nil {
-			HandleServerErr(i, err)
-			return
+			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
+			return nil
 		}
 
 		careers, err := h.DB.Careers.Query().
-			All(r.Context())
+			All(c.Request().Context())
 		if err != nil {
-			HandleServerErr(i, err)
-			return
+			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
+			return nil
 		}
 		if !utils.CheckPassword(user.Password, formData.Password) {
-			err = i.Render(w, r, "Auth/Login", inertia.Props{
+			err = i.Render(c.Response().Writer, c.Request(), "Auth/Login", inertia.Props{
 				"careers": careers,
 				"error":   "Credenciales incorrectas",
 			})
 			if err != nil {
-				HandleServerErr(i, err)
-				return
+				HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
+				return nil
 			}
 
-			return
+			return nil
 		}
 
 		var view string
@@ -124,162 +85,33 @@ func (h *Handler) LoginPost(i *inertia.Inertia) http.Handler {
 			view = "/student"
 		}
 
-		i.Redirect(w, r, view, 302)
+		i.Redirect(c.Response().Writer, c.Request(), view, 302)
+
+		return nil
 	}
 
-	return http.HandlerFunc(fn)
+	return fn
 }
 
-func (h *Handler) DirectiveDash(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		careers, err := h.DB.Careers.Query().All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-
-		err = i.Render(w, r, "Directive/Dash", inertia.Props{
-			"careers": careers,
-		})
-		fmt.Println(err)
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-	}
-
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) PaymentsDash(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		careers, err := h.DB.Careers.Query().All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-
-		err = i.Render(w, r, "Payment/Dash", inertia.Props{
-			"careers": careers,
-		})
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-	}
-
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) ControlDash(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		careers, err := h.DB.Careers.Query().All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-
-		err = i.Render(w, r, "Control/Dash", inertia.Props{
-			"careers": careers,
-		})
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-	}
-
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) ProfessorDash(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		careers, err := h.DB.Careers.Query().All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-
-		err = i.Render(w, r, "Professor/Dash", inertia.Props{
-			"careers": careers,
-		})
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-	}
-
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) StudentDash(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		careers, err := h.DB.Careers.Query().All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-
-		err = i.Render(w, r, "Student/Dash", inertia.Props{
-			"careers": careers,
-		})
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-	}
-
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) Settings(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		config := h.DB.Configuration.Query().
-			WithCycle().
-			Where(configuration.HasCycleWith(cycle.Active(true))).
-			OnlyX(r.Context())
-
-		if config == nil {
-			HandleServerErr(i, fmt.Errorf("config not found")).ServeHTTP(w, r)
-			return
-		}
-
-		err := i.Render(w, r, "Directive/Settings/Home", inertia.Props{
-			"notesNumber":   config.NumberNotes,
-			"paymentNumber": config.NumberFees,
-			"startRegSubj":  utils.FormatDate(config.StartRegistrationSubjects),
-			"endRegSubj":    utils.FormatDate(config.EndRegistrationSubjects),
-			"cycleStart":    utils.FormatDate(config.Edges.Cycle.StartDate),
-			"cycleEnd":      utils.FormatDate(config.Edges.Cycle.EndDate),
-			"percentages":   config.NotesPercentages,
-			"paymentDates":  config.FeeDates,
-		})
-		if err != nil {
-			HandleServerErr(i, err)
-			return
-		}
-	}
-
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) SettingsNotesPost(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SettingsNotesPost(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
-			return
+			return methodNotAllowed
 		}
 
 		err := r.ParseForm()
 		if err != nil {
 			println(err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		notesNumber, err := strconv.Atoi(r.FormValue("notes"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		_, err = h.DB.Configuration.Update().
@@ -288,51 +120,54 @@ func (h *Handler) SettingsNotesPost(i *inertia.Inertia) http.Handler {
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err)
-			return
+			return nil
 		}
 
 		i.Redirect(w, r, "/settings", 302)
+
+		return nil
 	}
 
-	return http.HandlerFunc(fn)
+	return fn
 }
 
-func (h *Handler) SettingsDatesPost(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SettingsDates(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
-			return
+			return methodNotAllowed
 		}
 
 		err := r.ParseForm()
 		if err != nil {
 			println(err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		startRegistrationSubjects, err := utils.ParseDate(r.FormValue("start_registration_subjects"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		endRegistrationSubjects, err := utils.ParseDate(r.FormValue("end_registration_subjects"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		cycleStart, err := utils.ParseDate(r.FormValue("cycle_start"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		cycleEnd, err := utils.ParseDate(r.FormValue("cycle_end"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		_, err = h.DB.Cycle.Update().
@@ -342,7 +177,7 @@ func (h *Handler) SettingsDatesPost(i *inertia.Inertia) http.Handler {
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		_, err = h.DB.Configuration.Update().
@@ -352,33 +187,35 @@ func (h *Handler) SettingsDatesPost(i *inertia.Inertia) http.Handler {
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		i.Redirect(w, r, "/settings", 302)
+
+		return nil
 	}
 
-	return http.HandlerFunc(fn)
+	return fn
 }
 
-func (h *Handler) SettingsPaymentsPostHandler(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SettingsPayments(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
-			return
+			return methodNotAllowed
 		}
 
 		err := r.ParseForm()
 		if err != nil {
-			println(err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		numberFees, err := strconv.Atoi(r.FormValue("payments"))
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		_, err = h.DB.Configuration.Update().
@@ -386,28 +223,31 @@ func (h *Handler) SettingsPaymentsPostHandler(i *inertia.Inertia) http.Handler {
 			SetNumberFees(numberFees).
 			Save(r.Context())
 		if err != nil {
-			HandleServerErr(i, err)
-			return
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
 		}
 
 		i.Redirect(w, r, "/settings", 302)
+
+		return nil
 	}
 
-	return http.HandlerFunc(fn)
+	return fn
 }
 
-func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SettingsNotesPercentage(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
-			return
+			return methodNotAllowed
 		}
 
 		err := r.ParseForm()
 		if err != nil {
 			println(err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		config := h.DB.Configuration.Query().
@@ -420,7 +260,7 @@ func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) http.Ha
 				note, err := strconv.Atoi(r.FormValue(fmt.Sprintf("note-%d", j+1)))
 				if err != nil {
 					HandleServerErr(i, err).ServeHTTP(w, r)
-					return
+					return nil
 				}
 
 				notes[j] = float64(note) / 100
@@ -432,28 +272,31 @@ func (h *Handler) SettingsNotesPercentagePostHandler(i *inertia.Inertia) http.Ha
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 		}
 
 		i.Redirect(w, r, "/settings", 302)
+
+		return nil
 	}
 
-	return http.HandlerFunc(fn)
+	return fn
 }
 
-func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SettingsPaymentsDates(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
-			return
+			return methodNotAllowed
 		}
 
 		err := r.ParseForm()
 		if err != nil {
 			println(err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		config := h.DB.Configuration.Query().
@@ -467,7 +310,7 @@ func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) http.Hand
 			payment, err := utils.ParseDate(date)
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 
 			fmt.Println(payment)
@@ -480,20 +323,22 @@ func (h *Handler) SettingsPaymentsDatesPostHandler(i *inertia.Inertia) http.Hand
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		i.Redirect(w, r, "/settings", 302)
+		return nil
 	}
 
-	return http.HandlerFunc(fn)
+	return fn
 }
 
-func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SettingsCycle(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
 			HandleNotFound(i).ServeHTTP(w, r)
-			return
+			return methodNotAllowed
 		}
 
 		currentCycle := h.DB.Cycle.Query().Where(cycle.ActiveEQ(true)).OnlyX(r.Context())
@@ -506,7 +351,7 @@ func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) http.Handler {
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		currentCycle, err = h.DB.Cycle.Create().
@@ -517,7 +362,7 @@ func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) http.Handler {
 			Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		_, err = h.DB.Configuration.Create().
@@ -528,144 +373,30 @@ func (h *Handler) SettingsCyclePostHandler(i *inertia.Inertia) http.Handler {
 			SetCycle(currentCycle).Save(r.Context())
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		i.Redirect(w, r, "/settings", 302)
+
+		return nil
 	}
 
-	return http.HandlerFunc(fn)
+	return fn
 }
 
-func (h *Handler) Students(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		students, err := h.DB.Student.Query().WithUser().WithCareer().All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-
-		studentDtos := make([]StudentsTableDto, len(students))
-		for i, student := range students {
-			studentDtos[i] = StudentsTableDto{
-				ID:           student.ID,
-				Name:         student.Edges.User.Name,
-				Avatar:       student.Edges.User.Avatar,
-				Email:        student.Edges.User.Email,
-				Phone:        student.Phone,
-				Career:       student.Edges.Career.Name,
-				TotalAverage: student.TotalAverage,
-			}
-		}
-
-		var dtos []interface{}
-		for _, studentDto := range studentDtos {
-			dtos = append(dtos, studentDto)
-		}
-
-		studentsPayload, err := utils.StructArrayToJson(dtos)
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-
-		fmt.Println(studentsPayload)
-
-		err = i.Render(w, r, "Directive/Students/Home", inertia.Props{
-			"students": studentsPayload,
-		})
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-	}
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) Student(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		// the id is a string, if it is "add" it means that the user wants to add a new student
-		id := r.URL.Query().Get("id")
-		var studentDto StudentDto
-		var userDto UserDto
-		if id != "add" {
-			studentId, err := strconv.Atoi(id)
-			if err != nil {
-				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
-			}
-
-			student, err := h.DB.Student.Query().
-				Where(student.ID(studentId)).
-				WithUser().WithCareer().
-				Only(r.Context())
-			if err != nil {
-				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
-			}
-
-			studentDto = StudentDto{
-				ID:                     student.ID,
-				Phone:                  student.Phone,
-				Address:                student.Address,
-				District:               student.District,
-				City:                   student.City,
-				PostalCode:             student.PostalCode,
-				IdentityCard:           student.IdentityCard,
-				BirthDate:              student.BirthDate.Format("2006-01-02"),
-				CreditUnitsAccumulated: student.CreditUnitsAccumulated,
-				TotalAverage:           student.TotalAverage,
-			}
-
-			userDto = UserDto{
-				ID:       0,
-				Name:     student.Edges.User.Name,
-				Email:    student.Edges.User.Email,
-				Username: student.Edges.User.Username,
-				Avatar:   strings.Replace(student.Edges.User.Avatar, "./", "/", 1),
-				Active:   student.Edges.User.IsActive,
-			}
-		}
-
-		careers, err := h.DB.Careers.Query().All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-
-		var careerDtos []SelectDto
-		for _, career := range careers {
-			careerDtos = append(careerDtos, SelectDto{
-				ID:   career.ID,
-				Name: career.Name,
-			})
-		}
-
-		err = i.Render(w, r, "Directive/Students/Upsert", inertia.Props{
-			"student": studentDto,
-			"user":    userDto,
-			"careers": careerDtos,
-		})
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-	}
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
 			http.NotFound(w, r)
-			return
+			return methodNotAllowed
 		}
 
 		err := r.ParseMultipartForm(10 << 20) // 10 MB max file size
 		if err != nil {
 			err = errors.New(err.Error() + " parse")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		// Accediendo a los valores enviados por el formulario
@@ -698,7 +429,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 				if err != nil {
 					err = errors.New(err.Error() + " file 637")
 					HandleServerErr(i, err).ServeHTTP(w, r)
-					return
+					return nil
 				}
 			}
 			defer f.Close()
@@ -707,7 +438,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 			if err != nil {
 				err = errors.New(err.Error() + " file 646")
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 		}
 
@@ -715,49 +446,49 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 		if err != nil {
 			err = errors.New(err.Error() + " password")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		postalCodeInt, err := strconv.Atoi(postalCode)
 		if err != nil {
 			err = errors.New(err.Error() + " postalCode")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		birthDateTime, err := utils.ParseDate(birthDate)
 		if err != nil {
 			err = errors.New(err.Error() + " birthDate")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		creditUnitsAccumulated, err := strconv.Atoi(cuAccumulated)
 		if err != nil {
 			err = errors.New(err.Error() + " creditUnitsAccumulated")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		semesterInt, err := strconv.Atoi(semester)
 		if err != nil {
 			err = errors.New(err.Error() + " semester")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		totalAverageFloat, err := strconv.ParseFloat(totalAverage, 64)
 		if err != nil {
 			err = errors.New(err.Error() + " totalAverage")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		careerId, err := strconv.Atoi(career)
 		if err != nil {
 			err = errors.New(err.Error() + " career")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		if id == "" {
@@ -772,7 +503,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 
 			_, err = h.DB.Student.Create().
@@ -791,13 +522,13 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 		} else {
 			studentId, err := strconv.Atoi(id)
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 
 			student, err := h.DB.Student.Query().
@@ -806,7 +537,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 				Only(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 
 			_, err = h.DB.Users.UpdateOne(student.Edges.User).
@@ -817,7 +548,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 
 			_, err = h.DB.Student.UpdateOne(student).
@@ -835,79 +566,30 @@ func (h *Handler) StudentPost(i *inertia.Inertia) http.Handler {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 		}
 
 		http.Redirect(w, r, "/directive/students", http.StatusSeeOther)
+
+		return nil
 	}
 
-	return http.HandlerFunc(fn)
+	return fn
 }
 
-func (h *Handler) Careers(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		careers, err := h.DB.Careers.Query().
-			WithLeader(func(query *ent.ProfessorQuery) { query.WithUser() }).
-			All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-
-		careerDtos := make([]CareerDto, len(careers))
-		for i, career := range careers {
-			if career.Edges.Leader == nil {
-				careerDtos[i] = CareerDto{
-					ID:          career.ID,
-					Name:        career.Name,
-					Description: career.Description,
-					LeaderName:  "",
-					LeaderId:    0,
-				}
-				continue
-			}
-			careerDtos[i] = CareerDto{
-				ID:          career.ID,
-				Name:        career.Name,
-				Description: career.Description,
-				LeaderName:  career.Edges.Leader.Edges.User.Name,
-				LeaderId:    career.Edges.Leader.Edges.User.ID,
-			}
-		}
-
-		professors := h.DB.Professor.Query().WithUser().AllX(r.Context())
-		professorsDto := make([]SelectDto, len(professors))
-		for i, professor := range professors {
-			professorsDto[i] = SelectDto{
-				ID:   professor.ID,
-				Name: professor.Edges.User.Name,
-			}
-		}
-
-		err = i.Render(w, r, "Directive/Careers", inertia.Props{
-			"careers":    careerDtos,
-			"professors": professorsDto,
-		})
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-	}
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) Career(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
-			http.NotFound(w, r)
-			return
+			HandleNotFound(i).ServeHTTP(w, r)
+			return methodNotAllowed
 		}
 
 		err := r.ParseForm()
 		if err != nil {
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		name := r.FormValue("name")
@@ -922,7 +604,7 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 				leader, err = strconv.Atoi(leaderId)
 				if err != nil {
 					HandleServerErr(i, err).ServeHTTP(w, r)
-					return
+					return nil
 				}
 
 				_, err = h.DB.Careers.Create().
@@ -939,13 +621,13 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 		} else {
 			careerId, err := strconv.Atoi(id)
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 
 			oldCareer, err := h.DB.Careers.Query().
@@ -953,7 +635,7 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 				Only(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 
 			var leader int
@@ -961,7 +643,7 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 				leader, err = strconv.Atoi(leaderId)
 				if err != nil {
 					HandleServerErr(i, err).ServeHTTP(w, r)
-					return
+					return nil
 				}
 
 				_, err = h.DB.Careers.UpdateOne(oldCareer).
@@ -978,123 +660,30 @@ func (h *Handler) Career(i *inertia.Inertia) http.Handler {
 
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 		}
 
 		i.Redirect(w, r, "/directive/careers", 302)
+
+		return nil
 	}
-	return http.HandlerFunc(fn)
+	return fn
 }
 
-func (h *Handler) Professors(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		professors, err := h.DB.Professor.Query().WithUser().All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-
-		professorDtos := make([]ProfessorDto, len(professors))
-		for i, professor := range professors {
-			professorDtos[i] = ProfessorDto{
-				ID:           professor.ID,
-				Name:         professor.Edges.User.Name,
-				Email:        professor.Edges.User.Email,
-				Avatar:       strings.Replace(professor.Edges.User.Avatar, "./", "/", 1),
-				IdentityCard: professor.IdentityCard,
-				Phone:        professor.Phone,
-			}
-		}
-
-		err = i.Render(w, r, "Directive/Professor/Home", inertia.Props{
-			"professors": professorDtos,
-		})
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-	}
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) Professor(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		id := r.URL.Query().Get("id")
-		var professorDto ProfessorDto
-		var userDto UserDto
-		if id != "add" {
-			professorId, err := strconv.Atoi(id)
-			if err != nil {
-				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
-			}
-
-			professor, err := h.DB.Professor.Query().Where(professor.ID(professorId)).WithUser().Only(r.Context())
-			if err != nil {
-				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
-			}
-
-			professorDto = ProfessorDto{
-				ID:           professor.ID,
-				IdentityCard: professor.IdentityCard,
-				Phone:        professor.Phone,
-			}
-
-			userDto = UserDto{
-				ID:       0,
-				Name:     professor.Edges.User.Name,
-				Email:    professor.Edges.User.Email,
-				Username: professor.Edges.User.Username,
-				Avatar:   strings.Replace(professor.Edges.User.Avatar, "./", "/", 1),
-				Active:   professor.Edges.User.IsActive,
-			}
-		}
-
-		// get all professors that don't have a boss, without BossID, use Boss Edge
-		professors, err := h.DB.Professor.Query().
-			WithUser().
-			Where(professor.Not(professor.HasBoss())).
-			All(r.Context())
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-
-		bossesDto := make([]SelectDto, len(professors))
-		for i, professor := range professors {
-			bossesDto[i] = SelectDto{
-				ID:   professor.ID,
-				Name: professor.Edges.User.Name,
-			}
-		}
-
-		err = i.Render(w, r, "Directive/Professor/Upsert", inertia.Props{
-			"professor": professorDto,
-			"user":      userDto,
-			"bosses":    bossesDto,
-		})
-		if err != nil {
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
-		}
-	}
-	return http.HandlerFunc(fn)
-}
-
-func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
 			http.NotFound(w, r)
-			return
+			return methodNotAllowed
 		}
 
 		err := r.ParseMultipartForm(10 << 20) // 10 MB max file size
 		if err != nil {
 			err = errors.New(err.Error() + " parse")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		// Accediendo a los valores enviados por el formulario
@@ -1120,7 +709,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
 				if err != nil {
 					err = errors.New(err.Error() + " file 637")
 					HandleServerErr(i, err).ServeHTTP(w, r)
-					return
+					return nil
 				}
 			}
 			defer f.Close()
@@ -1129,7 +718,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
 			if err != nil {
 				err = errors.New(err.Error() + " file 646")
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 		}
 
@@ -1137,14 +726,14 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
 		if err != nil {
 			err = errors.New(err.Error() + " password")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		birthDateTime, err := utils.ParseDate(birthDate)
 		if err != nil {
 			err = errors.New(err.Error() + " birthDate")
 			HandleServerErr(i, err).ServeHTTP(w, r)
-			return
+			return nil
 		}
 
 		if id == "" {
@@ -1159,7 +748,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 
 			_, err = h.DB.Professor.Create().
@@ -1171,13 +760,13 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 		} else {
 			professorId, err := strconv.Atoi(id)
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 
 			professor, err := h.DB.Professor.Query().
@@ -1186,7 +775,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
 				Only(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 
 			_, err = h.DB.Users.UpdateOne(professor.Edges.User).
@@ -1197,7 +786,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 
 			_, err = h.DB.Professor.UpdateOne(professor).
@@ -1208,12 +797,14 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) http.Handler {
 				Save(r.Context())
 			if err != nil {
 				HandleServerErr(i, err).ServeHTTP(w, r)
-				return
+				return nil
 			}
 		}
 
 		http.Redirect(w, r, "/directive/professors", http.StatusSeeOther)
+
+		return nil
 	}
 
-	return http.HandlerFunc(fn)
+	return fn
 }

@@ -13,55 +13,86 @@ import (
 	"mocku/backend/handlers"
 	"mocku/backend/utils"
 
+	"github.com/go-playground/validator"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	inertia "github.com/romsar/gonertia"
 
 	_ "github.com/lib/pq"
 )
 
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
 // MountApp mounts the application, initialize inertia.js and database,  and starts the server
 func MountApp() {
 	i := initInertia()
-	mux := http.NewServeMux()
-
 	client := initDatabase()
+
 	handler := handlers.Handler{
-		DB: client,
+		DB:     client,
+		Logger: log.New(os.Stdout, "mocku: ", log.LstdFlags),
 	}
 
-	// Routes
-	mux.Handle("/", i.Middleware(handler.Home(i)))
-	mux.Handle("/login", i.Middleware(handler.Login(i)))
-	mux.Handle("/login_post", i.Middleware(handler.LoginPost(i)))
+	app := echo.New()
+	inertia := echo.WrapMiddleware(i.Middleware)
+	app.Use(inertia)
+	app.Use(middleware.Logger())
+	app.Use(middleware.Recover())
 
-	// Dashboard routes
-	mux.Handle("/directive", i.Middleware(handler.DirectiveDash(i)))
-	mux.Handle("/payment", i.Middleware(handler.PaymentsDash(i)))
-	mux.Handle("/student", i.Middleware(handler.StudentDash(i)))
-	mux.Handle("/professor", i.Middleware(handler.ProfessorDash(i)))
-	mux.Handle("/control", i.Middleware(handler.ControlDash(i)))
+	app.Validator = &CustomValidator{validator: validator.New()}
+
+	// Routes
+	app.GET("/", handler.Home(i))
+	app.GET("/login", handler.Login(i))
+	app.Any("/login_post", handler.LoginPost(i))
 
 	// Directives routes
-	mux.Handle("/directive/students", i.Middleware(handler.Students(i)))
-	mux.Handle("/directive/students/view", i.Middleware(handler.Student(i)))
-	mux.Handle("/directive/students/view/submit", i.Middleware(handler.StudentPost(i)))
-	mux.Handle("/directive/careers", i.Middleware(handler.Careers(i)))
-	mux.Handle("/directive/careers/submit", i.Middleware(handler.Career(i)))
-	mux.Handle("/directive/professors", i.Middleware(handler.Professors(i)))
-	mux.Handle("/directive/professors/view", i.Middleware(handler.Professor(i)))
-	mux.Handle("/directive/professors/view/submit", i.Middleware(handler.ProfessorPost(i)))
-	mux.Handle("/settings/notes/percentages", i.Middleware(handler.SettingsNotesPercentagePostHandler(i)))
-	mux.Handle("/settings/payment", i.Middleware(handler.SettingsPaymentsPostHandler(i)))
-	mux.Handle("/settings/payment/dates", i.Middleware(handler.SettingsPaymentsDatesPostHandler(i)))
-	mux.Handle("/settings/cycle", i.Middleware(handler.SettingsCyclePostHandler(i)))
-	mux.Handle("/settings", i.Middleware(handler.Settings(i)))
-	mux.Handle("/settings/notes", i.Middleware(handler.SettingsNotesPost(i)))
-	mux.Handle("/settings/dates", i.Middleware(handler.SettingsDatesPost(i)))
+	directive := app.Group("/directive", inertia)
+	directive.GET("", handler.DirectiveDash(i))
+	directive.GET("/students", handler.Students(i))
+	directive.GET("/students/view", handler.Student(i))
+	directive.Any("/students/view/submit", handler.StudentPost(i))
+	directive.GET("/careers", handler.Careers(i))
+	directive.Any("/careers/submit", handler.Career(i))
+	directive.GET("/professors", handler.Professors(i))
+	directive.GET("/professors/view", handler.Professor(i))
+	directive.Any("/professors/view/submit", handler.ProfessorPost(i))
 
-	// API routes
-	mux.Handle("/build/", http.StripPrefix("/build/", http.FileServer(http.Dir("./public/build"))))
-	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
+	// Settings routes
+	settings := app.Group("/settings", inertia)
+	settings.GET("", handler.Settings(i))
+	settings.Any("/notes", handler.SettingsNotesPost(i))
+	settings.Any("/notes/percentages", handler.SettingsNotesPercentage(i))
+	settings.Any("/payment", handler.SettingsPayments(i))
+	settings.Any("/payment/dates", handler.SettingsPaymentsDates(i))
+	settings.Any("/cycle", handler.SettingsCycle(i))
+	settings.Any("/dates", handler.SettingsDates(i))
 
-	http.ListenAndServe(":3000", mux)
+	// Dashboard routes
+	// mux.Handle("/payment", i.Middleware(handler.PaymentsDash(i)))
+	// mux.Handle("/student", i.Middleware(handler.StudentDash(i)))
+	// mux.Handle("/professor", i.Middleware(handler.ProfessorDash(i)))
+	// mux.Handle("/control", i.Middleware(handler.ControlDash(i)))
+
+	// // API routes
+	app.Static("/build", "./public/build")
+	app.Static("/uploads", "./uploads")
+
+	// Start server
+	app.Start(":3000")
+}
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	if cv.validator == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Validator is not initialized")
+	}
+	if err := cv.validator.Struct(i); err != nil {
+		// Optionally, you could return the error to give each route more control over the status code
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	return nil
 }
 
 // initDatabase initializes the database connection and creates the schema
