@@ -2,15 +2,14 @@
     import Activity from "lucide-svelte/icons/activity";
     import ArrowUpRight from "lucide-svelte/icons/arrow-up-right";
     import CreditCard from "lucide-svelte/icons/credit-card";
-    import DollarSign from "lucide-svelte/icons/dollar-sign";
     import Users from "lucide-svelte/icons/users";
 
-    import {Badge} from "$lib/components/ui/badge/index.js";
-    import {Button} from "$lib/components/ui/button/index.js";
+    import { Avatar, AvatarFallback, AvatarImage } from "$lib/components/ui/avatar/index.js";
+    import { Badge } from "$lib/components/ui/badge/index.js";
+    import { Button } from "$lib/components/ui/button/index.js";
+    import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card/index.js";
+    import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$lib/components/ui/table/index.js";
     import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
-    import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "$lib/components/ui/card/index.js";
-    import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "$lib/components/ui/table/index.js";
-    import {Avatar, AvatarFallback, AvatarImage} from "$lib/components/ui/avatar/index.js";
 </script>
 
 <DirectiveLayout title="Dashboard" description="Dashboard for Acme Inc." keywords="dashboard, acme, inc">
