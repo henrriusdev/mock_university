@@ -13,55 +13,74 @@ import (
 	"mocku/backend/handlers"
 	"mocku/backend/utils"
 
+	"github.com/go-playground/validator"
+	"github.com/labstack/echo/v4"
 	inertia "github.com/romsar/gonertia"
 
 	_ "github.com/lib/pq"
 )
 
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
 // MountApp mounts the application, initialize inertia.js and database,  and starts the server
 func MountApp() {
 	i := initInertia()
-	mux := http.NewServeMux()
-
 	client := initDatabase()
+
 	handler := handlers.Handler{
-		DB: client,
+		DB:     client,
+		Logger: log.New(os.Stdout, "mocku: ", log.LstdFlags),
 	}
 
+	app := echo.New()
+	middleware := echo.WrapMiddleware(i.Middleware)
+	app.Use(middleware)
+
 	// Routes
-	mux.Handle("/", i.Middleware(handler.Home(i)))
-	mux.Handle("/login", i.Middleware(handler.Login(i)))
-	mux.Handle("/login_post", i.Middleware(handler.LoginPost(i)))
+	app.GET("/", handler.Home(i))
+	// mux.Handle("/", i.Middleware(handler.Home(i)))
+	// mux.Handle("/login", i.Middleware(handler.Login(i)))
+	// mux.Handle("/login_post", i.Middleware(handler.LoginPost(i)))
 
-	// Dashboard routes
-	mux.Handle("/directive", i.Middleware(handler.DirectiveDash(i)))
-	mux.Handle("/payment", i.Middleware(handler.PaymentsDash(i)))
-	mux.Handle("/student", i.Middleware(handler.StudentDash(i)))
-	mux.Handle("/professor", i.Middleware(handler.ProfessorDash(i)))
-	mux.Handle("/control", i.Middleware(handler.ControlDash(i)))
+	// // Dashboard routes
+	// mux.Handle("/directive", i.Middleware(handler.DirectiveDash(i)))
+	// mux.Handle("/payment", i.Middleware(handler.PaymentsDash(i)))
+	// mux.Handle("/student", i.Middleware(handler.StudentDash(i)))
+	// mux.Handle("/professor", i.Middleware(handler.ProfessorDash(i)))
+	// mux.Handle("/control", i.Middleware(handler.ControlDash(i)))
 
-	// Directives routes
-	mux.Handle("/directive/students", i.Middleware(handler.Students(i)))
-	mux.Handle("/directive/students/view", i.Middleware(handler.Student(i)))
-	mux.Handle("/directive/students/view/submit", i.Middleware(handler.StudentPost(i)))
-	mux.Handle("/directive/careers", i.Middleware(handler.Careers(i)))
-	mux.Handle("/directive/careers/submit", i.Middleware(handler.Career(i)))
-	mux.Handle("/directive/professors", i.Middleware(handler.Professors(i)))
-	mux.Handle("/directive/professors/view", i.Middleware(handler.Professor(i)))
-	mux.Handle("/directive/professors/view/submit", i.Middleware(handler.ProfessorPost(i)))
-	mux.Handle("/settings/notes/percentages", i.Middleware(handler.SettingsNotesPercentagePostHandler(i)))
-	mux.Handle("/settings/payment", i.Middleware(handler.SettingsPaymentsPostHandler(i)))
-	mux.Handle("/settings/payment/dates", i.Middleware(handler.SettingsPaymentsDatesPostHandler(i)))
-	mux.Handle("/settings/cycle", i.Middleware(handler.SettingsCyclePostHandler(i)))
-	mux.Handle("/settings", i.Middleware(handler.Settings(i)))
-	mux.Handle("/settings/notes", i.Middleware(handler.SettingsNotesPost(i)))
-	mux.Handle("/settings/dates", i.Middleware(handler.SettingsDatesPost(i)))
+	// // Directives routes
+	// mux.Handle("/directive/students", i.Middleware(handler.Students(i)))
+	// mux.Handle("/directive/students/view", i.Middleware(handler.Student(i)))
+	// mux.Handle("/directive/students/view/submit", i.Middleware(handler.StudentPost(i)))
+	// mux.Handle("/directive/careers", i.Middleware(handler.Careers(i)))
+	// mux.Handle("/directive/careers/submit", i.Middleware(handler.Career(i)))
+	// mux.Handle("/directive/professors", i.Middleware(handler.Professors(i)))
+	// mux.Handle("/directive/professors/view", i.Middleware(handler.Professor(i)))
+	// mux.Handle("/directive/professors/view/submit", i.Middleware(handler.ProfessorPost(i)))
+	// mux.Handle("/settings/notes/percentages", i.Middleware(handler.SettingsNotesPercentagePostHandler(i)))
+	// mux.Handle("/settings/payment", i.Middleware(handler.SettingsPaymentsPostHandler(i)))
+	// mux.Handle("/settings/payment/dates", i.Middleware(handler.SettingsPaymentsDatesPostHandler(i)))
+	// mux.Handle("/settings/cycle", i.Middleware(handler.SettingsCyclePostHandler(i)))
+	// mux.Handle("/settings", i.Middleware(handler.Settings(i)))
+	// mux.Handle("/settings/notes", i.Middleware(handler.SettingsNotesPost(i)))
+	// mux.Handle("/settings/dates", i.Middleware(handler.SettingsDatesPost(i)))
 
-	// API routes
-	mux.Handle("/build/", http.StripPrefix("/build/", http.FileServer(http.Dir("./public/build"))))
-	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
+	// // API routes
+	// mux.Handle("/build/", http.StripPrefix("/build/", http.FileServer(http.Dir("./public/build"))))
+	// mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 
-	http.ListenAndServe(":3000", mux)
+	// http.ListenAndServe(":3000", mux)
+}
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	if err := cv.validator.Struct(i); err != nil {
+		// Optionally, you could return the error to give each route more control over the status code
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	return nil
 }
 
 // initDatabase initializes the database connection and creates the schema
