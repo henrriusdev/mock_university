@@ -1,10 +1,5 @@
 <script>
-    // Puedes agregar lógica aquí si es necesario
 </script>
-
-<style>
-    /* Puedes agregar estilos adicionales aquí si lo deseas */
-</style>
 
 <div class="flex items-center justify-center min-h-screen bg-gray-100 text-center">
     <div class="max-w-sm p-6 bg-white rounded-lg shadow-lg">

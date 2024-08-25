@@ -34,31 +34,31 @@
     {
       label: "Copy professor name",
       /** @param {Professor} param0 */
-      onClick: ({name}) => {
+      onClick: ({ name }) => {
         window.navigator.clipboard.writeText(name);
       },
     },
     {
       label: "Copy professor email",
       /** @param {Professor} param0 */
-      onClick: ({email}) => {
+      onClick: ({ email }) => {
         window.navigator.clipboard.writeText(email);
       },
     },
     {
       label: "Copy professor phone",
       /** @param {Professor} param0 */
-      onClick: ({phone}) => {
+      onClick: ({ phone }) => {
         window.navigator.clipboard.writeText(phone);
       },
     },
     {
       label: "Edit",
       /** @param {Professor} param0 */
-      onClick: ({id}) => {
+      onClick: ({ id }) => {
         window.location.href = `/directive/professors/view?id=${id}`;
       },
-    }
+    },
   ];
 
   table = createTable(readable(professors), {
@@ -104,7 +104,6 @@
       },
       header: "Name",
       cell: ({ value }) => {
-        console.log(value.split(" ")[0]);
         return createRender(Avatar, {
           src: value.split(" ")[0],
           alt: "Avatar",
