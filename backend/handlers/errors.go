@@ -40,3 +40,16 @@ func HandleUnauthorized(i *inertia.Inertia) http.Handler {
 
 	return http.HandlerFunc(fn)
 }
+
+func HandleBadRequest(i *inertia.Inertia, validErr error) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		err := i.Render(w, r, "Errors/BadRequest", inertia.Props{
+			"error": validErr.Error(),
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+
+	return http.HandlerFunc(fn)
+}
