@@ -14,8 +14,6 @@
     .map((word) => word.charAt(0))
     .join("")
     .toUpperCase();
-
-  console.log(name, fallback);
 </script>
 
 <div class="flex items-center justify-start gap-x-1">
