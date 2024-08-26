@@ -33,11 +33,13 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		err := c.Bind(&formData)
 		if err != nil {
+			h.Logger.Printf("Error binding form data: %v", err)
 			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
 
 		if err = c.Validate(formData); err != nil {
+			h.Logger.Printf("Error validating form data: %v", err)
 			HandleBadRequest(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
@@ -47,6 +49,7 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 			WithRole().
 			First(c.Request().Context())
 		if err != nil {
+			h.Logger.Printf("Error querying user: %v", err)
 			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
@@ -54,6 +57,7 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 		careers, err := h.DB.Careers.Query().
 			All(c.Request().Context())
 		if err != nil {
+			h.Logger.Printf("Error querying careers: %v", err)
 			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
@@ -63,6 +67,7 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 				"error":   "Credenciales incorrectas",
 			})
 			if err != nil {
+				h.Logger.Printf("Error rendering login page: %v", err)
 				HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 				return nil
 			}
@@ -103,13 +108,14 @@ func (h *Handler) SettingsNotesPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		err := r.ParseForm()
 		if err != nil {
-			println(err)
+			h.Logger.Printf("Error parsing form: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
 		notesNumber, err := strconv.Atoi(r.FormValue("notes"))
 		if err != nil {
+			h.Logger.Printf("Error parsing notes number: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -119,6 +125,7 @@ func (h *Handler) SettingsNotesPost(i *inertia.Inertia) echo.HandlerFunc {
 			SetNumberNotes(notesNumber).
 			Save(r.Context())
 		if err != nil {
+			h.Logger.Printf("Error updating configuration: %v", err)
 			HandleServerErr(i, err)
 			return nil
 		}
@@ -141,31 +148,35 @@ func (h *Handler) SettingsDates(i *inertia.Inertia) echo.HandlerFunc {
 
 		err := r.ParseForm()
 		if err != nil {
-			println(err)
+			h.Logger.Printf("Error parsing form: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
 		startRegistrationSubjects, err := utils.ParseDate(r.FormValue("start_registration_subjects"))
 		if err != nil {
+			h.Logger.Printf("Error parsing start registration subjects: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
 		endRegistrationSubjects, err := utils.ParseDate(r.FormValue("end_registration_subjects"))
 		if err != nil {
+			h.Logger.Printf("Error parsing end registration subjects: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
 		cycleStart, err := utils.ParseDate(r.FormValue("cycle_start"))
 		if err != nil {
+			h.Logger.Printf("Error parsing cycle start: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
 		cycleEnd, err := utils.ParseDate(r.FormValue("cycle_end"))
 		if err != nil {
+			h.Logger.Printf("Error parsing cycle end: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -176,6 +187,7 @@ func (h *Handler) SettingsDates(i *inertia.Inertia) echo.HandlerFunc {
 			SetEndDate(cycleEnd).
 			Save(r.Context())
 		if err != nil {
+			h.Logger.Printf("Error updating cycle: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -186,6 +198,7 @@ func (h *Handler) SettingsDates(i *inertia.Inertia) echo.HandlerFunc {
 			SetEndRegistrationSubjects(endRegistrationSubjects).
 			Save(r.Context())
 		if err != nil {
+			h.Logger.Printf("Error updating configuration: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -208,12 +221,14 @@ func (h *Handler) SettingsPayments(i *inertia.Inertia) echo.HandlerFunc {
 
 		err := r.ParseForm()
 		if err != nil {
+			h.Logger.Printf("Error parsing form: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
 		numberFees, err := strconv.Atoi(r.FormValue("payments"))
 		if err != nil {
+			h.Logger.Printf("Error parsing number of fees: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -223,6 +238,7 @@ func (h *Handler) SettingsPayments(i *inertia.Inertia) echo.HandlerFunc {
 			SetNumberFees(numberFees).
 			Save(r.Context())
 		if err != nil {
+			h.Logger.Printf("Error updating configuration: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -245,7 +261,7 @@ func (h *Handler) SettingsNotesPercentage(i *inertia.Inertia) echo.HandlerFunc {
 
 		err := r.ParseForm()
 		if err != nil {
-			println(err)
+			h.Logger.Printf("Error parsing form: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -259,6 +275,7 @@ func (h *Handler) SettingsNotesPercentage(i *inertia.Inertia) echo.HandlerFunc {
 			for j := 0; j < config.NumberNotes; j++ {
 				note, err := strconv.Atoi(r.FormValue(fmt.Sprintf("note-%d", j+1)))
 				if err != nil {
+					h.Logger.Printf("Error parsing note: %v", err)
 					HandleServerErr(i, err).ServeHTTP(w, r)
 					return nil
 				}
@@ -271,6 +288,7 @@ func (h *Handler) SettingsNotesPercentage(i *inertia.Inertia) echo.HandlerFunc {
 				SetNotesPercentages(notes).
 				Save(r.Context())
 			if err != nil {
+				h.Logger.Printf("Error updating configuration: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -294,7 +312,7 @@ func (h *Handler) SettingsPaymentsDates(i *inertia.Inertia) echo.HandlerFunc {
 
 		err := r.ParseForm()
 		if err != nil {
-			println(err)
+			h.Logger.Printf("Error parsing form: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -309,6 +327,7 @@ func (h *Handler) SettingsPaymentsDates(i *inertia.Inertia) echo.HandlerFunc {
 			date := r.FormValue(fmt.Sprintf("payment-%d", j+1))
 			payment, err := utils.ParseDate(date)
 			if err != nil {
+				h.Logger.Printf("Error parsing payment date: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -322,6 +341,7 @@ func (h *Handler) SettingsPaymentsDates(i *inertia.Inertia) echo.HandlerFunc {
 			SetFeeDates(payments).
 			Save(r.Context())
 		if err != nil {
+			h.Logger.Printf("Error updating configuration: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -350,6 +370,7 @@ func (h *Handler) SettingsCycle(i *inertia.Inertia) echo.HandlerFunc {
 			SetActive(false).
 			Save(r.Context())
 		if err != nil {
+			h.Logger.Printf("Error updating cycle: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -361,6 +382,7 @@ func (h *Handler) SettingsCycle(i *inertia.Inertia) echo.HandlerFunc {
 			SetName(newCycle).
 			Save(r.Context())
 		if err != nil {
+			h.Logger.Printf("Error creating cycle: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -372,6 +394,7 @@ func (h *Handler) SettingsCycle(i *inertia.Inertia) echo.HandlerFunc {
 			SetEndRegistrationSubjects(time.Now()).
 			SetCycle(currentCycle).Save(r.Context())
 		if err != nil {
+			h.Logger.Printf("Error creating configuration: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -394,6 +417,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		err := r.ParseMultipartForm(10 << 20) // 10 MB max file size
 		if err != nil {
+			h.Logger.Printf("Error parsing form: %v", err)
 			err = errors.New(err.Error() + " parse")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
@@ -427,6 +451,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 			if err != nil {
 				err = os.MkdirAll("./uploads", os.ModePerm)
 				if err != nil {
+					h.Logger.Printf("Error creating directory: %v", err)
 					err = errors.New(err.Error() + " file 637")
 					HandleServerErr(i, err).ServeHTTP(w, r)
 					return nil
@@ -436,6 +461,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 
 			_, err = io.Copy(f, file)
 			if err != nil {
+				h.Logger.Printf("Error copying file: %v", err)
 				err = errors.New(err.Error() + " file 646")
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
@@ -444,6 +470,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		hashedPassword, err := utils.HashPassword(identityCard)
 		if err != nil {
+			h.Logger.Printf("Error hashing password: %v", err)
 			err = errors.New(err.Error() + " password")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
@@ -451,6 +478,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		postalCodeInt, err := strconv.Atoi(postalCode)
 		if err != nil {
+			h.Logger.Printf("Error parsing postal code: %v", err)
 			err = errors.New(err.Error() + " postalCode")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
@@ -458,6 +486,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		birthDateTime, err := utils.ParseDate(birthDate)
 		if err != nil {
+			h.Logger.Printf("Error parsing birth date: %v", err)
 			err = errors.New(err.Error() + " birthDate")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
@@ -465,6 +494,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		creditUnitsAccumulated, err := strconv.Atoi(cuAccumulated)
 		if err != nil {
+			h.Logger.Printf("Error parsing credit units accumulated: %v", err)
 			err = errors.New(err.Error() + " creditUnitsAccumulated")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
@@ -472,6 +502,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		semesterInt, err := strconv.Atoi(semester)
 		if err != nil {
+			h.Logger.Printf("Error parsing semester: %v", err)
 			err = errors.New(err.Error() + " semester")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
@@ -479,6 +510,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		totalAverageFloat, err := strconv.ParseFloat(totalAverage, 64)
 		if err != nil {
+			h.Logger.Printf("Error parsing total average: %v", err)
 			err = errors.New(err.Error() + " totalAverage")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
@@ -486,6 +518,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		careerId, err := strconv.Atoi(career)
 		if err != nil {
+			h.Logger.Printf("Error parsing career: %v", err)
 			err = errors.New(err.Error() + " career")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
@@ -502,6 +535,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 				SetRoleID(6).
 				Save(r.Context())
 			if err != nil {
+				h.Logger.Printf("Error creating user: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -521,12 +555,14 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 				SetCareerID(careerId).
 				Save(r.Context())
 			if err != nil {
+				h.Logger.Printf("Error creating student: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
 		} else {
 			studentId, err := strconv.Atoi(id)
 			if err != nil {
+				h.Logger.Printf("Error parsing student id: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -536,6 +572,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 				WithUser().
 				Only(r.Context())
 			if err != nil {
+				h.Logger.Printf("Error querying student: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -547,6 +584,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 				SetAvatar(filePath).
 				Save(r.Context())
 			if err != nil {
+				h.Logger.Printf("Error updating user: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -565,6 +603,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 				SetCareerID(careerId).
 				Save(r.Context())
 			if err != nil {
+				h.Logger.Printf("Error updating student: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -588,6 +627,7 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 
 		err := r.ParseForm()
 		if err != nil {
+			h.Logger.Printf("Error parsing form: %v", err)
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -596,13 +636,13 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 		description := r.FormValue("description")
 		leaderId := r.FormValue("leader")
 		id := r.FormValue("id")
-		fmt.Println(leaderId)
 
 		if id == "" {
 			var leader int
 			if leaderId != "" {
 				leader, err = strconv.Atoi(leaderId)
 				if err != nil {
+					h.Logger.Printf("Error parsing leader id: %v", err)
 					HandleServerErr(i, err).ServeHTTP(w, r)
 					return nil
 				}
@@ -620,12 +660,14 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 			}
 
 			if err != nil {
+				h.Logger.Printf("Error creating career: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
 		} else {
 			careerId, err := strconv.Atoi(id)
 			if err != nil {
+				h.Logger.Printf("Error parsing career id: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -634,6 +676,7 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 				Where(careers.ID(careerId)).
 				Only(r.Context())
 			if err != nil {
+				h.Logger.Printf("Error querying career: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -642,6 +685,7 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 			if leaderId != "" {
 				leader, err = strconv.Atoi(leaderId)
 				if err != nil {
+					h.Logger.Printf("Error parsing leader id: %v", err)
 					HandleServerErr(i, err).ServeHTTP(w, r)
 					return nil
 				}
@@ -659,6 +703,7 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 			}
 
 			if err != nil {
+				h.Logger.Printf("Error updating career: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -681,6 +726,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		err := r.ParseMultipartForm(10 << 20) // 10 MB max file size
 		if err != nil {
+			h.Logger.Printf("Error parsing form: %v", err)
 			err = errors.New(err.Error() + " parse")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
@@ -707,6 +753,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 			if err != nil {
 				err = os.MkdirAll("./uploads", os.ModePerm)
 				if err != nil {
+					h.Logger.Printf("Error creating directory: %v", err)
 					err = errors.New(err.Error() + " file 637")
 					HandleServerErr(i, err).ServeHTTP(w, r)
 					return nil
@@ -716,6 +763,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 
 			_, err = io.Copy(f, file)
 			if err != nil {
+				h.Logger.Printf("Error copying file: %v", err)
 				err = errors.New(err.Error() + " file 646")
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
@@ -724,6 +772,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		hashedPassword, err := utils.HashPassword(identityCard)
 		if err != nil {
+			h.Logger.Printf("Error hashing password: %v", err)
 			err = errors.New(err.Error() + " password")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
@@ -731,6 +780,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		birthDateTime, err := utils.ParseDate(birthDate)
 		if err != nil {
+			h.Logger.Printf("Error parsing birth date: %v", err)
 			err = errors.New(err.Error() + " birthDate")
 			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
@@ -759,12 +809,14 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 				SetUser(user).
 				Save(r.Context())
 			if err != nil {
+				h.Logger.Printf("Error creating professor: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
 		} else {
 			professorId, err := strconv.Atoi(id)
 			if err != nil {
+				h.Logger.Printf("Error parsing professor id: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -774,6 +826,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 				WithUser().
 				Only(r.Context())
 			if err != nil {
+				h.Logger.Printf("Error querying professor: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -785,6 +838,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 				SetAvatar(filePath).
 				Save(r.Context())
 			if err != nil {
+				h.Logger.Printf("Error updating user: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
@@ -796,6 +850,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 				SetBirthDate(birthDateTime).
 				Save(r.Context())
 			if err != nil {
+				h.Logger.Printf("Error updating professor: %v", err)
 				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
