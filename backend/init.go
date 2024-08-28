@@ -59,6 +59,9 @@ func MountApp() {
 	directive.GET("/professors", handler.Professors(i))
 	directive.GET("/professors/view", handler.Professor(i))
 	directive.Any("/professors/view/submit", handler.ProfessorPost(i))
+	directive.GET("/subjects", handler.Subjects(i))
+	// directive.GET("/subjects/view", handler.Subject(i))
+	directive.Any("/subjects/view/submit", handler.SubjectPost(i))
 
 	// Settings routes
 	settings := app.Group("/settings", inertia)
