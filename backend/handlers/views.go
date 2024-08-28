@@ -516,3 +516,54 @@ func (h *Handler) Professor(i *inertia.Inertia) echo.HandlerFunc {
 	}
 	return fn
 }
+
+func (h *Handler) Subjects(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
+		subjects, err := h.DB.Subject.Query().WithCareer().WithProfessor().All(r.Context())
+		if err != nil {
+			h.Logger.Printf("Error getting subjects: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		subjectDtos := make([]SubjectDto, len(subjects))
+		for i, subject := range subjects {
+			subjectDtos[i] = SubjectDto{
+				ID:            subject.ID,
+				Name:          subject.Name,
+				Description:   subject.Description,
+				Code:          subject.Code,
+				CreditUnits:   subject.CreditUnits,
+				Semester:      subject.Semester,
+				PracticeHours: subject.PracticeHours,
+				TheoryHours:   subject.TheoryHours,
+				LabHours:      subject.LabHours,
+				TotalHours:    subject.TotalHours,
+				ClassSchedule: subject.ClassSchedule,
+				ProfessorId:   subject.Edges.Professor.ID,
+				ProfessorName: subject.Edges.Professor.Edges.User.Name,
+				Careers:       nil,
+			}
+
+			for _, career := range subject.Edges.Career {
+				subjectDtos[i].Careers = append(subjectDtos[i].Careers, SelectDto{
+					ID:   career.ID,
+					Name: career.Name,
+				})
+			}
+		}
+
+		err = i.Render(w, r, "Directive/Subjects/Home", inertia.Props{
+			"subjects": subjectDtos,
+		})
+		if err != nil {
+			h.Logger.Printf("Error rendering subjects: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		return nil
+	}
+	return fn
+}

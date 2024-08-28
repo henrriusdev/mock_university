@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"mocku/backend/ent/careers"
@@ -15,6 +16,7 @@ import (
 	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/professor"
 	"mocku/backend/ent/student"
+	"mocku/backend/ent/subject"
 	"mocku/backend/ent/users"
 	"mocku/backend/utils"
 
@@ -857,6 +859,188 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 		}
 
 		http.Redirect(w, r, "/directive/professors", http.StatusSeeOther)
+
+		return nil
+	}
+
+	return fn
+}
+
+func (h *Handler) SubjectPost(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
+		if r.Method != http.MethodPost {
+			http.NotFound(w, r)
+			return methodNotAllowed
+		}
+
+		err := r.ParseForm()
+		if err != nil {
+			h.Logger.Printf("Error parsing form: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		name := r.FormValue("name")
+		description := r.FormValue("description")
+		creditUnits := r.FormValue("creditUnits")
+		semester := r.FormValue("semester")
+		code := r.FormValue("code")
+		practiceHours := r.FormValue("practiceHours")
+		theoryHours := r.FormValue("theoryHours")
+		labHours := r.FormValue("labHours")
+		totalHours := r.FormValue("totalHours")
+		classSchedule := r.FormValue("classSchedule")
+		professorId := r.FormValue("professor")
+		careersIds := r.FormValue("careers")
+		id := r.FormValue("id")
+
+		creditUnitsInt, err := strconv.Atoi(creditUnits)
+		if err != nil {
+			h.Logger.Printf("Error parsing credit units: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		semesterInt, err := strconv.Atoi(semester)
+		if err != nil {
+			h.Logger.Printf("Error parsing semester: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		practiceHoursInt, err := strconv.Atoi(practiceHours)
+		if err != nil {
+			h.Logger.Printf("Error parsing practice hours: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		theoryHoursInt, err := strconv.Atoi(theoryHours)
+		if err != nil {
+			h.Logger.Printf("Error parsing theory hours: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		labHoursInt, err := strconv.Atoi(labHours)
+		if err != nil {
+			h.Logger.Printf("Error parsing lab hours: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		totalHoursInt, err := strconv.Atoi(totalHours)
+		if err != nil {
+			h.Logger.Printf("Error parsing total hours: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		professorIdInt, err := strconv.Atoi(professorId)
+		if err != nil {
+			h.Logger.Printf("Error parsing professor id: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		classScheduleMap := make(map[string][]string)
+		if classSchedule != "" {
+			err = utils.Unmarshal(classSchedule, &classScheduleMap)
+			if err != nil {
+				h.Logger.Printf("Error unmarshaling class schedule: %v", err)
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return nil
+			}
+		}
+
+		careersIdsSlice := strings.Split(careersIds, ",")
+		careers, err := utils.StringSliceToIntSlice(careersIdsSlice)
+		if err != nil {
+			h.Logger.Printf("Error parsing careers ids: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		if id == "" {
+			professor, err := h.DB.Professor.Query().
+				Where(professor.ID(professorIdInt)).
+				Only(r.Context())
+			if err != nil {
+				h.Logger.Printf("Error querying professor: %v", err)
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return nil
+			}
+
+			_, err = h.DB.Subject.Create().
+				SetName(name).
+				SetDescription(description).
+				SetCreditUnits(creditUnitsInt).
+				SetSemester(semesterInt).
+				SetCode(code).
+				SetPracticeHours(practiceHoursInt).
+				SetTheoryHours(theoryHoursInt).
+				SetLabHours(labHoursInt).
+				SetTotalHours(totalHoursInt).
+				SetClassSchedule(classScheduleMap).
+				SetProfessor(professor).
+				AddCareerIDs(careers...).
+				Save(r.Context())
+			if err != nil {
+				h.Logger.Printf("Error creating subject: %v", err)
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return nil
+			}
+		} else {
+			subjectId, err := strconv.Atoi(id)
+			if err != nil {
+				h.Logger.Printf("Error parsing subject id: %v", err)
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return nil
+			}
+
+			subj, err := h.DB.Subject.Query().
+				Where(subject.ID(subjectId)).
+				WithProfessor().
+				WithCareer().
+				Only(r.Context())
+			if err != nil {
+				h.Logger.Printf("Error querying subject: %v", err)
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return nil
+			}
+
+			professor, err := h.DB.Professor.Query().
+				Where(professor.ID(professorIdInt)).
+				Only(r.Context())
+			if err != nil {
+				h.Logger.Printf("Error querying professor: %v", err)
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return nil
+			}
+
+			_, err = h.DB.Subject.UpdateOne(subj).
+				SetName(name).
+				SetDescription(description).
+				SetCreditUnits(creditUnitsInt).
+				SetSemester(semesterInt).
+				SetCode(code).
+				SetPracticeHours(practiceHoursInt).
+				SetTheoryHours(theoryHoursInt).
+				SetLabHours(labHoursInt).
+				SetTotalHours(totalHoursInt).
+				SetClassSchedule(classScheduleMap).
+				SetProfessor(professor).
+				AddCareerIDs(careers...).
+				Save(r.Context())
+			if err != nil {
+				h.Logger.Printf("Error creating subject: %v", err)
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return nil
+			}
+		}
+
+		i.Redirect(w, r, "/directive/subjects", 302)
 
 		return nil
 	}

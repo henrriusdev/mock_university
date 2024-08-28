@@ -24,37 +24,6 @@ func CheckPassword(hashedPassword, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) == nil
 }
 
-func ValidatePassword(password string) []string {
-	// Valida que la contraseña tenga al menos 6 caracteres, 1 mayúscula, 1 minúscula, 1 número, 1 caracter especial, minimo 8 caracteres de longitud y no contenga espacios
-	var errors []string
-
-	if len(password) < 8 {
-		errors = append(errors, "La contraseña debe tener al menos 8 caracteres")
-	}
-
-	if !regexp.MustCompile(`[A-Z]`).Match([]byte(password)) {
-		errors = append(errors, "La contraseña debe tener al menos una mayúscula")
-	}
-
-	if !regexp.MustCompile(`[a-z]`).Match([]byte(password)) {
-		errors = append(errors, "La contraseña debe tener al menos una minúscula")
-	}
-
-	if !regexp.MustCompile(`[0-9]`).Match([]byte(password)) {
-		errors = append(errors, "La contraseña debe tener al menos un número")
-	}
-
-	if !regexp.MustCompile(`[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]`).Match([]byte(password)) {
-		errors = append(errors, "La contraseña debe tener al menos un caracter especial")
-	}
-
-	if regexp.MustCompile(`\s`).Match([]byte(password)) {
-		errors = append(errors, "La contraseña no debe contener espacios")
-	}
-
-	return errors
-}
-
 func ValidateEmail(email string) bool {
 	// Valida que el email tenga un formato válido con regex
 	ok, err := regexp.Match(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, []byte(email))
@@ -131,6 +100,26 @@ func StructArrayToJson(dtos []interface{}) ([]map[string]interface{}, error) {
 		}
 
 		result = append(result, res)
+	}
+
+	return result, nil
+}
+
+// Unmarshal takes a JSON string and unmarshals it into the provided target variable.
+func Unmarshal(data string, target interface{}) error {
+	return json.Unmarshal([]byte(data), target)
+}
+
+func StringSliceToIntSlice(slice []string) ([]int, error) {
+	var result []int
+
+	for _, s := range slice {
+		i, err := strconv.Atoi(s)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, i)
 	}
 
 	return result, nil
