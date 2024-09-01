@@ -10,6 +10,7 @@ import (
 	"mocku/backend/ent/cycle"
 	"mocku/backend/ent/professor"
 	"mocku/backend/ent/student"
+	"mocku/backend/ent/subject"
 	"mocku/backend/utils"
 
 	"github.com/labstack/echo/v4"
@@ -514,5 +515,144 @@ func (h *Handler) Professor(i *inertia.Inertia) echo.HandlerFunc {
 
 		return nil
 	}
+	return fn
+}
+
+func (h *Handler) Subjects(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
+		subjects, err := h.DB.Subject.Query().WithCareer().WithProfessor().All(r.Context())
+		if err != nil {
+			h.Logger.Printf("Error getting subjects: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		subjectDtos := make([]SubjectDto, len(subjects))
+		for i, subject := range subjects {
+			subjectDtos[i] = SubjectDto{
+				ID:            subject.ID,
+				Name:          subject.Name,
+				Description:   subject.Description,
+				Code:          subject.Code,
+				CreditUnits:   subject.CreditUnits,
+				Semester:      subject.Semester,
+				PracticeHours: subject.PracticeHours,
+				TheoryHours:   subject.TheoryHours,
+				LabHours:      subject.LabHours,
+				TotalHours:    subject.TotalHours,
+				ClassSchedule: subject.ClassSchedule,
+				ProfessorId:   subject.Edges.Professor.ID,
+				ProfessorName: subject.Edges.Professor.Edges.User.Name,
+				Careers:       nil,
+			}
+
+			for _, career := range subject.Edges.Career {
+				subjectDtos[i].Careers = append(subjectDtos[i].Careers, SelectDto{
+					ID:   career.ID,
+					Name: career.Name,
+				})
+			}
+		}
+
+		err = i.Render(w, r, "Directive/Subjects/Home", inertia.Props{
+			"subjects": subjectDtos,
+		})
+		if err != nil {
+			h.Logger.Printf("Error rendering subjects: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		return nil
+	}
+	return fn
+}
+
+func (h *Handler) Subject(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
+		id := r.URL.Query().Get("id")
+		var subjectDto SubjectDto
+		if id != "add" {
+			subjectId, err := strconv.Atoi(id)
+			if err != nil {
+				h.Logger.Printf("Error converting id to int: %v", err)
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return nil
+			}
+
+			subj, err := h.DB.Subject.Query().
+				Where(subject.ID(subjectId)).
+				WithCareer().
+				WithProfessor(func(query *ent.ProfessorQuery) { query.WithUser() }).
+				Only(r.Context())
+			if err != nil {
+				h.Logger.Printf("Error getting subject: %v", err)
+				HandleServerErr(i, err).ServeHTTP(w, r)
+				return nil
+			}
+
+			subjectDto = SubjectDto{
+				ID:            subj.ID,
+				Name:          subj.Name,
+				Description:   subj.Description,
+				Code:          subj.Code,
+				CreditUnits:   subj.CreditUnits,
+				Semester:      subj.Semester,
+				PracticeHours: subj.PracticeHours,
+				TheoryHours:   subj.TheoryHours,
+				LabHours:      subj.LabHours,
+				TotalHours:    subj.TotalHours,
+				ClassSchedule: subj.ClassSchedule,
+				ProfessorId:   subj.Edges.Professor.ID,
+				ProfessorName: subj.Edges.Professor.Edges.User.Name,
+			}
+		}
+
+		professors, err := h.DB.Professor.Query().WithUser().All(r.Context())
+		if err != nil {
+			h.Logger.Printf("Error getting professors: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		professorDtos := make([]SelectDto, len(professors))
+		for i, professor := range professors {
+			professorDtos[i] = SelectDto{
+				ID:   professor.ID,
+				Name: professor.Edges.User.Name,
+			}
+		}
+
+		careers, err := h.DB.Careers.Query().All(r.Context())
+		if err != nil {
+			h.Logger.Printf("Error getting careers: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		careerDtos := make([]SelectDto, len(careers))
+		for i, career := range careers {
+			careerDtos[i] = SelectDto{
+				ID:   career.ID,
+				Name: career.Name,
+			}
+		}
+
+		err = i.Render(w, r, "Directive/Subjects/Upsert", inertia.Props{
+			"subject":    subjectDto,
+			"professors": professorDtos,
+			"careers":    careerDtos,
+		})
+		if err != nil {
+			h.Logger.Printf("Error rendering subject: %v", err)
+			HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		return nil
+	}
+
 	return fn
 }
