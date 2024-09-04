@@ -97,7 +97,7 @@
                             id="code"
                             value="{subject?.code ?? ''}"
                             name="code"
-                            imask="{{ mask: 'AAAA-000' }}"
+                            imask="{{ mask: 'aaaa-000' }}"
                     />
                   </span>
                   <span
@@ -223,7 +223,7 @@
                                 id="classSchedule"
                                 value=""
                                 name="classSchedule"
-                                imask={{ mask: 'HH:MM', blocks: { HH: { mask: IMask.MaskedRange, from: 0, to: 23 }, MM: { mask: IMask.MaskedRange, from: 0, to: 59 } } }}
+                                imask={{ mask: 'HH:MM', blocks: { HH: { mask: IMask.MaskedRange, from: 7, to: 18 }, MM: { mask: IMask.MaskedRange, from: 0, to: 59 } } }}
                         />
                     </span>
                     <span
@@ -234,7 +234,7 @@
                                 id="classSchedule"
                                 value=""
                                 name="classSchedule"
-                                imask={{ mask: 'HH:MM', blocks: { HH: { mask: IMask.MaskedRange, from: 0, to: 23 }, MM: { mask: IMask.MaskedRange, from: 0, to: 59 } } }}
+                                imask={{ mask: 'HH:MM', blocks: { HH: { mask: IMask.MaskedRange, from: 7, to: 18 }, MM: { mask: IMask.MaskedRange, from: 0, to: 59 } } }}
                         />
                     </span>
                   {:else}
