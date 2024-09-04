@@ -1,31 +1,39 @@
 <script>
   /** @typedef {{id: number, name: string, description: string, code: string, creditUnits: number, semester: number, praticeHours: number, theoryHours: number, labHours: number, classSchedule: {[key: string]: string[]}, professorId: number, professorName: string, careers: {id: number, name: string}[]}} Subject */
-  import { Camera, ChevronLeft } from "lucide-svelte";
+  import { ChevronLeft } from "lucide-svelte";
 
+  /** @typedef {Array<{id: number, name: string}>} Select */
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import { Input, MaskInput } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
-  import DatePicker from "$lib/components/DatePicker.svelte";
   import Textarea from "$lib/components/ui/textarea/textarea.svelte";
-  import { identityMask } from "$lib/utils";
   import * as Select from "$lib/components/ui/select/index.js";
   import Combobox from "$lib/components/Combobox.svelte";
-  import { CalendarDate } from "@internationalized/date";
+  import IMask from "imask";
 
   /** @type {Subject | null} */
   export let subject = null;
 
-  /** @type {Array<{id: number, name: string}>} */
+    /** @type {Select} */
   export let careers = [];
 
-  // birth date is a string, so, parse it to a CalendarDate object, its format is 'YYYY-MM-DD'
+    /** @type {Select} */
+  export let professors = [];
+
+  /** @type {string} */
+  let career = '';
+
+  /** @type {string} */
+  let professor = '';
+
+  console.log(subject);
 </script>
 
 <DirectiveLayout
-  title="{subject?.id ? `Update ${subject?.name}` : 'Add Student'}"
-  description="Add or update a student of the MockUniversity"
+  title="{subject?.id ? `Update ${subject?.name}` : 'Add subject'}"
+  description="Add or update a subject of the MockUniversity"
   keywords="add, update, inactive, mocku"
 >
   <section class="bg-muted/40 flex w-full flex-col p-4">
@@ -33,156 +41,307 @@
       <div class="mx-auto grid max-w-[59rem] flex-1 auto-rows-max gap-4">
         <div class="flex items-center gap-4 py-1">
           <Button
-            variant="ghost"
-            size="icon"
-            class="h-7 w-7"
-            href="/directive/subjects"
+                  variant="ghost"
+                  size="icon"
+                  class="h-7 w-7"
+                  href="/directive/subjects"
           >
             <ChevronLeft class="h-5 w-5" />
             <span class="sr-only">Back</span>
           </Button>
           <h1
-            class="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0"
+                  class="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0"
           >
             {#if subject?.id}
               Update {subject?.name}
             {:else}
-              Add Subject
+              Add subject
             {/if}
           </h1>
         </div>
-        <Card.Root>
-          <Card.Header>
-            <Card.Title>Subject Information</Card.Title>
-          </Card.Header>
-          <Card.Content>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <Label for="name">Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  bind:value="{subject?.name}"
-                  required
-                />
-              </div>
-              <div>
-                <Label for="code">Code</Label>
-                <Input
-                  id="code"
-                  name="code"
-                  type="text"
-                  bind:value="{subject?.code}"
-                  required
-                />
-              </div>
-              <div>
-                <Label for="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  bind:value="{subject?.description}"
-                  required
-                />
-              </div>
-              <div>
-                <Label for="creditUnits">Credit Units</Label>
-                <Input
-                  id="creditUnits"
-                  name="creditUnits"
-                  type="number"
-                  bind:value="{subject?.creditUnits}"
-                  required
-                />
-              </div>
-              <div>
-                <Label for="semester">Semester</Label>
-                <Input
-                  id="semester"
-                  name="semester"
-                  type="number"
-                  bind:value="{subject?.semester}"
-                  required
-                />
-              </div>
-              <div>
-                <Label for="praticeHours">Pratice Hours</Label>
-                <Input
-                  id="praticeHours"
-                  name="praticeHours"
-                  type="number"
-                  bind:value="{subject?.praticeHours}"
-                  required
-                />
-              </div>
-              <div>
-                <Label for="theoryHours">Theory Hours</Label>
-                <Input
-                  id="theoryHours"
-                  name="theoryHours"
-                  type="number"
-                  bind:value="{subject?.theoryHours}"
-                  required
-                />
-              </div>
-              <div>
-                <Label for="labHours">Lab Hours</Label>
-                <Input
-                  id="labHours"
-                  name="labHours"
-                  type="number"
-                  bind:value="{subject?.labHours}"
-                  required
-                />
-              </div>
-              <div>
-                <Label for="classSchedule">Class Schedule</Label>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {#each Object.entries(subject?.classSchedule || {}) as [day, hours]}
-                    <div>
-                      <Label for="day">{day}</Label>
-                      <!-- <Combobox
-                        id="day"
-                        name="day"
-                        bind:value="{hours}"
-                        multiple
-                        options="{[
-                          '08:00',
-                          '10:00',
-                          '14:00',
-                          '16:00',
-                          '18:00',
-                        ]}"
-                      /> -->
-                    </div>
-                  {/each}
-                </div>
-              </div>
-              <div>
-                <Label for="professorId">Professor</Label>
-                <!-- <Select
-                  id="professorId"
-                  name="professorId"
-                  bind:value="{subject?.professorId}"
-                  required
-                >
-                  <Select.Option value="" disabled
-                    >Select a professor</Select.Option
+        <form method="post" action="/directive/subjects/view/submit" enctype="multipart/form-data"
+              class="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8"
+        >
+          <div
+                  class="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8"
+          >
+            <Card.Root>
+              <Card.Header>
+                <Card.Title>General information</Card.Title>
+                <Card.Description>
+                  Fill the form with the subject's information.
+                </Card.Description>
+              </Card.Header>
+              <Card.Content>
+                <div class="grid gap-4 lg:grid-cols-4">
+                  <span
+                          class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
-                  <Select.Option value="1">Professor 1</Select.Option>
-                  <Select.Option value="2">Professor 2</Select.Option>
-                  <Select.Option value="3">Professor 3</Select.Option>
-                </Select> -->
-                <input
-                  type="hidden"
-                  name="professorId"
-                  value="{subject?.professorId}"
-                />
-              </div>
-            </div>
-          </Card.Content>
-        </Card.Root>
+                  {#if subject?.id}
+                    <input type="hidden" name="id" value="{subject?.id}" />
+                  {/if}
+                    <Label for="name">Name</Label>
+                    <Input
+                            type="text"
+                            id="name"
+                            value="{subject?.name ?? ''}"
+                            name="name"
+                            maxlength="100"
+                    />
+                  </span>
+                  <span
+                          class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                  >
+                    <Label for="code">Code</Label>
+                    <MaskInput
+                            id="code"
+                            value="{subject?.code ?? ''}"
+                            name="code"
+                            imask="{{ mask: 'AAAA-000' }}"
+                    />
+                  </span>
+                  <span
+                          class="text-sm font-semibold text-muted-foreground lg:col-span-4"
+                  >
+                    <Label for="description">Description</Label>
+                    <Textarea
+                            id="description"
+                            value="{subject?.description ?? ''}"
+                            name="description"
+                    />
+                  </span>
+                </div>
+              </Card.Content>
+            </Card.Root>
+            <Card.Root>
+              <Card.Header>
+                <Card.Title>Academic information</Card.Title>
+                <Card.Description>
+                  Fill the form with the subject's academical information.
+                </Card.Description>
+              </Card.Header>
+              <Card.Content>
+                <div class="grid gap-4 lg:grid-cols-5">
+                  <span
+                          class="text-sm font-semibold text-muted-foreground lg:col-span-1"
+                  >
+                    <Label for="creditUnits">Credit Units</Label>
+                    <MaskInput
+                            id="creditUnits"
+                            unmask="none"
+                            imask={{ mask: Number, min: 0, max: 22 }}
+                            value="{subject?.creditUnits?.toString() ?? ''}"
+                            name="creditUnits"
+                    />
+                  </span>
+                  <span
+                          class="text-sm font-semibold text-muted-foreground lg:col-span-1"
+                  >
+                    <Label for="practiceHours">Practice Hours</Label>
+                    <MaskInput
+                            id="practiceHours"
+                            unmask="none"
+                            imask={{ mask: Number, min: 0, max: 5 }}
+                            value="{subject?.praticeHours?.toString() ?? ''}"
+                            name="practiceHours"
+                    />
+                  </span>
+                  <span
+                          class="text-sm font-semibold text-muted-foreground lg:col-span-1"
+                  >
+                    <Label for="theoryHours">Theory Hours</Label>
+                    <MaskInput
+                            id="theoryHours"
+                            unmask="none"
+                            imask={{ mask: Number, min: 0, max: 5 }}
+                            value="{subject?.theoryHours?.toString() ?? ''}"
+                            name="theoryHours"
+                    />
+                  </span>
+                  <span
+                          class="text-sm font-semibold text-muted-foreground lg:col-span-1"
+                  >
+                    <Label for="labHours">Lab Hours</Label>
+                    <MaskInput
+                            id="labHours"
+                            unmask="none"
+                            imask={{ mask: Number, min: 0, max: 5 }}
+                            value="{subject?.labHours?.toString() ?? ''}"
+                            name="labHours"
+                    />
+                  </span>
+                  <span
+                          class="text-sm font-semibold text-muted-foreground lg:col-span-1"
+                  >
+                    <Label for="totalAverage">Semester</Label>
+                    <Input
+                            id="semester"
+                            type="number"
+                            min="1"
+                            max="10"
+                            value="{subject?.semester}"
+                            name="semester"
+                    />
+                  </span>
+                </div>
+              </Card.Content>
+            </Card.Root>
+            <Card.Root>
+              <Card.Header>
+                <Card.Title>Class Schedule</Card.Title>
+                <Card.Description>
+                    Fill the form with the subject's class schedule, by the selected practice, theory and laboratory hours.
+                </Card.Description>
+              </Card.Header>
+              <Card.Content>
+                <div class="grid gap-4 lg:grid-cols-6">
+                  {#if Object.keys(subject?.classSchedule ?? {}).length === 0}
+                    <span
+                            class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                    >
+                      <Label for="classSchedule">Class Schedule</Label>
+                      <Select.Root>
+                        <Select.Trigger>
+                          <Select.Value placeholder="Select a day"/>
+                        </Select.Trigger>
+                        <Select.Content>
+                          <Select.Item value="monday">Monday</Select.Item>
+                          <Select.Item value="tuesday">Tuesday</Select.Item>
+                          <Select.Item value="wednesday">Wednesday</Select.Item>
+                          <Select.Item value="thursday">Thursday</Select.Item>
+                          <Select.Item value="friday">Friday</Select.Item>
+                          <Select.Item value="saturday">Saturday</Select.Item>
+                          <Select.Item value="sunday">Sunday</Select.Item>
+                        </Select.Content>
+                      </Select.Root>
+                    </span>
+                    <span
+                            class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                    >
+                        <Label for="classSchedule">From</Label>
+                        <MaskInput
+                                id="classSchedule"
+                                value=""
+                                name="classSchedule"
+                                imask={{ mask: 'HH:MM', blocks: { HH: { mask: IMask.MaskedRange, from: 0, to: 23 }, MM: { mask: IMask.MaskedRange, from: 0, to: 59 } } }}
+                        />
+                    </span>
+                    <span
+                            class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                    >
+                        <Label for="classSchedule">To</Label>
+                        <MaskInput
+                                id="classSchedule"
+                                value=""
+                                name="classSchedule"
+                                imask={{ mask: 'HH:MM', blocks: { HH: { mask: IMask.MaskedRange, from: 0, to: 23 }, MM: { mask: IMask.MaskedRange, from: 0, to: 59 } } }}
+                        />
+                    </span>
+                  {:else}
+                  {#each Object.keys(subject?.classSchedule ?? {}) as day}
+                    <span
+                            class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                    >
+                      <Label for="classSchedule">Class Schedule</Label>
+                      <Select.Root selected={{
+                        value: day,
+                        label: day.charAt(0).toUpperCase() + day.slice(1)
+                      }}>
+                        <Select.Trigger>
+                          <Select.Value placeholder="Select a day"/>
+                        </Select.Trigger>
+                        <Select.Content>
+                          <Select.Item value="monday">Monday</Select.Item>
+                          <Select.Item value="tuesday">Tuesday</Select.Item>
+                          <Select.Item value="wednesday">Wednesday</Select.Item>
+                          <Select.Item value="thursday">Thursday</Select.Item>
+                          <Select.Item value="friday">Friday</Select.Item>
+                          <Select.Item value="saturday">Saturday</Select.Item>
+                          <Select.Item value="sunday">Sunday</Select.Item>
+                        </Select.Content>
+                      </Select.Root>
+                    </span>
+                    <span
+                            class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                    >
+                        <Label for="classSchedule">From</Label>
+                        <MaskInput
+                                id="classSchedule"
+                                value="{subject?.classSchedule[day][0] ?? ''}"
+                                name="classSchedule"
+                                imask={{ mask: 'HH:MM', blocks: { HH: { mask: IMask.MaskedRange, from: 0, to: 23 }, MM: { mask: IMask.MaskedRange, from: 0, to: 59 } } }}
+                        />
+                    </span>
+                    <span
+                            class="text-sm font-semibold text-muted-foreground lg:col-span-2"
+                    >
+                        <Label for="classSchedule">To</Label>
+                        <MaskInput
+                                id="classSchedule"
+                                value="{subject?.classSchedule[day][1] ?? ''}"
+                                name="classSchedule"
+                                imask={{ mask: 'HH:MM', blocks: { HH: { mask: IMask.MaskedRange, from: 0, to: 23 }, MM: { mask: IMask.MaskedRange, from: 0, to: 59 } } }}
+                        />
+                    </span>
+                  {/each}
+                    {/if}
+
+                </div>
+              </Card.Content>
+            </Card.Root>
+          </div>
+          <div class="grid auto-rows-max items-start gap-4 lg:gap-8">
+            <Card.Root>
+              <Card.Header>
+                <Card.Title>Professor And Careers</Card.Title>
+                <Card.Description>
+                  Fill the form with the professor and careers (can be one or more) of the subject.
+                </Card.Description>
+              </Card.Header>
+              <Card.Content>
+                <!-- Make a image rounded of the avatar with a button for change it -->
+                <div class="flex flex-col gap-4">
+                    <span
+                        class="text-sm font-semibold text-muted-foreground lg:col-span-2 flex flex-col justify-end gap-y-2"
+                    >
+                        <Label for="professor">Professor</Label>
+                        <Combobox options={professors.map((p) => ({ value: p.id.toString(), label: p.name }))} bind:value={professor} />
+                        <input type="hidden" id="professor" name="professor" bind:value={professor} />
+                    </span>
+                  <span
+                      class="text-sm font-semibold text-muted-foreground lg:col-span-2 flex flex-col justify-end gap-y-2"
+                  >
+                    <Label for="career">Career</Label>
+                    <Combobox multiple options={careers.map((c) => ({ value: c.id.toString(), label: c.name }))} bind:value={career} />
+                    <input type="hidden" id="career" name="career" bind:value={career} />
+                  </span>
+                </div>
+              </Card.Content>
+            </Card.Root>
+            <Card.Root>
+              <Card.Header>
+                <Card.Title>Actions</Card.Title>
+                <Card.Description>
+                  Save or cancel the changes made to the subject. Also inactive
+                  the subject.
+                </Card.Description>
+              </Card.Header>
+              <Card.Content>
+                <div class="flex flex-col gap-4">
+                  <Button variant="ghost" type="reset">Cancel</Button>
+                  <Button variant="default" type="submit">
+                    {subject?.id ? "Update" : "Add"} subject
+                  </Button>
+                  {#if subject?.id}
+                    <Button variant="destructive" type="button">
+                      Inactive subject
+                    </Button>
+                  {/if}
+                </div>
+              </Card.Content>
+            </Card.Root>
+          </div>
+        </form>
       </div>
     </main>
   </section>

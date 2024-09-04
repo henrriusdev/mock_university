@@ -529,25 +529,25 @@ func (h *Handler) Subjects(i *inertia.Inertia) echo.HandlerFunc {
 		}
 
 		subjectDtos := make([]SubjectDto, len(subjects))
-		for i, subject := range subjects {
+		for i, subj := range subjects {
 			subjectDtos[i] = SubjectDto{
-				ID:            subject.ID,
-				Name:          subject.Name,
-				Description:   subject.Description,
-				Code:          subject.Code,
-				CreditUnits:   subject.CreditUnits,
-				Semester:      subject.Semester,
-				PracticeHours: subject.PracticeHours,
-				TheoryHours:   subject.TheoryHours,
-				LabHours:      subject.LabHours,
-				TotalHours:    subject.TotalHours,
-				ClassSchedule: subject.ClassSchedule,
-				ProfessorId:   subject.Edges.Professor.ID,
-				ProfessorName: subject.Edges.Professor.Edges.User.Name,
+				ID:            subj.ID,
+				Name:          subj.Name,
+				Description:   subj.Description,
+				Code:          subj.Code,
+				CreditUnits:   subj.CreditUnits,
+				Semester:      subj.Semester,
+				PracticeHours: subj.PracticeHours,
+				TheoryHours:   subj.TheoryHours,
+				LabHours:      subj.LabHours,
+				TotalHours:    subj.TotalHours,
+				ClassSchedule: subj.ClassSchedule,
+				ProfessorId:   subj.Edges.Professor.ID,
+				ProfessorName: subj.Edges.Professor.Edges.User.Name,
 				Careers:       nil,
 			}
 
-			for _, career := range subject.Edges.Career {
+			for _, career := range subj.Edges.Career {
 				subjectDtos[i].Careers = append(subjectDtos[i].Careers, SelectDto{
 					ID:   career.ID,
 					Name: career.Name,
