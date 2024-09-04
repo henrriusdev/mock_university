@@ -2,11 +2,10 @@ package handlers
 
 import (
 	"log"
-
-	"mocku/backend/ent"
+	"mocku/backend/repos"
 )
 
 type Handler struct {
-	DB     *ent.Client
+	Repo   repos.Repo
 	Logger *log.Logger
 }
