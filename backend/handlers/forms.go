@@ -26,11 +26,6 @@ import (
 
 func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
-		if c.Request().Method != http.MethodPost {
-			HandleNotFound(i).ServeHTTP(c.Response().Writer, c.Request())
-			return methodNotAllowed
-		}
-
 		var formData LoginDto
 
 		err := c.Bind(&formData)
@@ -77,22 +72,7 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 			return nil
 		}
 
-		var view string
-		role := user.Edges.Role.ID
-		switch role {
-		case 1:
-			view = "/directive"
-		case 2:
-			view = "/payments"
-		case 3:
-			view = "/control"
-		case 4, 5:
-			view = "/professor"
-		case 6:
-			view = "/student"
-		}
-
-		i.Redirect(c.Response().Writer, c.Request(), view, 302)
+		utils.LoginRedirect(user.Edges.Role.ID, http.StatusSeeOther, c.Response().Writer, c.Request(), i)
 
 		return nil
 	}
