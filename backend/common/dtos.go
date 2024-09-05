@@ -103,3 +103,15 @@ type CareerRequestDto struct {
 	Description string `form:"description"`
 	LeaderId    *int   `form:"leaderId"`
 }
+
+type ProfessorRequestDto struct {
+	ID           int       `form:"id"`
+	IdentityCard string    `form:"identityCard"`
+	Name         string    `form:"name"`
+	Email        string    `form:"email"`
+	Phone        string    `form:"phone"`
+	Username     string    `form:"username"`
+	BirthDate    time.Time `form:"birthDate"`
+	Address      string    `form:"address"`
+	BossId       *int      `form:"bossId"`
+}

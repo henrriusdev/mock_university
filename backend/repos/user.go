@@ -22,20 +22,20 @@ func (r *Repo) GetByEmail(email string, i *inertia.Inertia, w http.ResponseWrite
 	return user, nil
 }
 
-func (r *Repo) CreateUserStudent(studentRequest common.StudentRequestDto, password, filePath string, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Users, error) {
-	if studentRequest.ID != 0 {
-		user, err := r.GetByEmail(studentRequest.Email, i, w, req)
+func (r *Repo) CreateUser(request common.User, password, filePath string, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Users, error) {
+	if request.GetID() != 0 {
+		user, err := r.GetByEmail(request.GetEmail(), i, w, req)
 		if err != nil {
 			return nil, err
 		}
 
-		return nil, r.UpdateUserStudent(user.ID, studentRequest, filePath, i, w, req)
+		return nil, r.UpdateUser(user.ID, request, filePath, i, w, req)
 	}
 	user, err := r.DB.Users.Create().
-		SetEmail(studentRequest.Email).
-		SetUsername(studentRequest.Username).
+		SetEmail(request.GetEmail()).
+		SetUsername(request.GetUsername()).
 		SetPassword(password).
-		SetName(studentRequest.Name).
+		SetName(request.GetName()).
 		SetAvatar(filePath).
 		SetIsActive(true).
 		SetRoleID(6).
@@ -49,11 +49,11 @@ func (r *Repo) CreateUserStudent(studentRequest common.StudentRequestDto, passwo
 	return user, nil
 }
 
-func (r *Repo) UpdateUserStudent(userID int, studentRequest common.StudentRequestDto, filePath string, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
+func (r *Repo) UpdateUser(userID int, request common.User, filePath string, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
 	_, err := r.DB.Users.UpdateOneID(userID).
-		SetEmail(studentRequest.Email).
-		SetUsername(studentRequest.Username).
-		SetName(studentRequest.Name).
+		SetEmail(request.GetEmail()).
+		SetUsername(request.GetUsername()).
+		SetName(request.GetName()).
 		SetAvatar(filePath).
 		Save(req.Context())
 	if err != nil {

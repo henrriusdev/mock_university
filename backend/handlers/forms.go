@@ -1,15 +1,11 @@
 package handlers
 
 import (
-	"errors"
-	"io"
 	"mocku/backend/common"
 	"mocku/backend/ent/professor"
 	"mocku/backend/ent/subject"
 	"mocku/backend/utils"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -347,7 +343,7 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 			return nil
 		}
 
-		user, err := h.Repo.CreateUserStudent(studentRequest, hashedPassword, filePath, i, w, r)
+		user, err := h.Repo.CreateUser(studentRequest, hashedPassword, filePath, i, w, r)
 		if err != nil {
 			return nil
 		}
@@ -393,128 +389,39 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 			return common.MethodNotAllowed
 		}
 
-		// Accediendo a los valores enviados por el formulario
-		id := r.FormValue("id")
-		phone := r.FormValue("phone")
-		identityCard := r.FormValue("identityCard")
-		name := r.FormValue("name")
-		email := r.FormValue("email")
-		username := r.FormValue("username")
-		birthDate := r.FormValue("birthDate")
-		address := r.FormValue("address")
-
-		filePath := ""
-		file, handler, err := r.FormFile("avatar")
-		if err == nil {
-			defer file.Close()
-
-			// Guarda el archivo si se ha subido
-			filePath = "./uploads/" + username + "_avatar" + filepath.Ext(handler.Filename)
-			f, err := os.Create(filePath)
-			if err != nil {
-				err = os.MkdirAll("./uploads", os.ModePerm)
-				if err != nil {
-					h.Logger.Printf("Error creating directory: %v", err)
-					err = errors.New(err.Error() + " file 637")
-					common.HandleServerErr(i, err).ServeHTTP(w, r)
-					return nil
-				}
-			}
-			defer f.Close()
-
-			_, err = io.Copy(f, file)
-			if err != nil {
-				h.Logger.Printf("Error copying file: %v", err)
-				err = errors.New(err.Error() + " file 646")
-				common.HandleServerErr(i, err).ServeHTTP(w, r)
-				return nil
-			}
+		var professorRequest common.ProfessorRequestDto
+		if err := c.Bind(&professorRequest); err != nil {
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+		handler, err := c.FormFile("avatar")
+		if err != nil {
+			h.Logger.Printf("Error getting file: %v", err)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 		}
 
-		hashedPassword, err := utils.HashPassword(identityCard)
+		// Guarda el archivo si se ha subido
+		filePath, err := utils.UploadAvatar(professorRequest.Username, handler)
+		if err != nil {
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		hashedPassword, err := utils.HashPassword(professorRequest.IdentityCard)
 		if err != nil {
 			h.Logger.Printf("Error hashing password: %v", err)
-			err = errors.New(err.Error() + " password")
 			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
-		birthDateTime, err := utils.ParseDate(birthDate)
+		user, err := h.Repo.CreateUser(professorRequest, hashedPassword, filePath, i, w, r)
 		if err != nil {
-			h.Logger.Printf("Error parsing birth date: %v", err)
-			err = errors.New(err.Error() + " birthDate")
-			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
-		if id == "" {
-			user, err := h.DB.Users.Create().
-				SetEmail(email).
-				SetUsername(username).
-				SetPassword(hashedPassword).
-				SetName(name).
-				SetAvatar(filePath).
-				SetIsActive(true).
-				SetRoleID(4).
-				Save(r.Context())
-			if err != nil {
-				common.HandleServerErr(i, err).ServeHTTP(w, r)
-				return nil
-			}
-
-			_, err = h.DB.Professor.Create().
-				SetPhone(phone).
-				SetIdentityCard(identityCard).
-				SetAddress(address).
-				SetBirthDate(birthDateTime).
-				SetUser(user).
-				Save(r.Context())
-			if err != nil {
-				h.Logger.Printf("Error creating professor: %v", err)
-				common.HandleServerErr(i, err).ServeHTTP(w, r)
-				return nil
-			}
-		} else {
-			professorId, err := strconv.Atoi(id)
-			if err != nil {
-				h.Logger.Printf("Error parsing professor id: %v", err)
-				common.HandleServerErr(i, err).ServeHTTP(w, r)
-				return nil
-			}
-
-			professor, err := h.DB.Professor.Query().
-				Where(professor.ID(professorId)).
-				WithUser().
-				Only(r.Context())
-			if err != nil {
-				h.Logger.Printf("Error querying professor: %v", err)
-				common.HandleServerErr(i, err).ServeHTTP(w, r)
-				return nil
-			}
-
-			_, err = h.DB.Users.UpdateOne(professor.Edges.User).
-				SetEmail(email).
-				SetUsername(username).
-				SetName(name).
-				SetAvatar(filePath).
-				Save(r.Context())
-			if err != nil {
-				h.Logger.Printf("Error updating user: %v", err)
-				common.HandleServerErr(i, err).ServeHTTP(w, r)
-				return nil
-			}
-
-			_, err = h.DB.Professor.UpdateOne(professor).
-				SetPhone(phone).
-				SetIdentityCard(identityCard).
-				SetAddress(address).
-				SetBirthDate(birthDateTime).
-				Save(r.Context())
-			if err != nil {
-				h.Logger.Printf("Error updating professor: %v", err)
-				common.HandleServerErr(i, err).ServeHTTP(w, r)
-				return nil
-			}
+		err = h.Repo.CreateProfessor(professorRequest, user, i, w, r)
+		if err != nil {
+			return nil
 		}
 
 		http.Redirect(w, r, "/directive/professors", http.StatusSeeOther)
