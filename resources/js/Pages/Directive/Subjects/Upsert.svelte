@@ -232,6 +232,7 @@
                       <Label for="labHours">Lab Hours</Label>
                       <MaskInput id="labHours" unmask="none" imask={{ mask: Number, min: 0, max: 5 }} bind:value={labHours} required name="labHours"
                       />
+                    <input type="hidden" name="totalHours" value="{totalHours}"/>
                   </span>
                   <span class="text-sm font-semibold text-muted-foreground lg:col-span-1">
                       <Label for="semester">Semester</Label>
@@ -320,11 +321,6 @@
                   <Button variant="default" type="submit">
                     {subject?.id ? "Update" : "Add"} subject
                   </Button>
-                  {#if subject?.id}
-                    <Button variant="destructive" type="button">
-                      Inactive subject
-                    </Button>
-                  {/if}
                 </div>
               </Card.Content>
             </Card.Root>

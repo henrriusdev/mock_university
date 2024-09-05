@@ -41,7 +41,7 @@ func (r *Repo) CreateSubject(subjectRequest common.SubjectRequestDto, carersIDs 
 func (r *Repo) GetSubjectById(id int, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Subject, error) {
 	sub, err := r.DB.Subject.Query().
 		Where(subject.IDEQ(id)).
-		WithProfessor().
+		WithProfessor(func(query *ent.ProfessorQuery) { query.WithUser() }).
 		WithCareer().
 		First(req.Context())
 	if err != nil {
