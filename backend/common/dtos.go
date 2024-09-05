@@ -1,4 +1,6 @@
-package handlers
+package common
+
+import "time"
 
 type LoginDto struct {
 	Email    string `form:"email" json:"email" validate:"required,email"`
@@ -75,4 +77,57 @@ type SubjectDto struct {
 	ProfessorId   int                 `json:"professorId"`
 	ProfessorName string              `json:"professorName"`
 	Careers       []SelectDto         `json:"careers"`
+}
+
+type StudentRequestDto struct {
+	ID                     int       `form:"id"`
+	Phone                  string    `form:"phone"`
+	District               string    `form:"district"`
+	City                   string    `form:"city"`
+	Address                string    `form:"address"`
+	IdentityCard           string    `form:"identityCard"`
+	PostalCode             int       `form:"postalCode"`
+	CreditUnitsAccumulated int       `form:"creditUnitsAccumulated"`
+	Semester               int       `form:"semester"`
+	TotalAverage           float64   `form:"totalAverage"`
+	BirthDate              time.Time `form:"birthDate"`
+	CareerId               int       `form:"career"`
+	Name                   string    `form:"name"`
+	Email                  string    `form:"email"`
+	Username               string    `form:"username"`
+}
+
+type CareerRequestDto struct {
+	ID          int    `form:"id"`
+	Name        string `form:"name"`
+	Description string `form:"description"`
+	LeaderId    *int   `form:"leaderId"`
+}
+
+type ProfessorRequestDto struct {
+	ID           int       `form:"id"`
+	IdentityCard string    `form:"identityCard"`
+	Name         string    `form:"name"`
+	Email        string    `form:"email"`
+	Phone        string    `form:"phone"`
+	Username     string    `form:"username"`
+	BirthDate    time.Time `form:"birthDate"`
+	Address      string    `form:"address"`
+	BossId       *int      `form:"bossId"`
+}
+
+type SubjectRequestDto struct {
+	ID            int                 `form:"id"`
+	Name          string              `form:"name"`
+	Description   string              `form:"description"`
+	CreditUnits   int                 `form:"creditUnits"`
+	Semester      int                 `form:"semester"`
+	Code          string              `form:"code"`
+	PracticeHours int                 `form:"practiceHours"`
+	TheoryHours   int                 `form:"theoryHours"`
+	LabHours      int                 `form:"labHours"`
+	TotalHours    int                 `form:"totalHours"`
+	ClassSchedule map[string][]string `form:"classSchedule"`
+	ProfessorId   int                 `form:"professor"`
+	CareerIds     string              `form:"careers"`
 }

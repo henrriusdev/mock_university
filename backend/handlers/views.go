@@ -1,16 +1,10 @@
 package handlers
 
 import (
-	"fmt"
+	"mocku/backend/common"
 	"strconv"
 	"strings"
 
-	"mocku/backend/ent"
-	"mocku/backend/ent/configuration"
-	"mocku/backend/ent/cycle"
-	"mocku/backend/ent/professor"
-	"mocku/backend/ent/student"
-	"mocku/backend/ent/subject"
 	"mocku/backend/utils"
 
 	"github.com/labstack/echo/v4"
@@ -19,10 +13,8 @@ import (
 
 func (h *Handler) Home(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
-		careers, err := h.DB.Careers.Query().All(c.Request().Context())
+		careers, err := h.Repo.GetCareers(i, c.Response().Writer, c.Request())
 		if err != nil {
-			h.Logger.Printf("Error getting careers: %v", err)
-			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
 
@@ -31,7 +23,7 @@ func (h *Handler) Home(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering home: %v", err)
-			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
+			common.HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
 
@@ -43,10 +35,10 @@ func (h *Handler) Home(i *inertia.Inertia) echo.HandlerFunc {
 
 func (h *Handler) Login(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
-		careers, err := h.DB.Careers.Query().All(c.Request().Context())
+		careers, err := h.Repo.GetCareers(i, c.Response().Writer, c.Request())
 		if err != nil {
 			h.Logger.Printf("Error getting careers: %v", err)
-			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
+			common.HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
 
@@ -55,7 +47,7 @@ func (h *Handler) Login(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering login: %v", err)
-			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
+			common.HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
 
@@ -67,10 +59,10 @@ func (h *Handler) Login(i *inertia.Inertia) echo.HandlerFunc {
 
 func (h *Handler) DirectiveDash(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
-		careers, err := h.DB.Careers.Query().All(c.Request().Context())
+		careers, err := h.Repo.GetCareers(i, c.Response().Writer, c.Request())
 		if err != nil {
 			h.Logger.Printf("Error getting careers: %v", err)
-			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
+			common.HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
 
@@ -79,7 +71,7 @@ func (h *Handler) DirectiveDash(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering directive dash: %v", err)
-			HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
+			common.HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
 
@@ -92,10 +84,10 @@ func (h *Handler) DirectiveDash(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) PaymentsDash(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
-		careers, err := h.DB.Careers.Query().All(r.Context())
+		careers, err := h.Repo.GetCareers(i, w, r)
 		if err != nil {
 			h.Logger.Printf("Error getting careers: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -104,7 +96,7 @@ func (h *Handler) PaymentsDash(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering payment dash: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -117,10 +109,10 @@ func (h *Handler) PaymentsDash(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) ControlDash(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
-		careers, err := h.DB.Careers.Query().All(r.Context())
+		careers, err := h.Repo.GetCareers(i, w, r)
 		if err != nil {
 			h.Logger.Printf("Error getting careers: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -129,7 +121,7 @@ func (h *Handler) ControlDash(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering control dash: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -142,10 +134,10 @@ func (h *Handler) ControlDash(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) ProfessorDash(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
-		careers, err := h.DB.Careers.Query().All(r.Context())
+		careers, err := h.Repo.GetCareers(i, w, r)
 		if err != nil {
 			h.Logger.Printf("Error getting careers: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -154,7 +146,7 @@ func (h *Handler) ProfessorDash(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering professor dash: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -167,10 +159,10 @@ func (h *Handler) ProfessorDash(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) StudentDash(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
-		careers, err := h.DB.Careers.Query().All(r.Context())
+		careers, err := h.Repo.GetCareers(i, w, r)
 		if err != nil {
 			h.Logger.Printf("Error getting careers: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -179,7 +171,7 @@ func (h *Handler) StudentDash(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering student dash: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -192,18 +184,12 @@ func (h *Handler) StudentDash(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Settings(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
-		config := h.DB.Configuration.Query().
-			WithCycle().
-			Where(configuration.HasCycleWith(cycle.Active(true))).
-			OnlyX(r.Context())
-
-		if config == nil {
-			h.Logger.Printf("Error getting configuration")
-			HandleServerErr(i, fmt.Errorf("config not found")).ServeHTTP(w, r)
+		config, err := h.Repo.GetConfiguration(i, w, r)
+		if err != nil {
 			return nil
 		}
 
-		err := i.Render(w, r, "Directive/Settings/Home", inertia.Props{
+		err = i.Render(w, r, "Directive/Settings/Home", inertia.Props{
 			"notesNumber":   config.NumberNotes,
 			"paymentNumber": config.NumberFees,
 			"startRegSubj":  utils.FormatDate(config.StartRegistrationSubjects),
@@ -215,7 +201,7 @@ func (h *Handler) Settings(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering settings: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -228,16 +214,14 @@ func (h *Handler) Settings(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Students(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
-		students, err := h.DB.Student.Query().WithUser().WithCareer().All(r.Context())
+		students, err := h.Repo.GetStudents(i, w, r)
 		if err != nil {
-			h.Logger.Printf("Error getting students: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
-		studentDtos := make([]StudentsTableDto, len(students))
+		studentDtos := make([]common.StudentsTableDto, len(students))
 		for i, student := range students {
-			studentDtos[i] = StudentsTableDto{
+			studentDtos[i] = common.StudentsTableDto{
 				ID:           student.ID,
 				Name:         student.Edges.User.Name,
 				Avatar:       student.Edges.User.Avatar,
@@ -253,19 +237,12 @@ func (h *Handler) Students(i *inertia.Inertia) echo.HandlerFunc {
 			dtos = append(dtos, studentDto)
 		}
 
-		studentsPayload, err := utils.StructArrayToJson(dtos)
-		if err != nil {
-			h.Logger.Printf("Error converting students to json: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return nil
-		}
-
 		err = i.Render(w, r, "Directive/Students/Home", inertia.Props{
-			"students": studentsPayload,
+			"students": dtos,
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering students: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -277,29 +254,18 @@ func (h *Handler) Students(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Student(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
-		// the id is a string, if it is "add" it means that the user wants to add a new student
 		id := r.URL.Query().Get("id")
-		var studentDto StudentDto
-		var userDto UserDto
+		var studentDto common.StudentDto
+		var userDto common.UserDto
 		if id != "add" {
-			studentId, err := strconv.Atoi(id)
+			studentId, _ := strconv.Atoi(id)
+
+			student, err := h.Repo.GetStudentById(studentId, i, w, r)
 			if err != nil {
-				h.Logger.Printf("Error converting id to int: %v", err)
-				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
 
-			student, err := h.DB.Student.Query().
-				Where(student.ID(studentId)).
-				WithUser().WithCareer().
-				Only(r.Context())
-			if err != nil {
-				h.Logger.Printf("Error getting student: %v", err)
-				HandleServerErr(i, err).ServeHTTP(w, r)
-				return nil
-			}
-
-			studentDto = StudentDto{
+			studentDto = common.StudentDto{
 				ID:                     student.ID,
 				Phone:                  student.Phone,
 				Address:                student.Address,
@@ -312,8 +278,8 @@ func (h *Handler) Student(i *inertia.Inertia) echo.HandlerFunc {
 				TotalAverage:           student.TotalAverage,
 			}
 
-			userDto = UserDto{
-				ID:       0,
+			userDto = common.UserDto{
+				ID:       student.Edges.User.ID,
 				Name:     student.Edges.User.Name,
 				Email:    student.Edges.User.Email,
 				Username: student.Edges.User.Username,
@@ -322,16 +288,14 @@ func (h *Handler) Student(i *inertia.Inertia) echo.HandlerFunc {
 			}
 		}
 
-		careers, err := h.DB.Careers.Query().All(r.Context())
+		careers, err := h.Repo.GetCareers(i, w, r)
 		if err != nil {
-			h.Logger.Printf("Error getting careers: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
-		var careerDtos []SelectDto
+		var careerDtos []common.SelectDto
 		for _, career := range careers {
-			careerDtos = append(careerDtos, SelectDto{
+			careerDtos = append(careerDtos, common.SelectDto{
 				ID:   career.ID,
 				Name: career.Name,
 			})
@@ -344,7 +308,7 @@ func (h *Handler) Student(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering student: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -356,19 +320,15 @@ func (h *Handler) Student(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Careers(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
-		careers, err := h.DB.Careers.Query().
-			WithLeader(func(query *ent.ProfessorQuery) { query.WithUser() }).
-			All(r.Context())
+		careers, err := h.Repo.GetCareersWithLeader(i, w, r)
 		if err != nil {
-			h.Logger.Printf("Error getting careers: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
-		careerDtos := make([]CareerDto, len(careers))
+		careerDtos := make([]common.CareerDto, len(careers))
 		for i, career := range careers {
 			if career.Edges.Leader == nil {
-				careerDtos[i] = CareerDto{
+				careerDtos[i] = common.CareerDto{
 					ID:          career.ID,
 					Name:        career.Name,
 					Description: career.Description,
@@ -377,7 +337,7 @@ func (h *Handler) Careers(i *inertia.Inertia) echo.HandlerFunc {
 				}
 				continue
 			}
-			careerDtos[i] = CareerDto{
+			careerDtos[i] = common.CareerDto{
 				ID:          career.ID,
 				Name:        career.Name,
 				Description: career.Description,
@@ -386,10 +346,10 @@ func (h *Handler) Careers(i *inertia.Inertia) echo.HandlerFunc {
 			}
 		}
 
-		professors := h.DB.Professor.Query().WithUser().AllX(r.Context())
-		professorsDto := make([]SelectDto, len(professors))
+		professors, err := h.Repo.GetProfessors(i, w, r)
+		professorsDto := make([]common.SelectDto, len(professors))
 		for i, professor := range professors {
-			professorsDto[i] = SelectDto{
+			professorsDto[i] = common.SelectDto{
 				ID:   professor.ID,
 				Name: professor.Edges.User.Name,
 			}
@@ -401,7 +361,7 @@ func (h *Handler) Careers(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering careers: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -413,16 +373,16 @@ func (h *Handler) Careers(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Professors(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
-		professors, err := h.DB.Professor.Query().WithUser().All(r.Context())
+		professors, err := h.Repo.GetProfessors(i, w, r)
 		if err != nil {
 			h.Logger.Printf("Error getting professors: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
-		professorDtos := make([]ProfessorDto, len(professors))
+		professorDtos := make([]common.ProfessorDto, len(professors))
 		for i, professor := range professors {
-			professorDtos[i] = ProfessorDto{
+			professorDtos[i] = common.ProfessorDto{
 				ID:           professor.ID,
 				Name:         professor.Edges.User.Name,
 				Email:        professor.Edges.User.Email,
@@ -437,7 +397,7 @@ func (h *Handler) Professors(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering professors: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -450,30 +410,28 @@ func (h *Handler) Professor(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
 		id := r.URL.Query().Get("id")
-		var professorDto ProfessorDto
-		var userDto UserDto
+		var professorDto common.ProfessorDto
+		var userDto common.UserDto
 		if id != "add" {
 			professorId, err := strconv.Atoi(id)
 			if err != nil {
 				h.Logger.Printf("Error converting id to int: %v", err)
-				HandleServerErr(i, err).ServeHTTP(w, r)
+				common.HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
 
-			professor, err := h.DB.Professor.Query().Where(professor.ID(professorId)).WithUser().Only(r.Context())
+			professor, err := h.Repo.GetProfessorById(professorId, i, w, r)
 			if err != nil {
-				h.Logger.Printf("Error getting professor: %v", err)
-				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
 
-			professorDto = ProfessorDto{
+			professorDto = common.ProfessorDto{
 				ID:           professor.ID,
 				IdentityCard: professor.IdentityCard,
 				Phone:        professor.Phone,
 			}
 
-			userDto = UserDto{
+			userDto = common.UserDto{
 				ID:       0,
 				Name:     professor.Edges.User.Name,
 				Email:    professor.Edges.User.Email,
@@ -484,19 +442,14 @@ func (h *Handler) Professor(i *inertia.Inertia) echo.HandlerFunc {
 		}
 
 		// get all professors that don't have a boss, without BossID, use Boss Edge
-		professors, err := h.DB.Professor.Query().
-			WithUser().
-			Where(professor.Not(professor.HasBoss())).
-			All(r.Context())
+		professors, err := h.Repo.GetProfessorsWithoutBoss(i, w, r)
 		if err != nil {
-			h.Logger.Printf("Error getting professors: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
-		bossesDto := make([]SelectDto, len(professors))
+		bossesDto := make([]common.SelectDto, len(professors))
 		for i, professor := range professors {
-			bossesDto[i] = SelectDto{
+			bossesDto[i] = common.SelectDto{
 				ID:   professor.ID,
 				Name: professor.Edges.User.Name,
 			}
@@ -509,7 +462,7 @@ func (h *Handler) Professor(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering professor: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -521,16 +474,14 @@ func (h *Handler) Professor(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Subjects(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
-		subjects, err := h.DB.Subject.Query().WithCareer().WithProfessor().All(r.Context())
+		subjects, err := h.Repo.GetSubjects(i, w, r)
 		if err != nil {
-			h.Logger.Printf("Error getting subjects: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
-		subjectDtos := make([]SubjectDto, len(subjects))
+		subjectDtos := make([]common.SubjectDto, len(subjects))
 		for i, subj := range subjects {
-			subjectDtos[i] = SubjectDto{
+			subjectDtos[i] = common.SubjectDto{
 				ID:            subj.ID,
 				Name:          subj.Name,
 				Description:   subj.Description,
@@ -548,7 +499,7 @@ func (h *Handler) Subjects(i *inertia.Inertia) echo.HandlerFunc {
 			}
 
 			for _, career := range subj.Edges.Career {
-				subjectDtos[i].Careers = append(subjectDtos[i].Careers, SelectDto{
+				subjectDtos[i].Careers = append(subjectDtos[i].Careers, common.SelectDto{
 					ID:   career.ID,
 					Name: career.Name,
 				})
@@ -560,7 +511,7 @@ func (h *Handler) Subjects(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering subjects: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
@@ -573,27 +524,16 @@ func (h *Handler) Subject(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
 		id := r.URL.Query().Get("id")
-		var subjectDto SubjectDto
+		var subjectDto common.SubjectDto
 		if id != "add" {
-			subjectId, err := strconv.Atoi(id)
+			subjectId, _ := strconv.Atoi(id)
+
+			subj, err := h.Repo.GetSubjectById(subjectId, i, w, r)
 			if err != nil {
-				h.Logger.Printf("Error converting id to int: %v", err)
-				HandleServerErr(i, err).ServeHTTP(w, r)
 				return nil
 			}
 
-			subj, err := h.DB.Subject.Query().
-				Where(subject.ID(subjectId)).
-				WithCareer().
-				WithProfessor(func(query *ent.ProfessorQuery) { query.WithUser() }).
-				Only(r.Context())
-			if err != nil {
-				h.Logger.Printf("Error getting subject: %v", err)
-				HandleServerErr(i, err).ServeHTTP(w, r)
-				return nil
-			}
-
-			subjectDto = SubjectDto{
+			subjectDto = common.SubjectDto{
 				ID:            subj.ID,
 				Name:          subj.Name,
 				Description:   subj.Description,
@@ -610,31 +550,24 @@ func (h *Handler) Subject(i *inertia.Inertia) echo.HandlerFunc {
 			}
 		}
 
-		professors, err := h.DB.Professor.Query().WithUser().All(r.Context())
+		professors, err := h.Repo.GetProfessors(i, w, r)
 		if err != nil {
-			h.Logger.Printf("Error getting professors: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
-		professorDtos := make([]SelectDto, len(professors))
+		professorDtos := make([]common.SelectDto, len(professors))
 		for i, professor := range professors {
-			professorDtos[i] = SelectDto{
+			professorDtos[i] = common.SelectDto{
 				ID:   professor.ID,
 				Name: professor.Edges.User.Name,
 			}
 		}
 
-		careers, err := h.DB.Careers.Query().All(r.Context())
-		if err != nil {
-			h.Logger.Printf("Error getting careers: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
-			return nil
-		}
+		careers, _ := h.Repo.GetCareers(i, w, r)
 
-		careerDtos := make([]SelectDto, len(careers))
+		careerDtos := make([]common.SelectDto, len(careers))
 		for i, career := range careers {
-			careerDtos[i] = SelectDto{
+			careerDtos[i] = common.SelectDto{
 				ID:   career.ID,
 				Name: career.Name,
 			}
@@ -647,7 +580,7 @@ func (h *Handler) Subject(i *inertia.Inertia) echo.HandlerFunc {
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering subject: %v", err)
-			HandleServerErr(i, err).ServeHTTP(w, r)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 

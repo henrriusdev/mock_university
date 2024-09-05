@@ -3,6 +3,11 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
@@ -123,4 +128,58 @@ func StringSliceToIntSlice(slice []string) ([]int, error) {
 	}
 
 	return result, nil
+}
+
+func ToPercentage(numberNotes int, r *http.Request) ([]float64, error) {
+	notes := make([]float64, numberNotes)
+	for j := 0; j < numberNotes; j++ {
+		note, err := strconv.Atoi(r.FormValue(fmt.Sprintf("note-%d", j+1)))
+		if err != nil {
+			return nil, err
+		}
+
+		notes[j] = float64(note) / 100
+	}
+
+	return notes, nil
+}
+
+func ParseFeeDates(numberFees int, r *http.Request) ([]time.Time, error) {
+	var feesDates []time.Time
+
+	for i := 0; i < numberFees; i++ {
+		feeDate, err := ParseDate(r.FormValue(fmt.Sprintf("payment-%d", i+1)))
+		if err != nil {
+			return nil, err
+		}
+
+		feesDates = append(feesDates, feeDate)
+	}
+
+	return feesDates, nil
+}
+
+func UploadAvatar(username string, handler *multipart.FileHeader) (string, error) {
+	filePath := "./uploads/" + username + "_avatar" + filepath.Ext(handler.Filename)
+	f, err := os.Create(filePath)
+	if err != nil {
+		err = os.MkdirAll("./uploads", os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+	}
+	defer f.Close()
+
+	file, err := handler.Open()
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	_, err = io.Copy(f, file)
+	if err != nil {
+		return "", err
+	}
+
+	return filePath, nil
 }
