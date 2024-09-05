@@ -8,10 +8,12 @@ import (
 	"net/http"
 )
 
-func (r *Repo) CreateSubject(subjectRequest common.SubjectRequestDto, carersIDs []int, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
+func (r *Repo) CreateSubject(subjectRequest common.SubjectRequestDto, carersIDs []int, classSchedule map[string][]string, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
 	if subjectRequest.ID != 0 {
-		return r.UpdateSubject(subjectRequest, carersIDs, i, w, req)
+		return r.UpdateSubject(subjectRequest, carersIDs, classSchedule, i, w, req)
 	}
+
+	r.Logger.Printf("Creating subject: %v", subjectRequest.ProfessorId)
 
 	_, err := r.DB.Subject.Create().
 		SetName(subjectRequest.Name).
@@ -23,7 +25,7 @@ func (r *Repo) CreateSubject(subjectRequest common.SubjectRequestDto, carersIDs 
 		SetTheoryHours(subjectRequest.TheoryHours).
 		SetLabHours(subjectRequest.LabHours).
 		SetTotalHours(subjectRequest.TotalHours).
-		SetClassSchedule(subjectRequest.ClassSchedule).
+		SetClassSchedule(classSchedule).
 		SetProfessorID(subjectRequest.ProfessorId).
 		AddCareerIDs(carersIDs...).
 		Save(req.Context())
@@ -51,7 +53,7 @@ func (r *Repo) GetSubjectById(id int, i *inertia.Inertia, w http.ResponseWriter,
 	return sub, nil
 }
 
-func (r *Repo) UpdateSubject(subjectRequest common.SubjectRequestDto, careerIDs []int, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
+func (r *Repo) UpdateSubject(subjectRequest common.SubjectRequestDto, careerIDs []int, classSchedule map[string][]string, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
 	_, err := r.DB.Subject.UpdateOneID(subjectRequest.ID).
 		SetName(subjectRequest.Name).
 		SetDescription(subjectRequest.Description).
@@ -62,7 +64,7 @@ func (r *Repo) UpdateSubject(subjectRequest common.SubjectRequestDto, careerIDs 
 		SetTheoryHours(subjectRequest.TheoryHours).
 		SetLabHours(subjectRequest.LabHours).
 		SetTotalHours(subjectRequest.TotalHours).
-		SetClassSchedule(subjectRequest.ClassSchedule).
+		SetClassSchedule(classSchedule).
 		SetProfessorID(subjectRequest.ProfessorId).
 		AddCareerIDs(careerIDs...).
 		Save(req.Context())
@@ -76,7 +78,9 @@ func (r *Repo) UpdateSubject(subjectRequest common.SubjectRequestDto, careerIDs 
 }
 
 func (r *Repo) GetSubjects(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) ([]*ent.Subject, error) {
-	subjectsArray, err := r.DB.Subject.Query().WithProfessor().WithCareer().All(req.Context())
+	subjectsArray, err := r.DB.Subject.Query().WithProfessor(func(query *ent.ProfessorQuery) {
+		query.WithUser()
+	}).WithCareer().All(req.Context())
 	if err != nil {
 		r.Logger.Printf("Error querying subjects: %v", err)
 		common.HandleServerErr(i, err).ServeHTTP(w, req)

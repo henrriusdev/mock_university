@@ -254,7 +254,7 @@ var (
 		{Name: "description", Type: field.TypeString, Size: 2147483647},
 		{Name: "read", Type: field.TypeBool, Default: false},
 		{Name: "create", Type: field.TypeBool, Default: false},
-		{Name: "update", Type: field.TypeBool, Default: false},
+		{Name: "modify", Type: field.TypeBool, Default: false},
 		{Name: "delete", Type: field.TypeBool, Default: false},
 	}
 	// PermissionsTable holds the schema information for the "permissions" table.

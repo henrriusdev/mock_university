@@ -24,8 +24,8 @@ type Permission struct {
 	Read bool `json:"read,omitempty"`
 	// Create holds the value of the "create" field.
 	Create bool `json:"create,omitempty"`
-	// Update holds the value of the "update" field.
-	Updated bool `json:"update,omitempty"`
+	// Modify holds the value of the "modify" field.
+	Modify bool `json:"modify,omitempty"`
 	// Delete holds the value of the "delete" field.
 	Delete bool `json:"delete,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -68,7 +68,7 @@ func (*Permission) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case permission.FieldRead, permission.FieldCreate, permission.FieldUpdate, permission.FieldDelete:
+		case permission.FieldRead, permission.FieldCreate, permission.FieldModify, permission.FieldDelete:
 			values[i] = new(sql.NullBool)
 		case permission.FieldID:
 			values[i] = new(sql.NullInt64)
@@ -119,11 +119,11 @@ func (pe *Permission) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pe.Create = value.Bool
 			}
-		case permission.FieldUpdate:
+		case permission.FieldModify:
 			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field update", values[i])
+				return fmt.Errorf("unexpected type %T for field modify", values[i])
 			} else if value.Valid {
-				pe.Updated = value.Bool
+				pe.Modify = value.Bool
 			}
 		case permission.FieldDelete:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -189,8 +189,8 @@ func (pe *Permission) String() string {
 	builder.WriteString("create=")
 	builder.WriteString(fmt.Sprintf("%v", pe.Create))
 	builder.WriteString(", ")
-	builder.WriteString("update=")
-	builder.WriteString(fmt.Sprintf("%v", pe.Update))
+	builder.WriteString("modify=")
+	builder.WriteString(fmt.Sprintf("%v", pe.Modify))
 	builder.WriteString(", ")
 	builder.WriteString("delete=")
 	builder.WriteString(fmt.Sprintf("%v", pe.Delete))

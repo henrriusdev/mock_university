@@ -18,7 +18,7 @@ func (Permission) Fields() []ent.Field {
 		field.Text("description").NotEmpty(),
 		field.Bool("read").Default(false),
 		field.Bool("create").Default(false),
-		field.Bool("update").Default(false),
+		field.Bool("modify").Default(false),
 		field.Bool("delete").Default(false),
 	}
 }

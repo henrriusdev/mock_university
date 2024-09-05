@@ -19,10 +19,10 @@ func (Subject) Fields() []ent.Field {
 		field.Int("credit_units").Positive(),
 		field.Int("semester").Positive(),
 		field.String("code").NotEmpty().MaxLen(20).Unique(),
-		field.Int("practice_hours").Positive(),
-		field.Int("theory_hours").Positive(),
-		field.Int("lab_hours").Positive(),
-		field.Int("total_hours").Positive(),
+		field.Int("practice_hours").NonNegative(),
+		field.Int("theory_hours").NonNegative(),
+		field.Int("lab_hours").NonNegative(),
+		field.Int("total_hours").NonNegative(),
 		field.JSON("class_schedule", map[string][]string{}).Optional(),
 	}
 }

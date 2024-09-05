@@ -85,16 +85,16 @@ func (pu *PermissionUpdate) SetNillableCreate(b *bool) *PermissionUpdate {
 	return pu
 }
 
-// SetUpdate sets the "update" field.
-func (pu *PermissionUpdate) SetUpdate(b bool) *PermissionUpdate {
-	pu.mutation.SetUpdate(b)
+// SetModify sets the "modify" field.
+func (pu *PermissionUpdate) SetModify(b bool) *PermissionUpdate {
+	pu.mutation.SetModify(b)
 	return pu
 }
 
-// SetNillableUpdate sets the "update" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillableUpdate(b *bool) *PermissionUpdate {
+// SetNillableModify sets the "modify" field if the given value is not nil.
+func (pu *PermissionUpdate) SetNillableModify(b *bool) *PermissionUpdate {
 	if b != nil {
-		pu.SetUpdate(*b)
+		pu.SetModify(*b)
 	}
 	return pu
 }
@@ -256,8 +256,8 @@ func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := pu.mutation.Create(); ok {
 		_spec.SetField(permission.FieldCreate, field.TypeBool, value)
 	}
-	if value, ok := pu.mutation.Update(); ok {
-		_spec.SetField(permission.FieldUpdate, field.TypeBool, value)
+	if value, ok := pu.mutation.Modify(); ok {
+		_spec.SetField(permission.FieldModify, field.TypeBool, value)
 	}
 	if value, ok := pu.mutation.Delete(); ok {
 		_spec.SetField(permission.FieldDelete, field.TypeBool, value)
@@ -428,16 +428,16 @@ func (puo *PermissionUpdateOne) SetNillableCreate(b *bool) *PermissionUpdateOne 
 	return puo
 }
 
-// SetUpdate sets the "update" field.
-func (puo *PermissionUpdateOne) SetUpdate(b bool) *PermissionUpdateOne {
-	puo.mutation.SetUpdate(b)
+// SetModify sets the "modify" field.
+func (puo *PermissionUpdateOne) SetModify(b bool) *PermissionUpdateOne {
+	puo.mutation.SetModify(b)
 	return puo
 }
 
-// SetNillableUpdate sets the "update" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillableUpdate(b *bool) *PermissionUpdateOne {
+// SetNillableModify sets the "modify" field if the given value is not nil.
+func (puo *PermissionUpdateOne) SetNillableModify(b *bool) *PermissionUpdateOne {
 	if b != nil {
-		puo.SetUpdate(*b)
+		puo.SetModify(*b)
 	}
 	return puo
 }
@@ -629,8 +629,8 @@ func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission,
 	if value, ok := puo.mutation.Create(); ok {
 		_spec.SetField(permission.FieldCreate, field.TypeBool, value)
 	}
-	if value, ok := puo.mutation.Update(); ok {
-		_spec.SetField(permission.FieldUpdate, field.TypeBool, value)
+	if value, ok := puo.mutation.Modify(); ok {
+		_spec.SetField(permission.FieldModify, field.TypeBool, value)
 	}
 	if value, ok := puo.mutation.Delete(); ok {
 		_spec.SetField(permission.FieldDelete, field.TypeBool, value)
