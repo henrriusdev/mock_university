@@ -115,3 +115,19 @@ type ProfessorRequestDto struct {
 	Address      string    `form:"address"`
 	BossId       *int      `form:"bossId"`
 }
+
+type SubjectRequestDto struct {
+	ID            int                 `form:"id"`
+	Name          string              `form:"name"`
+	Description   string              `form:"description"`
+	CreditUnits   int                 `form:"creditUnits"`
+	Semester      int                 `form:"semester"`
+	Code          string              `form:"code"`
+	PracticeHours int                 `form:"practiceHours"`
+	TheoryHours   int                 `form:"theoryHours"`
+	LabHours      int                 `form:"labHours"`
+	TotalHours    int                 `form:"totalHours"`
+	ClassSchedule map[string][]string `form:"classSchedule"`
+	ProfessorId   int                 `form:"professor"`
+	CareerIds     string              `form:"careers"`
+}

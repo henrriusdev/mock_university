@@ -72,3 +72,17 @@ func (r *Repo) UpdateStudent(studentRequest common.StudentRequestDto, i *inertia
 
 	return nil
 }
+
+func (r *Repo) GetStudents(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) ([]*ent.Student, error) {
+	students, err := r.DB.Student.Query().
+		WithUser().
+		WithCareer().
+		All(req.Context())
+	if err != nil {
+		r.Logger.Printf("Error querying students: %v", err)
+		common.HandleServerErr(i, err).ServeHTTP(w, req)
+		return nil, err
+	}
+
+	return students, nil
+}

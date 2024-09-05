@@ -6,6 +6,6 @@ import (
 )
 
 type Handler struct {
-	Repo   repos.Repo
+	Repo   *repos.Repo
 	Logger *log.Logger
 }

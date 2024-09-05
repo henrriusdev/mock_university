@@ -51,3 +51,16 @@ func (r *Repo) UpdateCareer(careerRequest common.CareerRequestDto, i *inertia.In
 
 	return nil
 }
+
+func (r *Repo) GetCareersWithLeader(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) ([]*ent.Careers, error) {
+	careersArray, err := r.DB.Careers.Query().
+		WithLeader(func(q *ent.ProfessorQuery) { q.WithUser() }).
+		All(req.Context())
+	if err != nil {
+		r.Logger.Printf("Error querying careers: %v", err)
+		common.HandleServerErr(i, err).ServeHTTP(w, req)
+		return nil, err
+	}
+
+	return careersArray, nil
+}

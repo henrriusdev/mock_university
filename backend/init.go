@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"mocku/backend/repos"
 	"net/http"
 	"os"
 	"strings"
@@ -30,8 +31,10 @@ func MountApp() {
 	i := initInertia()
 	client := initDatabase()
 
+	repo := repos.NewRepo(client, log.New(os.Stdout, "mocku_repo: ", log.LstdFlags))
+
 	handler := handlers.Handler{
-		DB:     client,
+		Repo:   repo,
 		Logger: log.New(os.Stdout, "mocku: ", log.LstdFlags),
 	}
 

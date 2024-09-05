@@ -60,3 +60,28 @@ func (r *Repo) UpdateProfessor(professorRequest common.ProfessorRequestDto, i *i
 
 	return nil
 }
+
+func (r *Repo) GetProfessors(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) ([]*ent.Professor, error) {
+	professorsArray, err := r.DB.Professor.Query().WithUser().All(req.Context())
+	if err != nil {
+		r.Logger.Printf("Error querying professors: %v", err)
+		common.HandleServerErr(i, err).ServeHTTP(w, req)
+		return nil, err
+	}
+
+	return professorsArray, nil
+}
+
+func (r *Repo) GetProfessorsWithoutBoss(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) ([]*ent.Professor, error) {
+	professorsArray, err := r.DB.Professor.Query().
+		Where(professor.Not(professor.HasBoss())).
+		WithUser().
+		All(req.Context())
+	if err != nil {
+		r.Logger.Printf("Error querying professors: %v", err)
+		common.HandleServerErr(i, err).ServeHTTP(w, req)
+		return nil, err
+	}
+
+	return professorsArray, nil
+}

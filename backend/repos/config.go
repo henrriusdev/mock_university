@@ -68,7 +68,6 @@ func (r *Repo) GetConfiguration(i *inertia.Inertia, w http.ResponseWriter, req *
 	config, err := r.DB.Configuration.Query().
 		Where(configuration.HasCycleWith(cycle.Active(true))).
 		WithCycle().
-		Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).
 		First(req.Context())
 	if err != nil {
 		r.Logger.Printf("Error querying configuration: %v", err)
