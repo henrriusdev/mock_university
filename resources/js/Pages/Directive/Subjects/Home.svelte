@@ -15,7 +15,7 @@
   import Button from "$lib/components/ui/button/button.svelte";
   import { ChevronRight } from "lucide-svelte";
   /** @typedef {{[key: string]: string[]}} Schedule */
-  /** @type { Array<{id: number, name: string, creditUnits: number, semester: number, careers: Array<{id: number, name: string}>, code: string, practiceHours: number, theoryHours: number, labHours: number, totalHours: number, class_schedule: Schedule }>} */
+  /** @type { Array<{id: number, name: string, creditUnits: number, semester: number, careers: Array<{id: number, name: string}>, code: string, practiceHours: number, theoryHours: number, labHours: number, totalHours: number, classSchedule: Schedule }>} */
   export let subjects = [];
 
   let table = createTable(readable(subjects), {
@@ -65,9 +65,9 @@ Total: ${totalHours}h`;
       },
       {
           label: "Copy class schedule",
-          /** @param {{class_schedule: Schedule}} param0 */
-          onClick: ({ class_schedule }) => {
-              const schedule = Object.entries(class_schedule).map(
+          /** @param {{classSchedule: Schedule}} param0 */
+          onClick: ({ classSchedule }) => {
+              const schedule = Object.entries(classSchedule).map(
                   ([day, hours]) => `${day}: ${hours.join(", ")}`
               );
               window.navigator.clipboard.writeText(schedule.join("\n"));
@@ -187,12 +187,12 @@ Total: ${totalHours}h`;
           }
       }),
       table.column({
-          accessor: ({ class_schedule }) => {
-              if (class_schedule === undefined) {
+          accessor: ({ classSchedule }) => {
+              if (classSchedule === undefined) {
                   return "No schedule";
               }
-              const schedule = Object.entries(class_schedule).map(
-                  ([day, hours]) => `${day}: ${hours.join(", ")}`
+              const schedule = Object.entries(classSchedule).map(
+                  ([day, hours]) => `${day}: ${hours.join("-")}`
               );
               if (schedule.join(", ").length > 50) {
                   return schedule.join(", ").slice(0, 30) + "...";
@@ -201,6 +201,9 @@ Total: ${totalHours}h`;
               return schedule.join(", ");
           },
           header: "Schedule",
+          cell: ({ value }) => {
+              return value.replace(/, /g, "\n");
+          },
       }),
       table.column({
           accessor: (row) => row,

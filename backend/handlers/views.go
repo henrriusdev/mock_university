@@ -548,12 +548,16 @@ func (h *Handler) Subject(i *inertia.Inertia) echo.HandlerFunc {
 				ProfessorId:   subj.Edges.Professor.ID,
 				ProfessorName: subj.Edges.Professor.Edges.User.Name,
 			}
+
+			for _, career := range subj.Edges.Career {
+				subjectDto.Careers = append(subjectDto.Careers, common.SelectDto{
+					ID:   career.ID,
+					Name: career.Name,
+				})
+			}
 		}
 
-		professors, err := h.Repo.GetProfessors(i, w, r)
-		if err != nil {
-			return nil
-		}
+		professors, _ := h.Repo.GetProfessors(i, w, r)
 
 		professorDtos := make([]common.SelectDto, len(professors))
 		for i, professor := range professors {
@@ -573,7 +577,7 @@ func (h *Handler) Subject(i *inertia.Inertia) echo.HandlerFunc {
 			}
 		}
 
-		err = i.Render(w, r, "Directive/Subjects/Upsert", inertia.Props{
+		err := i.Render(w, r, "Directive/Subjects/Upsert", inertia.Props{
 			"subject":    subjectDto,
 			"professors": professorDtos,
 			"careers":    careerDtos,
