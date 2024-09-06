@@ -553,13 +553,13 @@ func (h *Handler) Subject(i *inertia.Inertia) echo.HandlerFunc {
 		}
 
 		careers, _ := h.Repo.GetCareers(i, w, r)
-		careerDtos := make([]common.SelectDto, len(careers))
+		careerDtos := common.FillSelectDto(careers, "ID", "Name")
 
 		professors, _ := h.Repo.GetProfessors(i, w, r)
-		professorDtos := make([]common.SelectDto, len(professors))
+		professorDtos := common.FillSelectDto(professors, "ID", "Edges.User.Name")
 
-		subjects, _ := h.Repo.GetSubjects(i, w, r)
-		subjectDtos := make([]common.SelectDto, len(subjects))
+		subjects, _ := h.Repo.GetSubjectsNotID(subjectDto.ID, i, w, r)
+		subjectDtos := common.FillSelectDtoSubject(subjects)
 
 		err := i.Render(w, r, "Directive/Subjects/Upsert", inertia.Props{
 			"subject":    subjectDto,

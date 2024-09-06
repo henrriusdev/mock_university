@@ -45,6 +45,13 @@ type SelectDto struct {
 	Name string `json:"name"`
 }
 
+type SelectDtoSubject struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Code     string `json:"code"`
+	Semester int    `json:"semester"`
+}
+
 type CareerDto struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
