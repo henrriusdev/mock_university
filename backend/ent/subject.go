@@ -53,9 +53,13 @@ type SubjectEdges struct {
 	Career []*Careers `json:"career,omitempty"`
 	// Notes holds the value of the notes edge.
 	Notes []*Note `json:"notes,omitempty"`
+	// NextSubject holds the value of the next_subject edge.
+	NextSubject []*Subject `json:"next_subject,omitempty"`
+	// Prerequisites holds the value of the prerequisites edge.
+	Prerequisites []*Subject `json:"prerequisites,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [5]bool
 }
 
 // ProfessorOrErr returns the Professor value or an error if the edge
@@ -85,6 +89,24 @@ func (e SubjectEdges) NotesOrErr() ([]*Note, error) {
 		return e.Notes, nil
 	}
 	return nil, &NotLoadedError{edge: "notes"}
+}
+
+// NextSubjectOrErr returns the NextSubject value or an error if the edge
+// was not loaded in eager-loading.
+func (e SubjectEdges) NextSubjectOrErr() ([]*Subject, error) {
+	if e.loadedTypes[3] {
+		return e.NextSubject, nil
+	}
+	return nil, &NotLoadedError{edge: "next_subject"}
+}
+
+// PrerequisitesOrErr returns the Prerequisites value or an error if the edge
+// was not loaded in eager-loading.
+func (e SubjectEdges) PrerequisitesOrErr() ([]*Subject, error) {
+	if e.loadedTypes[4] {
+		return e.Prerequisites, nil
+	}
+	return nil, &NotLoadedError{edge: "prerequisites"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -216,6 +238,16 @@ func (s *Subject) QueryCareer() *CareersQuery {
 // QueryNotes queries the "notes" edge of the Subject entity.
 func (s *Subject) QueryNotes() *NoteQuery {
 	return NewSubjectClient(s.config).QueryNotes(s)
+}
+
+// QueryNextSubject queries the "next_subject" edge of the Subject entity.
+func (s *Subject) QueryNextSubject() *SubjectQuery {
+	return NewSubjectClient(s.config).QueryNextSubject(s)
+}
+
+// QueryPrerequisites queries the "prerequisites" edge of the Subject entity.
+func (s *Subject) QueryPrerequisites() *SubjectQuery {
+	return NewSubjectClient(s.config).QueryPrerequisites(s)
 }
 
 // Update returns a builder for updating this Subject.
