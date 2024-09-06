@@ -130,6 +130,11 @@ Total: ${totalHours}h`;
     table.column({
       accessor: ({ creditUnits }) => creditUnits,
       header: "C.U",
+        plugins: {
+            sort: {
+                disable: true,
+            },
+        }
     }),
     table.column({
       accessor: ({ semester }) => semester,
@@ -141,7 +146,6 @@ Total: ${totalHours}h`;
         if (careersNames.length > 50) {
           return careersNames.slice(0, 30) + "...";
         }
-
         return careersNames;
       },
       header: "Careers",
@@ -149,18 +153,54 @@ Total: ${totalHours}h`;
     table.column({
       accessor: ({ practiceHours }) => practiceHours,
       header: "P.H",
+        plugins: {
+            sort: {
+                disable: true,
+            },
+        }
     }),
     table.column({
       accessor: ({ theoryHours }) => theoryHours,
       header: "T.H",
+        plugins: {
+            sort: {
+                disable: true,
+            },
+        }
     }),
     table.column({
       accessor: ({ labHours }) => labHours,
       header: "L.H",
+        plugins: {
+            sort: {
+                disable: true,
+            },
+        }
     }),
       table.column({
           accessor: ({ totalHours }) => totalHours,
           header: "Total",
+          plugins: {
+              sort: {
+                  disable: true,
+              },
+          }
+      }),
+      table.column({
+          accessor: ({ class_schedule }) => {
+              if (class_schedule === undefined) {
+                  return "No schedule";
+              }
+              const schedule = Object.entries(class_schedule).map(
+                  ([day, hours]) => `${day}: ${hours.join(", ")}`
+              );
+              if (schedule.join(", ").length > 50) {
+                  return schedule.join(", ").slice(0, 30) + "...";
+              }
+
+              return schedule.join(", ");
+          },
+          header: "Schedule",
       }),
       table.column({
           accessor: (row) => row,
