@@ -458,6 +458,7 @@ func (h *Handler) SubjectPost(i *inertia.Inertia) echo.HandlerFunc {
 		if err := utils.Unmarshal(subjectRequest.ClassSchedule, &classSchedule); err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Invalid ClassSchedule format")
 		}
+		h.Logger.Printf("ClassSchedule: %v", classSchedule)
 
 		err = h.Repo.CreateSubject(subjectRequest, careers, classSchedule, i, w, r)
 		if err != nil {

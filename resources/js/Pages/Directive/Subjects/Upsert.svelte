@@ -1,5 +1,5 @@
 <script>
-    /** @typedef {{id: number, name: string, description: string, code: string, creditUnits: number, semester: number, praticeHours: number, theoryHours: number, labHours: number, classSchedule: {[key: string]: string[]}, professorId: number, professorName: string, careers: {id: number, name: string}[]}} Subject */
+    /** @typedef {{id: number, name: string, description: string, code: string, creditUnits: number, semester: number, practiceHours: number, theoryHours: number, labHours: number, classSchedule: {[key: string]: string[]}, professorId: number, professorName: string, careers: {id: number, name: string}[]}} Subject */
     import { ChevronLeft } from "lucide-svelte";
     import { Button } from "$lib/components/ui/button/index.js";
     import * as Card from "$lib/components/ui/card/index.js";
@@ -19,7 +19,7 @@
         code: '',
         creditUnits: 0,
         semester: 0,
-        praticeHours: 0,
+        practiceHours: 0,
         theoryHours: 0,
         labHours: 0,
         classSchedule: {},
@@ -35,29 +35,34 @@
     export let professors = [];
 
     /** @type {string} */
-    let career = '';
+    let career = subject?.careers?.map(c => c.id.toString()).join(',') ?? '';
 
+    console.log(subject);
     /** @type {string} */
-    let professor = '';
+    let professor = subject?.professorId?.toString() ?? '';
 
-    let practiceHours = subject?.praticeHours?.toString() ?? "0";
+    let practiceHours = subject?.practiceHours?.toString() ?? "0";
     let theoryHours = subject?.theoryHours?.toString() ?? "0";
     let labHours = subject?.labHours?.toString() ?? "0";
     let totalHours = Number(practiceHours) + Number(theoryHours) + Number(labHours);
     let semester = subject?.semester?.toString() === "0" ? "1" : subject?.semester?.toString();
 
-    /** @type {Array<{day: string, from: string | undefined, to: string | undefined}>} */
+    /** @type {Array<{day: string, from: string | undefined, to: string | undefined, daySelected: { value: string, label: string }}>} */
     let scheduleEntries = Object.keys(subject?.classSchedule || {}).map(day => {
         return {
             day,
             from: subject?.classSchedule[day][0],
-            to: subject?.classSchedule[day][1]
+            to: subject?.classSchedule[day][1],
+            daySelected: { value: day, label: day.charAt(0).toUpperCase() + day.slice(1) }
         };
     });
 
     // Calcular horas totales dinámicamente
     $: totalHours = Number(practiceHours) + Number(theoryHours) + Number(labHours);
     $: semester = Number(semester) > 10 ? "10" : (Number(semester) === 0 && semester !== "" ? "1" : semester);
+    $: if (totalHours || scheduleEntries){
+        validateSchedule();
+    }
 
     function validateSchedule() {
         let accumulatedMinutes = 0;
@@ -108,11 +113,7 @@
     }
 
     function addEmptyScheduleEntry() {
-        scheduleEntries.push({ day: '', from: '', to: '' });
-    }
-
-    $: if (totalHours || scheduleEntries){
-        validateSchedule();
+        scheduleEntries.push({ day: '', from: '', to: '', daySelected: { value: '', label: '' } });
     }
 
     /**
@@ -122,13 +123,14 @@
         // Construir el objeto classSchedule a partir de scheduleEntries
         const classSchedule = {};
         scheduleEntries.forEach((entry) => {
-            if (entry.day && entry.from && entry.to) {
-                //@ts-ignore
-                classSchedule[entry.day] = [entry.from, entry.to];
+            if (entry.daySelected.value && entry.from && entry.to) {
+                // @ts-ignore
+                classSchedule[entry.daySelected.value] = [entry.from, entry.to];
             }
         });
 
         // Crear un input oculto para enviar classSchedule como JSON
+        console.log(classSchedule, scheduleEntries);
         const classScheduleInput = document.createElement('input');
         classScheduleInput.type = 'hidden';
         classScheduleInput.name = 'classSchedule';
@@ -253,10 +255,10 @@
               </Card.Header>
               <Card.Content>
                 <div class="grid gap-4 lg:grid-cols-6">
-                  {#each scheduleEntries as {day, from, to}, index}
+                  {#each scheduleEntries as {daySelected, from, to}, index}
                   <span class="text-sm font-semibold text-muted-foreground lg:col-span-2">
                       <Label for="classScheduleDay{index}">Day</Label>
-                      <Select.Root bind:value={day} on:change="{e => scheduleEntries[index].day = e.detail}">
+                      <Select.Root bind:selected={daySelected} on:change="{e => scheduleEntries[index].day = e.detail}">
                           <Select.Trigger>
                               <Select.Value placeholder="Select a day"/>
                           </Select.Trigger>
@@ -267,7 +269,6 @@
                               <Select.Item value="thursday">Thursday</Select.Item>
                               <Select.Item value="friday">Friday</Select.Item>
                               <Select.Item value="saturday">Saturday</Select.Item>
-                              <Select.Item value="sunday">Sunday</Select.Item>
                           </Select.Content>
                       </Select.Root>
                   </span>
