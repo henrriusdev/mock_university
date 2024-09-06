@@ -77,6 +77,7 @@ type SubjectDto struct {
 	ProfessorId   int                 `json:"professorId"`
 	ProfessorName string              `json:"professorName"`
 	Careers       []SelectDto         `json:"careers"`
+	Prerequisites []SelectDto         `json:"prerequisites"`
 }
 
 type StudentRequestDto struct {
@@ -130,4 +131,5 @@ type SubjectRequestDto struct {
 	ClassSchedule string `form:"classSchedule"`
 	ProfessorId   int    `form:"professorId"`
 	CareerIds     string `form:"careers"`
+	PreqIds       string `form:"prerequisites"`
 }
