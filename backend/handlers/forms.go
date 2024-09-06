@@ -51,7 +51,7 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 			return nil
 		}
 
-		utils.LoginRedirect(user.Edges.Role.ID, http.StatusSeeOther, c.Response().Writer, c.Request(), i)
+		utils.LoginRedirect(user.Edges.Role.ID, c.Response().Writer, c.Request(), i)
 
 		return nil
 	}
@@ -389,6 +389,7 @@ func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		var professorRequest common.ProfessorRequestDto
 		if err := c.Bind(&professorRequest); err != nil {
+			h.Logger.Printf("Error binding form data: %v", err)
 			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -440,6 +441,7 @@ func (h *Handler) SubjectPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		var subjectRequest common.SubjectRequestDto
 		if err := c.Bind(&subjectRequest); err != nil {
+			h.Logger.Printf("Error binding form data: %v", err)
 			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
@@ -452,7 +454,13 @@ func (h *Handler) SubjectPost(i *inertia.Inertia) echo.HandlerFunc {
 			return nil
 		}
 
-		err = h.Repo.CreateSubject(subjectRequest, careers, i, w, r)
+		var classSchedule map[string][]string
+		if err := utils.Unmarshal(subjectRequest.ClassSchedule, &classSchedule); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid ClassSchedule format")
+		}
+		h.Logger.Printf("ClassSchedule: %v", classSchedule)
+
+		err = h.Repo.CreateSubject(subjectRequest, careers, classSchedule, i, w, r)
 		if err != nil {
 			return nil
 		}

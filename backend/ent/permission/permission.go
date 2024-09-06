@@ -20,8 +20,8 @@ const (
 	FieldRead = "read"
 	// FieldCreate holds the string denoting the create field in the database.
 	FieldCreate = "create"
-	// FieldUpdate holds the string denoting the update field in the database.
-	FieldUpdate = "update"
+	// FieldModify holds the string denoting the modify field in the database.
+	FieldModify = "modify"
 	// FieldDelete holds the string denoting the delete field in the database.
 	FieldDelete = "delete"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
@@ -51,7 +51,7 @@ var Columns = []string{
 	FieldDescription,
 	FieldRead,
 	FieldCreate,
-	FieldUpdate,
+	FieldModify,
 	FieldDelete,
 }
 
@@ -80,8 +80,8 @@ var (
 	DefaultRead bool
 	// DefaultCreate holds the default value on creation for the "create" field.
 	DefaultCreate bool
-	// DefaultUpdate holds the default value on creation for the "update" field.
-	DefaultUpdate bool
+	// DefaultModify holds the default value on creation for the "modify" field.
+	DefaultModify bool
 	// DefaultDelete holds the default value on creation for the "delete" field.
 	DefaultDelete bool
 )
@@ -114,9 +114,9 @@ func ByCreate(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreate, opts...).ToFunc()
 }
 
-// ByUpdate orders the results by the update field.
-func ByUpdate(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUpdate, opts...).ToFunc()
+// ByModify orders the results by the modify field.
+func ByModify(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModify, opts...).ToFunc()
 }
 
 // ByDelete orders the results by the delete field.

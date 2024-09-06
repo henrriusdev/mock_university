@@ -39,7 +39,7 @@ func Vite(manifestPath, buildDir string) func(path string) (string, error) {
 	}
 }
 
-func LoginRedirect(role, statusCode int, w http.ResponseWriter, r *http.Request, i *inertia.Inertia) {
+func LoginRedirect(role int, w http.ResponseWriter, r *http.Request, i *inertia.Inertia) {
 	var view string
 	switch role {
 	case 1:

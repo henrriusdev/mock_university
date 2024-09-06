@@ -74,9 +74,9 @@ func Create(v bool) predicate.Permission {
 	return predicate.Permission(sql.FieldEQ(FieldCreate, v))
 }
 
-// Update applies equality check predicate on the "update" field. It's identical to UpdateEQ.
-func Update(v bool) predicate.Permission {
-	return predicate.Permission(sql.FieldEQ(FieldUpdate, v))
+// Modify applies equality check predicate on the "modify" field. It's identical to ModifyEQ.
+func Modify(v bool) predicate.Permission {
+	return predicate.Permission(sql.FieldEQ(FieldModify, v))
 }
 
 // Delete applies equality check predicate on the "delete" field. It's identical to DeleteEQ.
@@ -234,14 +234,14 @@ func CreateNEQ(v bool) predicate.Permission {
 	return predicate.Permission(sql.FieldNEQ(FieldCreate, v))
 }
 
-// UpdateEQ applies the EQ predicate on the "update" field.
-func UpdateEQ(v bool) predicate.Permission {
-	return predicate.Permission(sql.FieldEQ(FieldUpdate, v))
+// ModifyEQ applies the EQ predicate on the "modify" field.
+func ModifyEQ(v bool) predicate.Permission {
+	return predicate.Permission(sql.FieldEQ(FieldModify, v))
 }
 
-// UpdateNEQ applies the NEQ predicate on the "update" field.
-func UpdateNEQ(v bool) predicate.Permission {
-	return predicate.Permission(sql.FieldNEQ(FieldUpdate, v))
+// ModifyNEQ applies the NEQ predicate on the "modify" field.
+func ModifyNEQ(v bool) predicate.Permission {
+	return predicate.Permission(sql.FieldNEQ(FieldModify, v))
 }
 
 // DeleteEQ applies the EQ predicate on the "delete" field.

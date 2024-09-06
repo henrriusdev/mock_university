@@ -4,5 +4,5 @@ bootstrap/
 .env
 .yarn/
 tmp/
-
+.idea/
 uploads/

@@ -39,9 +39,8 @@ func MountApp() {
 	}
 
 	app := echo.New()
-	inertia := echo.WrapMiddleware(i.Middleware)
-	app.Use(inertia)
-	app.Use(middleware.Logger())
+	inertiaMiddl := echo.WrapMiddleware(i.Middleware)
+	app.Use(inertiaMiddl)
 	app.Use(middleware.Recover())
 
 	app.Validator = &CustomValidator{validator: validator.New()}
@@ -52,7 +51,7 @@ func MountApp() {
 	app.Any("/login_post", handler.LoginPost(i))
 
 	// Directives routes
-	directive := app.Group("/directive", inertia)
+	directive := app.Group("/directive", inertiaMiddl)
 	directive.GET("", handler.DirectiveDash(i))
 	directive.GET("/students", handler.Students(i))
 	directive.GET("/students/view", handler.Student(i))
@@ -67,7 +66,7 @@ func MountApp() {
 	directive.Any("/subjects/view/submit", handler.SubjectPost(i))
 
 	// Settings routes
-	settings := app.Group("/settings", inertia)
+	settings := app.Group("/settings", inertiaMiddl)
 	settings.GET("", handler.Settings(i))
 	settings.Any("/notes", handler.SettingsNotesPost(i))
 	settings.Any("/notes/percentages", handler.SettingsNotesPercentage(i))

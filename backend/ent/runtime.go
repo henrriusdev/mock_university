@@ -279,10 +279,10 @@ func init() {
 	permissionDescCreate := permissionFields[3].Descriptor()
 	// permission.DefaultCreate holds the default value on creation for the create field.
 	permission.DefaultCreate = permissionDescCreate.Default.(bool)
-	// permissionDescUpdate is the schema descriptor for update field.
-	permissionDescUpdate := permissionFields[4].Descriptor()
-	// permission.DefaultUpdate holds the default value on creation for the update field.
-	permission.DefaultUpdate = permissionDescUpdate.Default.(bool)
+	// permissionDescModify is the schema descriptor for modify field.
+	permissionDescModify := permissionFields[4].Descriptor()
+	// permission.DefaultModify holds the default value on creation for the modify field.
+	permission.DefaultModify = permissionDescModify.Default.(bool)
 	// permissionDescDelete is the schema descriptor for delete field.
 	permissionDescDelete := permissionFields[5].Descriptor()
 	// permission.DefaultDelete holds the default value on creation for the delete field.

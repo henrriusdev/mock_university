@@ -6242,7 +6242,7 @@ type PermissionMutation struct {
 	description   *string
 	read          *bool
 	create        *bool
-	update        *bool
+	modify        *bool
 	delete        *bool
 	clearedFields map[string]struct{}
 	roles         map[int]struct{}
@@ -6498,40 +6498,40 @@ func (m *PermissionMutation) ResetCreate() {
 	m.create = nil
 }
 
-// SetUpdate sets the "update" field.
-func (m *PermissionMutation) SetUpdate(b bool) {
-	m.update = &b
+// SetModify sets the "modify" field.
+func (m *PermissionMutation) SetModify(b bool) {
+	m.modify = &b
 }
 
-// Update returns the value of the "update" field in the mutation.
-func (m *PermissionMutation) Update() (r bool, exists bool) {
-	v := m.update
+// Modify returns the value of the "modify" field in the mutation.
+func (m *PermissionMutation) Modify() (r bool, exists bool) {
+	v := m.modify
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldUpdate returns the old "update" field's value of the Permission entity.
+// OldModify returns the old "modify" field's value of the Permission entity.
 // If the Permission object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PermissionMutation) OldUpdate(ctx context.Context) (v bool, err error) {
+func (m *PermissionMutation) OldModify(ctx context.Context) (v bool, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldUpdate is only allowed on UpdateOne operations")
+		return v, errors.New("OldModify is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldUpdate requires an ID field in the mutation")
+		return v, errors.New("OldModify requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUpdate: %w", err)
+		return v, fmt.Errorf("querying old value for OldModify: %w", err)
 	}
-	return oldValue.Updated, nil
+	return oldValue.Modify, nil
 }
 
-// ResetUpdate resets all changes to the "update" field.
-func (m *PermissionMutation) ResetUpdate() {
-	m.update = nil
+// ResetModify resets all changes to the "modify" field.
+func (m *PermissionMutation) ResetModify() {
+	m.modify = nil
 }
 
 // SetDelete sets the "delete" field.
@@ -6725,8 +6725,8 @@ func (m *PermissionMutation) Fields() []string {
 	if m.create != nil {
 		fields = append(fields, permission.FieldCreate)
 	}
-	if m.update != nil {
-		fields = append(fields, permission.FieldUpdate)
+	if m.modify != nil {
+		fields = append(fields, permission.FieldModify)
 	}
 	if m.delete != nil {
 		fields = append(fields, permission.FieldDelete)
@@ -6747,8 +6747,8 @@ func (m *PermissionMutation) Field(name string) (ent.Value, bool) {
 		return m.Read()
 	case permission.FieldCreate:
 		return m.Create()
-	case permission.FieldUpdate:
-		return m.Update()
+	case permission.FieldModify:
+		return m.Modify()
 	case permission.FieldDelete:
 		return m.Delete()
 	}
@@ -6768,8 +6768,8 @@ func (m *PermissionMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldRead(ctx)
 	case permission.FieldCreate:
 		return m.OldCreate(ctx)
-	case permission.FieldUpdate:
-		return m.OldUpdate(ctx)
+	case permission.FieldModify:
+		return m.OldModify(ctx)
 	case permission.FieldDelete:
 		return m.OldDelete(ctx)
 	}
@@ -6809,12 +6809,12 @@ func (m *PermissionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCreate(v)
 		return nil
-	case permission.FieldUpdate:
+	case permission.FieldModify:
 		v, ok := value.(bool)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetUpdate(v)
+		m.SetModify(v)
 		return nil
 	case permission.FieldDelete:
 		v, ok := value.(bool)
@@ -6884,8 +6884,8 @@ func (m *PermissionMutation) ResetField(name string) error {
 	case permission.FieldCreate:
 		m.ResetCreate()
 		return nil
-	case permission.FieldUpdate:
-		m.ResetUpdate()
+	case permission.FieldModify:
+		m.ResetModify()
 		return nil
 	case permission.FieldDelete:
 		m.ResetDelete()

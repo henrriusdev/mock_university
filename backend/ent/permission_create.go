@@ -61,16 +61,16 @@ func (pc *PermissionCreate) SetNillableCreate(b *bool) *PermissionCreate {
 	return pc
 }
 
-// SetUpdate sets the "update" field.
-func (pc *PermissionCreate) SetUpdate(b bool) *PermissionCreate {
-	pc.mutation.SetUpdate(b)
+// SetModify sets the "modify" field.
+func (pc *PermissionCreate) SetModify(b bool) *PermissionCreate {
+	pc.mutation.SetModify(b)
 	return pc
 }
 
-// SetNillableUpdate sets the "update" field if the given value is not nil.
-func (pc *PermissionCreate) SetNillableUpdate(b *bool) *PermissionCreate {
+// SetNillableModify sets the "modify" field if the given value is not nil.
+func (pc *PermissionCreate) SetNillableModify(b *bool) *PermissionCreate {
 	if b != nil {
-		pc.SetUpdate(*b)
+		pc.SetModify(*b)
 	}
 	return pc
 }
@@ -162,9 +162,9 @@ func (pc *PermissionCreate) defaults() {
 		v := permission.DefaultCreate
 		pc.mutation.SetCreate(v)
 	}
-	if _, ok := pc.mutation.Update(); !ok {
-		v := permission.DefaultUpdate
-		pc.mutation.SetUpdate(v)
+	if _, ok := pc.mutation.Modify(); !ok {
+		v := permission.DefaultModify
+		pc.mutation.SetModify(v)
 	}
 	if _, ok := pc.mutation.Delete(); !ok {
 		v := permission.DefaultDelete
@@ -196,8 +196,8 @@ func (pc *PermissionCreate) check() error {
 	if _, ok := pc.mutation.Create(); !ok {
 		return &ValidationError{Name: "create", err: errors.New(`ent: missing required field "Permission.create"`)}
 	}
-	if _, ok := pc.mutation.Update(); !ok {
-		return &ValidationError{Name: "update", err: errors.New(`ent: missing required field "Permission.update"`)}
+	if _, ok := pc.mutation.Modify(); !ok {
+		return &ValidationError{Name: "modify", err: errors.New(`ent: missing required field "Permission.modify"`)}
 	}
 	if _, ok := pc.mutation.Delete(); !ok {
 		return &ValidationError{Name: "delete", err: errors.New(`ent: missing required field "Permission.delete"`)}
@@ -244,9 +244,9 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 		_spec.SetField(permission.FieldCreate, field.TypeBool, value)
 		_node.Create = value
 	}
-	if value, ok := pc.mutation.Update(); ok {
-		_spec.SetField(permission.FieldUpdate, field.TypeBool, value)
-		_node.Updated = value
+	if value, ok := pc.mutation.Modify(); ok {
+		_spec.SetField(permission.FieldModify, field.TypeBool, value)
+		_node.Modify = value
 	}
 	if value, ok := pc.mutation.Delete(); ok {
 		_spec.SetField(permission.FieldDelete, field.TypeBool, value)

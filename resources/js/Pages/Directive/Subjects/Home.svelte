@@ -15,7 +15,7 @@
   import Button from "$lib/components/ui/button/button.svelte";
   import { ChevronRight } from "lucide-svelte";
   /** @typedef {{[key: string]: string[]}} Schedule */
-  /** @type { Array<{id: number, name: string, creditUnits: number, semester: number, career: string, code: string, practiceHours: number, theoryHours: number, labHours: number, totalHours: number, class_schedule: Schedule }>} */
+  /** @type { Array<{id: number, name: string, creditUnits: number, semester: number, careers: Array<{id: number, name: string}>, code: string, practiceHours: number, theoryHours: number, labHours: number, totalHours: number, classSchedule: Schedule }>} */
   export let subjects = [];
 
   let table = createTable(readable(subjects), {
@@ -31,33 +31,55 @@
 
   const actions = [
     {
-      label: "Copy student name",
+      label: "Copy subject name",
       /** @param {{name: string}} param0 */
       onClick: ({ name }) => {
         window.navigator.clipboard.writeText(name);
       },
     },
     {
-      label: "Copy student email",
-      /** @param {{email: string}} param0 */
-      onClick: ({ email }) => {
-        window.navigator.clipboard.writeText(email);
+      label: "Copy subject code",
+      /** @param {{code: string}} param0 */
+      onClick: ({ code }) => {
+        window.navigator.clipboard.writeText(code);
       },
     },
-    {
-      label: "Copy student phone",
-      /** @param {{phone: string}} param0 */
-      onClick: ({ phone }) => {
-        window.navigator.clipboard.writeText(phone);
+      {
+          label: "Copy hours",
+          /** @param {{totalHours: number, practiceHours: number, theoryHours: number, labHours: number}} param0 */
+          onClick: ({ totalHours,  practiceHours, labHours, theoryHours}) => {
+              let hours = `Practice: ${practiceHours}h
+Theory: ${theoryHours}h
+Lab: ${labHours}h
+Total: ${totalHours}h`;
+              window.navigator.clipboard.writeText(hours);
+          },
       },
-    },
-    {
-      label: "Edit",
-      /** @param {{id: number}} param0 */
-      onClick: ({ id }) => {
-        window.location.href = `/directive/students/view?id=${id}`;
+      {
+          label: "Copy careers",
+          /** @param {{careers: Array<{name: string}>}} param0 */
+          onClick: ({ careers }) => {
+              const careersNames = careers.map(({ name }) => name).join(", ");
+              window.navigator.clipboard.writeText(careersNames);
+          },
       },
-    },
+      {
+          label: "Copy class schedule",
+          /** @param {{classSchedule: Schedule}} param0 */
+          onClick: ({ classSchedule }) => {
+              const schedule = Object.entries(classSchedule).map(
+                  ([day, hours]) => `${day}: ${hours.join(", ")}`
+              );
+              window.navigator.clipboard.writeText(schedule.join("\n"));
+          },
+      },
+      {
+          label:"Edit",
+          /** @param {{id: number}} param0 */
+          onClick: ({ id }) => {
+              window.location.href = `/directive/subjects/view?id=${id}`;
+          }
+      }
   ];
 
   table = createTable(readable(subjects), {
@@ -101,6 +123,103 @@
       accessor: ({ name }) => name,
       header: "Subject",
     }),
+    table.column({
+      accessor: ({ code }) => code,
+      header: "Code",
+    }),
+    table.column({
+      accessor: ({ creditUnits }) => creditUnits,
+      header: "C.U",
+        plugins: {
+            sort: {
+                disable: true,
+            },
+        }
+    }),
+    table.column({
+      accessor: ({ semester }) => semester,
+      header: "Semester",
+    }),
+    table.column({
+      accessor: ({careers}) => {
+        const careersNames = careers.map(({ name }) => name).join(", ");
+        if (careersNames.length > 50) {
+          return careersNames.slice(0, 30) + "...";
+        }
+        return careersNames;
+      },
+      header: "Careers",
+    }),
+    table.column({
+      accessor: ({ practiceHours }) => practiceHours,
+      header: "P.H",
+        plugins: {
+            sort: {
+                disable: true,
+            },
+        }
+    }),
+    table.column({
+      accessor: ({ theoryHours }) => theoryHours,
+      header: "T.H",
+        plugins: {
+            sort: {
+                disable: true,
+            },
+        }
+    }),
+    table.column({
+      accessor: ({ labHours }) => labHours,
+      header: "L.H",
+        plugins: {
+            sort: {
+                disable: true,
+            },
+        }
+    }),
+      table.column({
+          accessor: ({ totalHours }) => totalHours,
+          header: "Total",
+          plugins: {
+              sort: {
+                  disable: true,
+              },
+          }
+      }),
+      table.column({
+          accessor: ({ classSchedule }) => {
+              if (classSchedule === undefined) {
+                  return "No schedule";
+              }
+              const schedule = Object.entries(classSchedule).map(
+                  ([day, hours]) => `${day}: ${hours.join("-")}`
+              );
+              if (schedule.join(", ").length > 50) {
+                  return schedule.join(", ").slice(0, 30) + "...";
+              }
+
+              return schedule.join(", ");
+          },
+          header: "Schedule",
+          cell: ({ value }) => {
+              return value.replace(/, /g, "\n");
+          },
+      }),
+      table.column({
+          accessor: (row) => row,
+          header: "Actions",
+          cell: ({ value }) => {
+              return createRender(DataTableActions, { row: value, actions });
+          },
+          plugins: {
+              sort: {
+                  disable: true,
+              },
+              filter: {
+                  exclude: true,
+              },
+          },
+      }),
   ]);
 </script>
 
