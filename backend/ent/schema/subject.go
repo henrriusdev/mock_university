@@ -33,5 +33,6 @@ func (Subject) Edges() []ent.Edge {
 		edge.To("professor", Professor.Type).Unique(),
 		edge.To("career", Careers.Type),
 		edge.From("notes", Note.Type).Ref("subject"),
+		edge.To("prerequisites", Subject.Type).From("next_subject"),
 	}
 }

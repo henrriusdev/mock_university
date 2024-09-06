@@ -458,9 +458,16 @@ func (h *Handler) SubjectPost(i *inertia.Inertia) echo.HandlerFunc {
 		if err := utils.Unmarshal(subjectRequest.ClassSchedule, &classSchedule); err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Invalid ClassSchedule format")
 		}
-		h.Logger.Printf("ClassSchedule: %v", classSchedule)
 
-		err = h.Repo.CreateSubject(subjectRequest, careers, classSchedule, i, w, r)
+		subjectsIdsSlice := strings.Split(subjectRequest.PreqIds, ",")
+		subjects, err := utils.StringSliceToIntSlice(subjectsIdsSlice)
+		if err != nil {
+			h.Logger.Printf("Error parsing prerequisites ids: %v", err)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		err = h.Repo.CreateSubject(subjectRequest, careers, subjects, classSchedule, i, w, r)
 		if err != nil {
 			return nil
 		}

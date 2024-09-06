@@ -10391,37 +10391,43 @@ func (m *StudentMutation) ResetEdge(name string) error {
 // SubjectMutation represents an operation that mutates the Subject nodes in the graph.
 type SubjectMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *int
-	name              *string
-	description       *string
-	credit_units      *int
-	addcredit_units   *int
-	semester          *int
-	addsemester       *int
-	code              *string
-	practice_hours    *int
-	addpractice_hours *int
-	theory_hours      *int
-	addtheory_hours   *int
-	lab_hours         *int
-	addlab_hours      *int
-	total_hours       *int
-	addtotal_hours    *int
-	class_schedule    *map[string][]string
-	clearedFields     map[string]struct{}
-	professor         *int
-	clearedprofessor  bool
-	career            map[int]struct{}
-	removedcareer     map[int]struct{}
-	clearedcareer     bool
-	notes             map[int]struct{}
-	removednotes      map[int]struct{}
-	clearednotes      bool
-	done              bool
-	oldValue          func(context.Context) (*Subject, error)
-	predicates        []predicate.Subject
+	op                   Op
+	typ                  string
+	id                   *int
+	name                 *string
+	description          *string
+	credit_units         *int
+	addcredit_units      *int
+	semester             *int
+	addsemester          *int
+	code                 *string
+	practice_hours       *int
+	addpractice_hours    *int
+	theory_hours         *int
+	addtheory_hours      *int
+	lab_hours            *int
+	addlab_hours         *int
+	total_hours          *int
+	addtotal_hours       *int
+	class_schedule       *map[string][]string
+	clearedFields        map[string]struct{}
+	professor            *int
+	clearedprofessor     bool
+	career               map[int]struct{}
+	removedcareer        map[int]struct{}
+	clearedcareer        bool
+	notes                map[int]struct{}
+	removednotes         map[int]struct{}
+	clearednotes         bool
+	next_subject         map[int]struct{}
+	removednext_subject  map[int]struct{}
+	clearednext_subject  bool
+	prerequisites        map[int]struct{}
+	removedprerequisites map[int]struct{}
+	clearedprerequisites bool
+	done                 bool
+	oldValue             func(context.Context) (*Subject, error)
+	predicates           []predicate.Subject
 }
 
 var _ ent.Mutation = (*SubjectMutation)(nil)
@@ -11162,6 +11168,114 @@ func (m *SubjectMutation) ResetNotes() {
 	m.removednotes = nil
 }
 
+// AddNextSubjectIDs adds the "next_subject" edge to the Subject entity by ids.
+func (m *SubjectMutation) AddNextSubjectIDs(ids ...int) {
+	if m.next_subject == nil {
+		m.next_subject = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.next_subject[ids[i]] = struct{}{}
+	}
+}
+
+// ClearNextSubject clears the "next_subject" edge to the Subject entity.
+func (m *SubjectMutation) ClearNextSubject() {
+	m.clearednext_subject = true
+}
+
+// NextSubjectCleared reports if the "next_subject" edge to the Subject entity was cleared.
+func (m *SubjectMutation) NextSubjectCleared() bool {
+	return m.clearednext_subject
+}
+
+// RemoveNextSubjectIDs removes the "next_subject" edge to the Subject entity by IDs.
+func (m *SubjectMutation) RemoveNextSubjectIDs(ids ...int) {
+	if m.removednext_subject == nil {
+		m.removednext_subject = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.next_subject, ids[i])
+		m.removednext_subject[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedNextSubject returns the removed IDs of the "next_subject" edge to the Subject entity.
+func (m *SubjectMutation) RemovedNextSubjectIDs() (ids []int) {
+	for id := range m.removednext_subject {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// NextSubjectIDs returns the "next_subject" edge IDs in the mutation.
+func (m *SubjectMutation) NextSubjectIDs() (ids []int) {
+	for id := range m.next_subject {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetNextSubject resets all changes to the "next_subject" edge.
+func (m *SubjectMutation) ResetNextSubject() {
+	m.next_subject = nil
+	m.clearednext_subject = false
+	m.removednext_subject = nil
+}
+
+// AddPrerequisiteIDs adds the "prerequisites" edge to the Subject entity by ids.
+func (m *SubjectMutation) AddPrerequisiteIDs(ids ...int) {
+	if m.prerequisites == nil {
+		m.prerequisites = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.prerequisites[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPrerequisites clears the "prerequisites" edge to the Subject entity.
+func (m *SubjectMutation) ClearPrerequisites() {
+	m.clearedprerequisites = true
+}
+
+// PrerequisitesCleared reports if the "prerequisites" edge to the Subject entity was cleared.
+func (m *SubjectMutation) PrerequisitesCleared() bool {
+	return m.clearedprerequisites
+}
+
+// RemovePrerequisiteIDs removes the "prerequisites" edge to the Subject entity by IDs.
+func (m *SubjectMutation) RemovePrerequisiteIDs(ids ...int) {
+	if m.removedprerequisites == nil {
+		m.removedprerequisites = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.prerequisites, ids[i])
+		m.removedprerequisites[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPrerequisites returns the removed IDs of the "prerequisites" edge to the Subject entity.
+func (m *SubjectMutation) RemovedPrerequisitesIDs() (ids []int) {
+	for id := range m.removedprerequisites {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PrerequisitesIDs returns the "prerequisites" edge IDs in the mutation.
+func (m *SubjectMutation) PrerequisitesIDs() (ids []int) {
+	for id := range m.prerequisites {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPrerequisites resets all changes to the "prerequisites" edge.
+func (m *SubjectMutation) ResetPrerequisites() {
+	m.prerequisites = nil
+	m.clearedprerequisites = false
+	m.removedprerequisites = nil
+}
+
 // Where appends a list predicates to the SubjectMutation builder.
 func (m *SubjectMutation) Where(ps ...predicate.Subject) {
 	m.predicates = append(m.predicates, ps...)
@@ -11532,7 +11646,7 @@ func (m *SubjectMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *SubjectMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.professor != nil {
 		edges = append(edges, subject.EdgeProfessor)
 	}
@@ -11541,6 +11655,12 @@ func (m *SubjectMutation) AddedEdges() []string {
 	}
 	if m.notes != nil {
 		edges = append(edges, subject.EdgeNotes)
+	}
+	if m.next_subject != nil {
+		edges = append(edges, subject.EdgeNextSubject)
+	}
+	if m.prerequisites != nil {
+		edges = append(edges, subject.EdgePrerequisites)
 	}
 	return edges
 }
@@ -11565,18 +11685,36 @@ func (m *SubjectMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case subject.EdgeNextSubject:
+		ids := make([]ent.Value, 0, len(m.next_subject))
+		for id := range m.next_subject {
+			ids = append(ids, id)
+		}
+		return ids
+	case subject.EdgePrerequisites:
+		ids := make([]ent.Value, 0, len(m.prerequisites))
+		for id := range m.prerequisites {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *SubjectMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.removedcareer != nil {
 		edges = append(edges, subject.EdgeCareer)
 	}
 	if m.removednotes != nil {
 		edges = append(edges, subject.EdgeNotes)
+	}
+	if m.removednext_subject != nil {
+		edges = append(edges, subject.EdgeNextSubject)
+	}
+	if m.removedprerequisites != nil {
+		edges = append(edges, subject.EdgePrerequisites)
 	}
 	return edges
 }
@@ -11597,13 +11735,25 @@ func (m *SubjectMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case subject.EdgeNextSubject:
+		ids := make([]ent.Value, 0, len(m.removednext_subject))
+		for id := range m.removednext_subject {
+			ids = append(ids, id)
+		}
+		return ids
+	case subject.EdgePrerequisites:
+		ids := make([]ent.Value, 0, len(m.removedprerequisites))
+		for id := range m.removedprerequisites {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *SubjectMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.clearedprofessor {
 		edges = append(edges, subject.EdgeProfessor)
 	}
@@ -11612,6 +11762,12 @@ func (m *SubjectMutation) ClearedEdges() []string {
 	}
 	if m.clearednotes {
 		edges = append(edges, subject.EdgeNotes)
+	}
+	if m.clearednext_subject {
+		edges = append(edges, subject.EdgeNextSubject)
+	}
+	if m.clearedprerequisites {
+		edges = append(edges, subject.EdgePrerequisites)
 	}
 	return edges
 }
@@ -11626,6 +11782,10 @@ func (m *SubjectMutation) EdgeCleared(name string) bool {
 		return m.clearedcareer
 	case subject.EdgeNotes:
 		return m.clearednotes
+	case subject.EdgeNextSubject:
+		return m.clearednext_subject
+	case subject.EdgePrerequisites:
+		return m.clearedprerequisites
 	}
 	return false
 }
@@ -11653,6 +11813,12 @@ func (m *SubjectMutation) ResetEdge(name string) error {
 		return nil
 	case subject.EdgeNotes:
 		m.ResetNotes()
+		return nil
+	case subject.EdgeNextSubject:
+		m.ResetNextSubject()
+		return nil
+	case subject.EdgePrerequisites:
+		m.ResetPrerequisites()
 		return nil
 	}
 	return fmt.Errorf("unknown Subject edge %s", name)

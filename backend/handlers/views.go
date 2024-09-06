@@ -548,39 +548,24 @@ func (h *Handler) Subject(i *inertia.Inertia) echo.HandlerFunc {
 				ProfessorId:   subj.Edges.Professor.ID,
 				ProfessorName: subj.Edges.Professor.Edges.User.Name,
 			}
-
-			for _, career := range subj.Edges.Career {
-				subjectDto.Careers = append(subjectDto.Careers, common.SelectDto{
-					ID:   career.ID,
-					Name: career.Name,
-				})
-			}
-		}
-
-		professors, _ := h.Repo.GetProfessors(i, w, r)
-
-		professorDtos := make([]common.SelectDto, len(professors))
-		for i, professor := range professors {
-			professorDtos[i] = common.SelectDto{
-				ID:   professor.ID,
-				Name: professor.Edges.User.Name,
-			}
+			subjectDto.Careers = common.FillSelectDto(subj.Edges.Career, "ID", "Name")
+			subjectDto.Prerequisites = common.FillSelectDto(subj.Edges.Prerequisites, "ID", "Name")
 		}
 
 		careers, _ := h.Repo.GetCareers(i, w, r)
+		careerDtos := common.FillSelectDto(careers, "ID", "Name")
 
-		careerDtos := make([]common.SelectDto, len(careers))
-		for i, career := range careers {
-			careerDtos[i] = common.SelectDto{
-				ID:   career.ID,
-				Name: career.Name,
-			}
-		}
+		professors, _ := h.Repo.GetProfessors(i, w, r)
+		professorDtos := common.FillSelectDto(professors, "ID", "Edges.User.Name")
+
+		subjects, _ := h.Repo.GetSubjectsNotID(subjectDto.ID, i, w, r)
+		subjectDtos := common.FillSelectDtoSubject(subjects)
 
 		err := i.Render(w, r, "Directive/Subjects/Upsert", inertia.Props{
 			"subject":    subjectDto,
 			"professors": professorDtos,
 			"careers":    careerDtos,
+			"subjects":   subjectDtos,
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering subject: %v", err)

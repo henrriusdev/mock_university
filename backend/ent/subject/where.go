@@ -613,6 +613,52 @@ func HasNotesWith(preds ...predicate.Note) predicate.Subject {
 	})
 }
 
+// HasNextSubject applies the HasEdge predicate on the "next_subject" edge.
+func HasNextSubject() predicate.Subject {
+	return predicate.Subject(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, NextSubjectTable, NextSubjectPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasNextSubjectWith applies the HasEdge predicate on the "next_subject" edge with a given conditions (other predicates).
+func HasNextSubjectWith(preds ...predicate.Subject) predicate.Subject {
+	return predicate.Subject(func(s *sql.Selector) {
+		step := newNextSubjectStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPrerequisites applies the HasEdge predicate on the "prerequisites" edge.
+func HasPrerequisites() predicate.Subject {
+	return predicate.Subject(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, PrerequisitesTable, PrerequisitesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPrerequisitesWith applies the HasEdge predicate on the "prerequisites" edge with a given conditions (other predicates).
+func HasPrerequisitesWith(preds ...predicate.Subject) predicate.Subject {
+	return predicate.Subject(func(s *sql.Selector) {
+		step := newPrerequisitesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Subject) predicate.Subject {
 	return predicate.Subject(sql.AndPredicates(predicates...))

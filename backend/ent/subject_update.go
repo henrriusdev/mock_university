@@ -259,6 +259,36 @@ func (su *SubjectUpdate) AddNotes(n ...*Note) *SubjectUpdate {
 	return su.AddNoteIDs(ids...)
 }
 
+// AddNextSubjectIDs adds the "next_subject" edge to the Subject entity by IDs.
+func (su *SubjectUpdate) AddNextSubjectIDs(ids ...int) *SubjectUpdate {
+	su.mutation.AddNextSubjectIDs(ids...)
+	return su
+}
+
+// AddNextSubject adds the "next_subject" edges to the Subject entity.
+func (su *SubjectUpdate) AddNextSubject(s ...*Subject) *SubjectUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return su.AddNextSubjectIDs(ids...)
+}
+
+// AddPrerequisiteIDs adds the "prerequisites" edge to the Subject entity by IDs.
+func (su *SubjectUpdate) AddPrerequisiteIDs(ids ...int) *SubjectUpdate {
+	su.mutation.AddPrerequisiteIDs(ids...)
+	return su
+}
+
+// AddPrerequisites adds the "prerequisites" edges to the Subject entity.
+func (su *SubjectUpdate) AddPrerequisites(s ...*Subject) *SubjectUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return su.AddPrerequisiteIDs(ids...)
+}
+
 // Mutation returns the SubjectMutation object of the builder.
 func (su *SubjectUpdate) Mutation() *SubjectMutation {
 	return su.mutation
@@ -310,6 +340,48 @@ func (su *SubjectUpdate) RemoveNotes(n ...*Note) *SubjectUpdate {
 		ids[i] = n[i].ID
 	}
 	return su.RemoveNoteIDs(ids...)
+}
+
+// ClearNextSubject clears all "next_subject" edges to the Subject entity.
+func (su *SubjectUpdate) ClearNextSubject() *SubjectUpdate {
+	su.mutation.ClearNextSubject()
+	return su
+}
+
+// RemoveNextSubjectIDs removes the "next_subject" edge to Subject entities by IDs.
+func (su *SubjectUpdate) RemoveNextSubjectIDs(ids ...int) *SubjectUpdate {
+	su.mutation.RemoveNextSubjectIDs(ids...)
+	return su
+}
+
+// RemoveNextSubject removes "next_subject" edges to Subject entities.
+func (su *SubjectUpdate) RemoveNextSubject(s ...*Subject) *SubjectUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return su.RemoveNextSubjectIDs(ids...)
+}
+
+// ClearPrerequisites clears all "prerequisites" edges to the Subject entity.
+func (su *SubjectUpdate) ClearPrerequisites() *SubjectUpdate {
+	su.mutation.ClearPrerequisites()
+	return su
+}
+
+// RemovePrerequisiteIDs removes the "prerequisites" edge to Subject entities by IDs.
+func (su *SubjectUpdate) RemovePrerequisiteIDs(ids ...int) *SubjectUpdate {
+	su.mutation.RemovePrerequisiteIDs(ids...)
+	return su
+}
+
+// RemovePrerequisites removes "prerequisites" edges to Subject entities.
+func (su *SubjectUpdate) RemovePrerequisites(s ...*Subject) *SubjectUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return su.RemovePrerequisiteIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -571,6 +643,96 @@ func (su *SubjectUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if su.mutation.NextSubjectCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NextSubjectTable,
+			Columns: subject.NextSubjectPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedNextSubjectIDs(); len(nodes) > 0 && !su.mutation.NextSubjectCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NextSubjectTable,
+			Columns: subject.NextSubjectPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.NextSubjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NextSubjectTable,
+			Columns: subject.NextSubjectPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if su.mutation.PrerequisitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   subject.PrerequisitesTable,
+			Columns: subject.PrerequisitesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedPrerequisitesIDs(); len(nodes) > 0 && !su.mutation.PrerequisitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   subject.PrerequisitesTable,
+			Columns: subject.PrerequisitesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.PrerequisitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   subject.PrerequisitesTable,
+			Columns: subject.PrerequisitesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{subject.Label}
@@ -820,6 +982,36 @@ func (suo *SubjectUpdateOne) AddNotes(n ...*Note) *SubjectUpdateOne {
 	return suo.AddNoteIDs(ids...)
 }
 
+// AddNextSubjectIDs adds the "next_subject" edge to the Subject entity by IDs.
+func (suo *SubjectUpdateOne) AddNextSubjectIDs(ids ...int) *SubjectUpdateOne {
+	suo.mutation.AddNextSubjectIDs(ids...)
+	return suo
+}
+
+// AddNextSubject adds the "next_subject" edges to the Subject entity.
+func (suo *SubjectUpdateOne) AddNextSubject(s ...*Subject) *SubjectUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return suo.AddNextSubjectIDs(ids...)
+}
+
+// AddPrerequisiteIDs adds the "prerequisites" edge to the Subject entity by IDs.
+func (suo *SubjectUpdateOne) AddPrerequisiteIDs(ids ...int) *SubjectUpdateOne {
+	suo.mutation.AddPrerequisiteIDs(ids...)
+	return suo
+}
+
+// AddPrerequisites adds the "prerequisites" edges to the Subject entity.
+func (suo *SubjectUpdateOne) AddPrerequisites(s ...*Subject) *SubjectUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return suo.AddPrerequisiteIDs(ids...)
+}
+
 // Mutation returns the SubjectMutation object of the builder.
 func (suo *SubjectUpdateOne) Mutation() *SubjectMutation {
 	return suo.mutation
@@ -871,6 +1063,48 @@ func (suo *SubjectUpdateOne) RemoveNotes(n ...*Note) *SubjectUpdateOne {
 		ids[i] = n[i].ID
 	}
 	return suo.RemoveNoteIDs(ids...)
+}
+
+// ClearNextSubject clears all "next_subject" edges to the Subject entity.
+func (suo *SubjectUpdateOne) ClearNextSubject() *SubjectUpdateOne {
+	suo.mutation.ClearNextSubject()
+	return suo
+}
+
+// RemoveNextSubjectIDs removes the "next_subject" edge to Subject entities by IDs.
+func (suo *SubjectUpdateOne) RemoveNextSubjectIDs(ids ...int) *SubjectUpdateOne {
+	suo.mutation.RemoveNextSubjectIDs(ids...)
+	return suo
+}
+
+// RemoveNextSubject removes "next_subject" edges to Subject entities.
+func (suo *SubjectUpdateOne) RemoveNextSubject(s ...*Subject) *SubjectUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return suo.RemoveNextSubjectIDs(ids...)
+}
+
+// ClearPrerequisites clears all "prerequisites" edges to the Subject entity.
+func (suo *SubjectUpdateOne) ClearPrerequisites() *SubjectUpdateOne {
+	suo.mutation.ClearPrerequisites()
+	return suo
+}
+
+// RemovePrerequisiteIDs removes the "prerequisites" edge to Subject entities by IDs.
+func (suo *SubjectUpdateOne) RemovePrerequisiteIDs(ids ...int) *SubjectUpdateOne {
+	suo.mutation.RemovePrerequisiteIDs(ids...)
+	return suo
+}
+
+// RemovePrerequisites removes "prerequisites" edges to Subject entities.
+func (suo *SubjectUpdateOne) RemovePrerequisites(s ...*Subject) *SubjectUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return suo.RemovePrerequisiteIDs(ids...)
 }
 
 // Where appends a list predicates to the SubjectUpdate builder.
@@ -1155,6 +1389,96 @@ func (suo *SubjectUpdateOne) sqlSave(ctx context.Context) (_node *Subject, err e
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suo.mutation.NextSubjectCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NextSubjectTable,
+			Columns: subject.NextSubjectPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedNextSubjectIDs(); len(nodes) > 0 && !suo.mutation.NextSubjectCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NextSubjectTable,
+			Columns: subject.NextSubjectPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.NextSubjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NextSubjectTable,
+			Columns: subject.NextSubjectPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suo.mutation.PrerequisitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   subject.PrerequisitesTable,
+			Columns: subject.PrerequisitesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedPrerequisitesIDs(); len(nodes) > 0 && !suo.mutation.PrerequisitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   subject.PrerequisitesTable,
+			Columns: subject.PrerequisitesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.PrerequisitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   subject.PrerequisitesTable,
+			Columns: subject.PrerequisitesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

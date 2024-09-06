@@ -1,5 +1,5 @@
 <script>
-    /** @typedef {{id: number, name: string, description: string, code: string, creditUnits: number, semester: number, practiceHours: number, theoryHours: number, labHours: number, classSchedule: {[key: string]: string[]}, professorId: number, professorName: string, careers: {id: number, name: string}[]}} Subject */
+    /** @typedef {{id: number, name: string, description: string, code: string, creditUnits: number, semester: number, practiceHours: number, theoryHours: number, labHours: number, classSchedule: {[key: string]: string[]}, professorId: number, professorName: string, careers: {id: number, name: string}[], prerequisites: {id: number, name: string}[]}} Subject */
     import { ChevronLeft } from "lucide-svelte";
     import { Button } from "$lib/components/ui/button/index.js";
     import * as Card from "$lib/components/ui/card/index.js";
@@ -25,7 +25,8 @@
         classSchedule: {},
         professorId: 0,
         professorName: '',
-        careers: []
+        careers: [],
+        prerequisites: []
     };
 
     /** @type {Array<{id: number, name: string}>} */
@@ -34,12 +35,17 @@
     /** @type {Array<{id: number, name: string}>} */
     export let professors = [];
 
+    /** @type {Array<{id: number, name: string, code: string, semester: number}>} */
+    export let subjects = [];
+
     /** @type {string} */
     let career = subject?.careers?.map(c => c.id.toString()).join(',') ?? '';
 
-    console.log(subject);
     /** @type {string} */
     let professor = subject?.professorId?.toString() ?? '';
+
+    /** @type {string} */
+    let prereq = subject?.prerequisites?.map(p => p.id.toString()).join(',') ?? '';
 
     let practiceHours = subject?.practiceHours?.toString() ?? "0";
     let theoryHours = subject?.theoryHours?.toString() ?? "0";
@@ -62,6 +68,10 @@
     $: semester = Number(semester) > 10 ? "10" : (Number(semester) === 0 && semester !== "" ? "1" : semester);
     $: if (totalHours || scheduleEntries){
         validateSchedule();
+    }
+
+    $: if (semester){
+        subjects = subjects.filter(s => s.semester < Number(semester));
     }
 
     function validateSchedule() {
@@ -288,9 +298,9 @@
           <div class="grid auto-rows-max items-start gap-4 lg:gap-8">
             <Card.Root>
               <Card.Header>
-                <Card.Title>Professor And Careers</Card.Title>
+                <Card.Title>Professor, Careers & Prerequisites</Card.Title>
                 <Card.Description>
-                  Fill the form with the professor and careers (can be one or more) of the subject.
+                  Fill the form with the professor, prerequisites and careers (can be one or more) of the subject.
                 </Card.Description>
               </Card.Header>
               <Card.Content>
@@ -304,6 +314,11 @@
                       <Label for="career">Career</Label>
                       <Combobox multiple options={careers.map((c) => ({ value: c.id.toString(), label: c.name }))} bind:value={career}/>
                     <input type="hidden" name="careers" value="{career}"/>
+                  </span>
+                  <span class="text-sm font-semibold text-muted-foreground lg:col-span-2">
+                      <Label for="prerequisites">Prerequisites</Label>
+                      <Combobox multiple options={subjects.map((s) => ({ value: s.id.toString(), label: s.name }))} bind:value={prereq}/>
+                    <input type="hidden" name="prerequisites" value="{prereq}"/>
                   </span>
                 </div>
               </Card.Content>
