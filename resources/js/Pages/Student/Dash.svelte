@@ -1,7 +1,7 @@
 <script>
-    
-    import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
+
+import StudentLayout from "$lib/layouts/StudentLayout.svelte";
 </script>
 
-<DirectiveLayout title="Dashboard" description="Dashboard for Acme Inc." keywords="dashboard, acme, inc">
-</DirectiveLayout>
+<StudentLayout title="Dashboard" description="Dashboard for Acme Inc." keywords="dashboard, acme, inc">
+</StudentLayout>
