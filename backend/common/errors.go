@@ -7,7 +7,7 @@ import (
 	inertia "github.com/romsar/gonertia"
 )
 
-var MethodNotAllowed = errors.New("Method not allowed")
+var ErrMethodNotAllowed = errors.New("method not allowed")
 
 func HandleServerErr(i *inertia.Inertia, err error) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +24,7 @@ func HandleServerErr(i *inertia.Inertia, err error) http.Handler {
 
 func HandleNotFound(i *inertia.Inertia) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		err := i.Render(w, r, "Errors/NotFound", nil)
+		err := i.Render(w, r, "Errors/NotFound", inertia.Props{})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

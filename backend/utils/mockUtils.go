@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -16,7 +17,6 @@ import (
 )
 
 func HashPassword(password string) (string, error) {
-	// Genera un hash de la contraseña utilizando bcrypt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
@@ -25,7 +25,6 @@ func HashPassword(password string) (string, error) {
 }
 
 func CheckPassword(hashedPassword, password string) bool {
-	// Compara la contraseña en texto plano con el hash
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) == nil
 }
 
@@ -191,4 +190,19 @@ func Average(notes []float64, percentages []float64) float64 {
 	}
 
 	return sum
+}
+
+func GenerateJWT(userID int, username, email, role string) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id":  userID,
+		"username": username,
+		"email":    email,
+		"role":     role,
+		"exp":      time.Now().Add(24 * time.Hour).Unix(), // Expira en 24 horas
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Firmar el token con la clave secreta
+	return token.SignedString([]byte("your-secret-key"))
 }

@@ -1,11 +1,12 @@
 package repos
 
 import (
+	"net/http"
+
 	inertia "github.com/romsar/gonertia"
 	"mocku/backend/common"
 	"mocku/backend/ent"
 	"mocku/backend/ent/users"
-	"net/http"
 )
 
 func (r *Repo) GetByEmail(email string, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Users, error) {
@@ -31,8 +32,9 @@ func (r *Repo) CreateUser(request common.User, password, filePath string, i *ine
 
 		return nil, r.UpdateUser(user.ID, request, filePath, i, w, req)
 	}
-	r.Logger.Printf("Creating user: %v", password)
-	user, err := r.DB.Users.Create().
+
+	user, err := r.DB.Users.
+		Create().
 		SetEmail(request.GetEmail()).
 		SetUsername(request.GetUsername()).
 		SetPassword(password).
@@ -51,7 +53,8 @@ func (r *Repo) CreateUser(request common.User, password, filePath string, i *ine
 }
 
 func (r *Repo) UpdateUser(userID int, request common.User, filePath string, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
-	_, err := r.DB.Users.UpdateOneID(userID).
+	_, err := r.DB.Users.
+		UpdateOneID(userID).
 		SetEmail(request.GetEmail()).
 		SetUsername(request.GetUsername()).
 		SetName(request.GetName()).

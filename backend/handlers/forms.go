@@ -1,11 +1,14 @@
 package handlers
 
 import (
-	"mocku/backend/common"
-	"mocku/backend/utils"
+	"mocku/backend/ent"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
+
+	"mocku/backend/common"
+	"mocku/backend/utils"
 
 	"github.com/labstack/echo/v4"
 	inertia "github.com/romsar/gonertia"
@@ -14,6 +17,10 @@ import (
 func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		var formData common.LoginDto
+		if c.Request().Method != http.MethodPost {
+			common.HandleNotFound(i).ServeHTTP(c.Response().Writer, c.Request())
+			return common.ErrMethodNotAllowed
+		}
 
 		if err := c.Bind(&formData); err != nil {
 			h.Logger.Printf("Error binding form data: %v", err)
@@ -39,20 +46,34 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 			return nil
 		}
 
-		h.Logger.Printf("User: %v", user)
 		if !utils.CheckPassword(user.Password, formData.Password) {
-			err = i.Render(c.Response().Writer, c.Request(), "Auth/Login", inertia.Props{
-				"careers": careersArray,
-				"error":   "Invalid credentials",
-			})
-			if err != nil {
-				h.Logger.Printf("Error rendering login page: %v", err)
-				common.HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
-				return nil
-			}
-
-			return nil
+			return h.invalidCredentials(i, c.Response().Writer, c.Request(), careersArray)
 		}
+
+		tokenString, err := utils.GenerateJWT(user.ID, user.Username, user.Email, user.Edges.Role.Name)
+		if err != nil {
+			return c.Redirect(http.StatusFound, "/login?error=token generation failed")
+		}
+
+		// Almacenar el JWT en una cookie segura
+		c.SetCookie(&http.Cookie{
+			Name:     "jwt",
+			Value:    tokenString,
+			Expires:  time.Now().Add(24 * time.Hour),
+			HttpOnly: true,
+			Secure:   true,
+			Path:     "/",
+		})
+
+		// Almacenar el JWT en una cookie segura
+		c.SetCookie(&http.Cookie{
+			Name:     "jwt",
+			Value:    tokenString,
+			Expires:  time.Now().Add(5 * time.Hour),
+			HttpOnly: true,
+			Secure:   true,
+			Path:     "/",
+		})
 
 		utils.LoginRedirect(user.Edges.Role.ID, c.Response().Writer, c.Request(), i)
 
@@ -62,12 +83,25 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 	return fn
 }
 
+func (h *Handler) invalidCredentials(i *inertia.Inertia, w http.ResponseWriter, r *http.Request, careersArray []*ent.Careers) error {
+	err := i.Render(w, r, "Auth/Login", inertia.Props{
+		"careers": careersArray,
+		"error":   "Invalid credentials",
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (h *Handler) SettingsNotesPost(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		if r.Method != http.MethodPost {
 			common.HandleNotFound(i).ServeHTTP(w, r)
-			return common.MethodNotAllowed
+			return common.ErrMethodNotAllowed
 		}
 
 		err := r.ParseForm()
@@ -100,9 +134,10 @@ func (h *Handler) SettingsNotesPost(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) SettingsDates(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		if r.Method != http.MethodPost {
 			common.HandleNotFound(i).ServeHTTP(w, r)
-			return common.MethodNotAllowed
+			return common.ErrMethodNotAllowed
 		}
 
 		err := r.ParseForm()
@@ -156,9 +191,10 @@ func (h *Handler) SettingsDates(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) SettingsPayments(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		if r.Method != http.MethodPost {
 			common.HandleNotFound(i).ServeHTTP(w, r)
-			return common.MethodNotAllowed
+			return common.ErrMethodNotAllowed
 		}
 
 		err := r.ParseForm()
@@ -191,9 +227,10 @@ func (h *Handler) SettingsPayments(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) SettingsNotesPercentage(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		if r.Method != http.MethodPost {
 			common.HandleNotFound(i).ServeHTTP(w, r)
-			return common.MethodNotAllowed
+			return common.ErrMethodNotAllowed
 		}
 
 		err := r.ParseForm()
@@ -208,9 +245,8 @@ func (h *Handler) SettingsNotesPercentage(i *inertia.Inertia) echo.HandlerFunc {
 			return nil
 		}
 
-		notes := make([]float64, config.NumberNotes)
 		if config.NumberNotes > 0 {
-			notes, err = utils.ToPercentage(config.NumberNotes, r)
+			notes, err := utils.ToPercentage(config.NumberNotes, r)
 			if err != nil {
 				h.Logger.Printf("Error converting to percentage: %v", err)
 				common.HandleServerErr(i, err).ServeHTTP(w, r)
@@ -234,9 +270,10 @@ func (h *Handler) SettingsNotesPercentage(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) SettingsPaymentsDates(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		if r.Method != http.MethodPost {
 			common.HandleNotFound(i).ServeHTTP(w, r)
-			return common.MethodNotAllowed
+			return common.ErrMethodNotAllowed
 		}
 
 		err := r.ParseForm()
@@ -275,9 +312,10 @@ func (h *Handler) SettingsPaymentsDates(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) SettingsCycle(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		if r.Method != http.MethodPost {
 			common.HandleNotFound(i).ServeHTTP(w, r)
-			return common.MethodNotAllowed
+			return common.ErrMethodNotAllowed
 		}
 
 		currentCycle, err := h.Repo.GetCurrentCycle(i, w, r)
@@ -314,6 +352,11 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
 
+		if r.Method != http.MethodPost {
+			common.HandleNotFound(i).ServeHTTP(w, r)
+			return common.ErrMethodNotAllowed
+		}
+
 		var studentRequest common.StudentRequestDto
 		if err := c.Bind(&studentRequest); err != nil {
 			common.HandleServerErr(i, err).ServeHTTP(w, r)
@@ -349,6 +392,9 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 			return nil
 		}
 		err = h.Repo.CreateStudent(studentRequest, user, i, w, r)
+		if err != nil {
+			return nil
+		}
 
 		http.Redirect(w, r, "/directive/students", http.StatusSeeOther)
 		return nil
@@ -360,9 +406,10 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		if r.Method != http.MethodPost {
 			common.HandleNotFound(i).ServeHTTP(w, r)
-			return common.MethodNotAllowed
+			return common.ErrMethodNotAllowed
 		}
 
 		var careerRequest common.CareerRequestDto
@@ -385,9 +432,10 @@ func (h *Handler) Career(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) ProfessorPost(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		if r.Method != http.MethodPost {
 			http.NotFound(w, r)
-			return common.MethodNotAllowed
+			return common.ErrMethodNotAllowed
 		}
 
 		var professorRequest common.ProfessorRequestDto
@@ -438,8 +486,8 @@ func (h *Handler) SubjectPost(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
 		if r.Method != http.MethodPost {
-			http.NotFound(w, r)
-			return common.MethodNotAllowed
+			common.HandleNotFound(i).ServeHTTP(w, r)
+			return common.ErrMethodNotAllowed
 		}
 
 		var subjectRequest common.SubjectRequestDto
@@ -459,7 +507,9 @@ func (h *Handler) SubjectPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		var classSchedule map[string][]string
 		if err := utils.Unmarshal(subjectRequest.ClassSchedule, &classSchedule); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid ClassSchedule format")
+			h.Logger.Printf("Error unmarshalling class schedule: %v", err)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
 		}
 
 		subjectsIdsSlice := strings.Split(subjectRequest.PreqIds, ",")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	mocku "mocku/backend/middleware"
 	"mocku/backend/repos"
 	"net/http"
 	"os"
@@ -39,9 +40,11 @@ func MountApp() {
 	}
 
 	app := echo.New()
+
 	inertiaMiddl := echo.WrapMiddleware(i.Middleware)
 	app.Use(inertiaMiddl)
 	app.Use(middleware.Recover())
+	app.Use(mocku.JWTMiddleware())
 
 	app.Validator = &CustomValidator{validator: validator.New()}
 
@@ -51,7 +54,7 @@ func MountApp() {
 	app.Any("/login_post", handler.LoginPost(i))
 
 	// Directives routes
-	directive := app.Group("/directive", inertiaMiddl)
+	directive := app.Group("/directive", inertiaMiddl, mocku.JWTMiddleware(), mocku.RoleMiddleware("directive"))
 	directive.GET("", handler.DirectiveDash(i))
 	directive.GET("/students", handler.Students(i))
 	directive.GET("/students/view", handler.Student(i))
@@ -66,7 +69,7 @@ func MountApp() {
 	directive.Any("/subjects/view/submit", handler.SubjectPost(i))
 
 	// Settings routes
-	settings := app.Group("/settings", inertiaMiddl)
+	settings := app.Group("/settings", inertiaMiddl, mocku.JWTMiddleware(), mocku.RoleMiddleware("directive"))
 	settings.GET("", handler.Settings(i))
 	settings.Any("/notes", handler.SettingsNotesPost(i))
 	settings.Any("/notes/percentages", handler.SettingsNotesPercentage(i))
@@ -76,12 +79,11 @@ func MountApp() {
 	settings.Any("/dates", handler.SettingsDates(i))
 
 	// Students routes
-	student := app.Group("/student", inertiaMiddl)
+	student := app.Group("/student", inertiaMiddl, mocku.JWTMiddleware(), mocku.RoleMiddleware("student"))
 	student.GET("", handler.StudentDash(i))
 
 	// Dashboard routes
 	// mux.Handle("/payment", i.Middleware(handler.PaymentsDash(i)))
-	// mux.Handle("/student", i.Middleware(handler.StudentDash(i)))
 	// mux.Handle("/professor", i.Middleware(handler.ProfessorDash(i)))
 	// mux.Handle("/control", i.Middleware(handler.ControlDash(i)))
 

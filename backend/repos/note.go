@@ -20,8 +20,9 @@ func (r *Repo) GetStudentNotes(id int, i *inertia.Inertia, w http.ResponseWriter
 
 	notes, err := r.DB.Note.
 		Query().
-		Where(note.HasStudentWith(student.ID(st.ID))).
+		Where(note.HasStudentWith(student.ID(id))).
 		All(req.Context())
+
 	if err != nil {
 		r.Logger.Printf("Error getting notes: %v", err)
 		common.HandleServerErr(i, err).ServeHTTP(w, req)
