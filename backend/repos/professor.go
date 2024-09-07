@@ -15,7 +15,7 @@ func (r *Repo) CreateProfessor(professorRequest common.ProfessorRequestDto, user
 
 	_, err := r.DB.Professor.Create().
 		SetAddress(professorRequest.Address).
-		SetBirthDate(professorRequest.BirthDate).
+		SetBirthDate(professorRequest.BirthDate.Time).
 		SetPhone(professorRequest.Phone).
 		SetIdentityCard(professorRequest.IdentityCard).
 		SetNillableBossID(professorRequest.BossId).
@@ -47,7 +47,7 @@ func (r *Repo) GetProfessorById(id int, i *inertia.Inertia, w http.ResponseWrite
 func (r *Repo) UpdateProfessor(professorRequest common.ProfessorRequestDto, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
 	_, err := r.DB.Professor.UpdateOneID(professorRequest.ID).
 		SetAddress(professorRequest.Address).
-		SetBirthDate(professorRequest.BirthDate).
+		SetBirthDate(professorRequest.BirthDate.Time).
 		SetPhone(professorRequest.Phone).
 		SetIdentityCard(professorRequest.IdentityCard).
 		SetNillableBossID(professorRequest.BossId).

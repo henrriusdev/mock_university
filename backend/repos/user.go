@@ -31,6 +31,7 @@ func (r *Repo) CreateUser(request common.User, password, filePath string, i *ine
 
 		return nil, r.UpdateUser(user.ID, request, filePath, i, w, req)
 	}
+	r.Logger.Printf("Creating user: %v", password)
 	user, err := r.DB.Users.Create().
 		SetEmail(request.GetEmail()).
 		SetUsername(request.GetUsername()).
