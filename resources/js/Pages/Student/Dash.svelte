@@ -1,19 +1,13 @@
 <script>
     import DataTable from "$lib/components/datatable/data-table.svelte";
-    import { createTable, createRender } from "svelte-headless-table";
-    import {
-        addPagination,
-        addSortBy,
-        addTableFilter,
-        addSelectedRows,
-    } from "svelte-headless-table/plugins";
-    import { readable } from "svelte/store";
+    import {createRender, createTable} from "svelte-headless-table";
+    import {addPagination, addSelectedRows, addSortBy, addTableFilter,} from "svelte-headless-table/plugins";
+    import {readable} from "svelte/store";
     import DataTableActions from "$lib/components/datatable/data-table-actions.svelte";
-    import Avatar from "$lib/components/Avatar.svelte";
     import StudentLayout from "$lib/layouts/StudentLayout.svelte";
     import DataTableCheckbox from "$lib/components/datatable/data-table-checkbox.svelte";
     import Button from "$lib/components/ui/button/button.svelte";
-    import { ChevronRight } from "lucide-svelte";
+    import {ChevronRight} from "lucide-svelte";
     import {Badge} from "$lib/components/ui/badge/index.js";
     /** @typedef {{[key: string]: string[]}} Schedule */
     /** @type { Array<{id: number, subject: string, notes: number[], avg: number}> } */
@@ -27,7 +21,7 @@
         sort: addSortBy(),
         filter: addTableFilter({
             /** @param {{filterValue: string, value: string}} param0 */
-            fn: ({ filterValue, value }) =>
+            fn: ({filterValue, value}) =>
                 value.toLowerCase().includes(filterValue.toLowerCase()),
         }),
         select: addSelectedRows(),
@@ -37,21 +31,21 @@
         {
             label: "Copy subject name",
             /** @param {{name: string}} param0 */
-            onClick: ({ name }) => {
+            onClick: ({name}) => {
                 window.navigator.clipboard.writeText(name);
             },
         },
         {
             label: "Copy subject code",
             /** @param {{code: string}} param0 */
-            onClick: ({ code }) => {
+            onClick: ({code}) => {
                 window.navigator.clipboard.writeText(code);
             },
         },
         {
             label: "Copy hours",
             /** @param {{totalHours: number, practiceHours: number, theoryHours: number, labHours: number}} param0 */
-            onClick: ({ totalHours,  practiceHours, labHours, theoryHours}) => {
+            onClick: ({totalHours, practiceHours, labHours, theoryHours}) => {
                 let hours = `Practice: ${practiceHours}h
 Theory: ${theoryHours}h
 Lab: ${labHours}h
@@ -62,15 +56,15 @@ Total: ${totalHours}h`;
         {
             label: "Copy careers",
             /** @param {{careers: Array<{name: string}>}} param0 */
-            onClick: ({ careers }) => {
-                const careersNames = careers.map(({ name }) => name).join(", ");
+            onClick: ({careers}) => {
+                const careersNames = careers.map(({name}) => name).join(", ");
                 window.navigator.clipboard.writeText(careersNames);
             },
         },
         {
             label: "Copy class schedule",
             /** @param {{classSchedule: Schedule}} param0 */
-            onClick: ({ classSchedule }) => {
+            onClick: ({classSchedule}) => {
                 const schedule = Object.entries(classSchedule).map(
                     ([day, hours]) => `${day}: ${hours.join(", ")}`
                 );
@@ -78,9 +72,9 @@ Total: ${totalHours}h`;
             },
         },
         {
-            label:"Edit",
+            label: "Edit",
             /** @param {{id: number}} param0 */
-            onClick: ({ id }) => {
+            onClick: ({id}) => {
                 window.location.href = `/directive/subjects/view?id=${id}`;
             }
         }
@@ -91,7 +85,7 @@ Total: ${totalHours}h`;
         sort: addSortBy(),
         filter: addTableFilter({
             /** @param {{filterValue: string, value: string}} param0 */
-            fn: ({ filterValue, value }) =>
+            fn: ({filterValue, value}) =>
                 value.toLowerCase().includes(filterValue.toLowerCase()),
         }),
         select: addSelectedRows(),
@@ -103,7 +97,7 @@ Total: ${totalHours}h`;
     for (let i = 0; i < notesNumber; i++) {
         noteColumns.push(
             table.column({
-                accessor: ({ notes }) => notes[i] ?? 0,
+                accessor: ({notes}) => notes[i] ?? 0,
                 header: `${cardinal[i]} note`,
             })
         );
@@ -112,15 +106,15 @@ Total: ${totalHours}h`;
     const columns = table.createColumns([
         table.column({
             accessor: "id",
-            header: (_, { pluginStates }) => {
-                const { allPageRowsSelected } = pluginStates.select;
+            header: (_, {pluginStates}) => {
+                const {allPageRowsSelected} = pluginStates.select;
                 return createRender(DataTableCheckbox, {
                     checked: allPageRowsSelected,
                 });
             },
-            cell: ({ row }, { pluginStates }) => {
-                const { getRowState } = pluginStates.select;
-                const { isSelected } = getRowState(row);
+            cell: ({row}, {pluginStates}) => {
+                const {getRowState} = pluginStates.select;
+                const {isSelected} = getRowState(row);
 
                 return createRender(DataTableCheckbox, {
                     checked: isSelected,
@@ -136,15 +130,15 @@ Total: ${totalHours}h`;
             },
         }),
         table.column({
-            accessor: ({ subject }) => subject,
+            accessor: ({subject}) => subject,
             header: "Subject",
         }),
         ...noteColumns,
         table.column({
             accessor: (row) => row,
             header: "Actions",
-            cell: ({ value }) => {
-                return createRender(DataTableActions, { row: value, actions });
+            cell: ({value}) => {
+                return createRender(DataTableActions, {row: value, actions});
             },
             plugins: {
                 sort: {
@@ -171,9 +165,9 @@ Total: ${totalHours}h`;
       >
         Welcome, Henrry
         {#if scheduleStart > new Date()}
-        <Badge variant="ghost" class="ml-2">
+          <Badge variant="ghost" class="ml-2">
             Schedule registration starts on {scheduleStart.toLocaleDateString()}
-        </Badge>
+          </Badge>
         {:else if scheduleEnd < new Date()}
           <Badge variant="destructive" class="ml-2">
             Schedule registration ended on {scheduleEnd.toLocaleDateString()}
@@ -191,7 +185,7 @@ Total: ${totalHours}h`;
               href="/directive/subjects/view?id=add"
       >
         Register my schedule
-        <ChevronRight class="w-6 h-6" />
+        <ChevronRight class="w-6 h-6"/>
       </Button>
     </div>
     <div class="w-full">
@@ -200,7 +194,7 @@ Total: ${totalHours}h`;
           No notes found, please register your schedule
         </p>
       {:else}
-        <DataTable {table} {columns} />
+        <DataTable {table} {columns}/>
       {/if}
     </div>
   </section>
