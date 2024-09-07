@@ -1,18 +1,22 @@
 package repos
 
 import (
+	"mocku/backend/ent/users"
+	"net/http"
+
 	inertia "github.com/romsar/gonertia"
 	"mocku/backend/common"
 	"mocku/backend/ent"
 	"mocku/backend/ent/student"
-	"net/http"
 )
 
 func (r *Repo) CreateStudent(studentRequest common.StudentRequestDto, user *ent.Users, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
 	if studentRequest.ID != 0 {
 		return r.UpdateStudent(studentRequest, i, w, req)
 	}
-	_, err := r.DB.Student.Create().
+
+	_, err := r.DB.Student.
+		Create().
 		SetPhone(studentRequest.Phone).
 		SetDistrict(studentRequest.District).
 		SetCity(studentRequest.City).
@@ -36,7 +40,8 @@ func (r *Repo) CreateStudent(studentRequest common.StudentRequestDto, user *ent.
 }
 
 func (r *Repo) GetStudentById(id int, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Student, error) {
-	st, err := r.DB.Student.Query().
+	st, err := r.DB.Student.
+		Query().
 		Where(student.IDEQ(id)).
 		WithUser().
 		WithCareer().
@@ -51,7 +56,8 @@ func (r *Repo) GetStudentById(id int, i *inertia.Inertia, w http.ResponseWriter,
 }
 
 func (r *Repo) UpdateStudent(studentRequest common.StudentRequestDto, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
-	_, err := r.DB.Student.UpdateOneID(studentRequest.ID).
+	_, err := r.DB.Student.
+		UpdateOneID(studentRequest.ID).
 		SetPhone(studentRequest.Phone).
 		SetDistrict(studentRequest.District).
 		SetCity(studentRequest.City).
@@ -74,7 +80,8 @@ func (r *Repo) UpdateStudent(studentRequest common.StudentRequestDto, i *inertia
 }
 
 func (r *Repo) GetStudents(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) ([]*ent.Student, error) {
-	students, err := r.DB.Student.Query().
+	students, err := r.DB.Student.
+		Query().
 		WithUser().
 		WithCareer().
 		All(req.Context())
@@ -85,4 +92,20 @@ func (r *Repo) GetStudents(i *inertia.Inertia, w http.ResponseWriter, req *http.
 	}
 
 	return students, nil
+}
+
+func (r *Repo) GetStudentByUserId(userId int, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Student, error) {
+	st, err := r.DB.Student.
+		Query().
+		Where(student.HasUserWith(users.IDEQ(userId))).
+		WithUser().
+		WithCareer().
+		First(req.Context())
+	if err != nil {
+		r.Logger.Printf("Error querying student: %v", err)
+		common.HandleServerErr(i, err).ServeHTTP(w, req)
+		return nil, err
+	}
+
+	return st, nil
 }

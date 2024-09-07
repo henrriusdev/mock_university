@@ -84,6 +84,7 @@ func (h *Handler) DirectiveDash(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) PaymentsDash(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		careers, err := h.Repo.GetCareers(i, w, r)
 		if err != nil {
 			h.Logger.Printf("Error getting careers: %v", err)
@@ -109,6 +110,7 @@ func (h *Handler) PaymentsDash(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) ControlDash(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		careers, err := h.Repo.GetCareers(i, w, r)
 		if err != nil {
 			h.Logger.Printf("Error getting careers: %v", err)
@@ -134,6 +136,7 @@ func (h *Handler) ControlDash(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) ProfessorDash(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		careers, err := h.Repo.GetCareers(i, w, r)
 		if err != nil {
 			h.Logger.Printf("Error getting careers: %v", err)
@@ -159,12 +162,15 @@ func (h *Handler) ProfessorDash(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) StudentDash(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
+		userID := c.Get("user_id").(int)
+
 		config, err := h.Repo.GetConfiguration(i, w, r)
 		if err != nil {
 			return nil
 		}
 
-		notes, err := h.Repo.GetStudentNotes(2, i, w, r)
+		notes, err := h.Repo.GetStudentNotes(userID, i, w, r)
 		if err != nil {
 			return nil
 		}
@@ -200,6 +206,7 @@ func (h *Handler) StudentDash(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Settings(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		config, err := h.Repo.GetConfiguration(i, w, r)
 		if err != nil {
 			return nil
@@ -230,6 +237,7 @@ func (h *Handler) Settings(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Students(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		students, err := h.Repo.GetStudents(i, w, r)
 		if err != nil {
 			return nil
@@ -270,9 +278,12 @@ func (h *Handler) Students(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Student(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		id := r.URL.Query().Get("id")
+
 		var studentDto common.StudentDto
 		var userDto common.UserDto
+
 		if id != "add" {
 			studentId, _ := strconv.Atoi(id)
 
@@ -336,6 +347,7 @@ func (h *Handler) Student(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Careers(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		careers, err := h.Repo.GetCareersWithLeader(i, w, r)
 		if err != nil {
 			return nil
@@ -363,6 +375,10 @@ func (h *Handler) Careers(i *inertia.Inertia) echo.HandlerFunc {
 		}
 
 		professors, err := h.Repo.GetProfessors(i, w, r)
+		if err != nil {
+			return nil
+		}
+
 		professorsDto := make([]common.SelectDto, len(professors))
 		for i, professor := range professors {
 			professorsDto[i] = common.SelectDto{
@@ -389,6 +405,7 @@ func (h *Handler) Careers(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Professors(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		professors, err := h.Repo.GetProfessors(i, w, r)
 		if err != nil {
 			h.Logger.Printf("Error getting professors: %v", err)
@@ -425,9 +442,12 @@ func (h *Handler) Professors(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Professor(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		id := r.URL.Query().Get("id")
+
 		var professorDto common.ProfessorDto
 		var userDto common.UserDto
+
 		if id != "add" {
 			professorId, err := strconv.Atoi(id)
 			if err != nil {
@@ -490,6 +510,7 @@ func (h *Handler) Professor(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Subjects(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		subjects, err := h.Repo.GetSubjects(i, w, r)
 		if err != nil {
 			return nil
@@ -539,8 +560,11 @@ func (h *Handler) Subjects(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) Subject(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
+
 		id := r.URL.Query().Get("id")
+
 		var subjectDto common.SubjectDto
+
 		if id != "add" {
 			subjectId, _ := strconv.Atoi(id)
 
@@ -564,7 +588,9 @@ func (h *Handler) Subject(i *inertia.Inertia) echo.HandlerFunc {
 				ProfessorId:   subj.Edges.Professor.ID,
 				ProfessorName: subj.Edges.Professor.Edges.User.Name,
 			}
+
 			subjectDto.Careers = common.FillSelectDto(subj.Edges.Career, "ID", "Name")
+
 			subjectDto.Prerequisites = common.FillSelectDto(subj.Edges.Prerequisites, "ID", "Name")
 		}
 
