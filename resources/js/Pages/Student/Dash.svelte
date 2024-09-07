@@ -14,6 +14,7 @@
     import DataTableCheckbox from "$lib/components/datatable/data-table-checkbox.svelte";
     import Button from "$lib/components/ui/button/button.svelte";
     import { ChevronRight } from "lucide-svelte";
+    import {Badge} from "$lib/components/ui/badge/index.js";
     /** @typedef {{[key: string]: string[]}} Schedule */
     /** @type { Array<{id: number, subject: string, notes: number[], avg: number}> } */
     export let notes = [];
@@ -166,23 +167,24 @@ Total: ${totalHours}h`;
   >
     <div class="w-full flex justify-between items-center">
       <h2
-              class="text-2xl md:text-3xl xl:text-5xl font-bold w-full text-left pb-1 md:pb-3"
+              class="text-2xl md:text-3xl xl:text-4xl font-bold w-full text-left pb-1 md:pb-3 flex items-center gap-x-2"
       >
-        Welcome
+        Welcome, Henrry
+        {#if scheduleStart > new Date()}
+        <Badge variant="ghost" class="ml-2">
+            Schedule registration starts on {scheduleStart.toLocaleDateString()}
+        </Badge>
+        {:else if scheduleEnd < new Date()}
+          <Badge variant="destructive" class="ml-2">
+            Schedule registration ended on {scheduleEnd.toLocaleDateString()}
+          </Badge>
+        {:else}
+          <Badge variant="default" class="ml-2">
+            Schedule registration is open until {scheduleEnd.toLocaleDateString()}
+          </Badge>
+        {/if}
+
       </h2>
-      {#if scheduleStart > new Date()}
-        <p class="text-lg font-semibold text-muted-foreground">
-          Your schedule registration starts on {scheduleStart.toLocaleDateString()}
-        </p>
-      {:else if scheduleEnd < new Date()}
-        <p class="text-lg font-semibold text-muted-foreground">
-          Your schedule registration ended on {scheduleEnd.toLocaleDateString()}
-        </p>
-      {:else}
-        <p class="text-lg font-semibold text-muted-foreground">
-          Your schedule registration is open until {scheduleEnd.toLocaleDateString()}
-        </p>
-      {/if}
       <Button
               variant="outline"
               class="flex justify-center gap-x-3 items-center"
