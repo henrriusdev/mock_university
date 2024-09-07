@@ -6,6 +6,16 @@
 
   /** @type {Array<{name: string}>} */
   export let careers = [];
+
+  /** @type {string} */
+  export let error = "";
+
+  $: if (error) {
+    setTimeout(() => {
+      error = "";
+      window.history.replaceState({}, "", "/login");
+    }, 2000);
+  }
 </script>
 
 <MainLayout
@@ -19,6 +29,7 @@
         method="post"
         action="/login_post"
         class="mx-auto grid w-[350px] gap-6"
+        enctype="multipart/form-data"
       >
         <div class="grid gap-2 text-center">
           <h1 class="text-3xl font-bold">Login</h1>
@@ -46,6 +57,9 @@
             </div>
             <Input id="password" type="password" name="password" required />
           </div>
+          {#if error}
+            <p class="text-red-500 text-sm">{error}</p>
+          {/if}
           <Button type="submit" class="w-full">Login</Button>
           <Button variant="outline" class="w-full">Login with Google</Button>
         </div>

@@ -183,3 +183,12 @@ func UploadAvatar(username string, handler *multipart.FileHeader) (string, error
 
 	return filePath, nil
 }
+
+func Average(notes []float64, percentages []float64) float64 {
+	var sum float64
+	for i, note := range notes {
+		sum += note * percentages[i]
+	}
+
+	return sum
+}

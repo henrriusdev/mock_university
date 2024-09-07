@@ -159,15 +159,31 @@ func (h *Handler) ProfessorDash(i *inertia.Inertia) echo.HandlerFunc {
 func (h *Handler) StudentDash(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
-		careers, err := h.Repo.GetCareers(i, w, r)
+		config, err := h.Repo.GetConfiguration(i, w, r)
 		if err != nil {
-			h.Logger.Printf("Error getting careers: %v", err)
-			common.HandleServerErr(i, err).ServeHTTP(w, r)
 			return nil
 		}
 
+		notes, err := h.Repo.GetStudentNotes(2, i, w, r)
+		if err != nil {
+			return nil
+		}
+
+		notesDto := make([]common.NoteDto, len(notes))
+		for i, note := range notes {
+			notesDto[i] = common.NoteDto{
+				ID:      note.ID,
+				Subject: note.Edges.Subject.Name,
+				Notes:   note.Notes,
+				Average: utils.Average(note.Notes, config.NotesPercentages),
+			}
+		}
+
 		err = i.Render(w, r, "Student/Dash", inertia.Props{
-			"careers": careers,
+			"notes":                     notesDto,
+			"notesNumber":               config.NumberNotes,
+			"scheduleRegistrationStart": utils.FormatDate(config.StartRegistrationSubjects),
+			"scheduleRegistrationEnd":   utils.FormatDate(config.EndRegistrationSubjects),
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering student dash: %v", err)

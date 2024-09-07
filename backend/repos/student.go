@@ -19,7 +19,7 @@ func (r *Repo) CreateStudent(studentRequest common.StudentRequestDto, user *ent.
 		SetPostalCode(studentRequest.PostalCode).
 		SetAddress(studentRequest.Address).
 		SetIdentityCard(studentRequest.IdentityCard).
-		SetBirthDate(studentRequest.BirthDate).
+		SetBirthDate(studentRequest.BirthDate.Time).
 		SetCreditUnitsAccumulated(studentRequest.CreditUnitsAccumulated).
 		SetSemester(studentRequest.Semester).
 		SetTotalAverage(studentRequest.TotalAverage).
@@ -58,7 +58,7 @@ func (r *Repo) UpdateStudent(studentRequest common.StudentRequestDto, i *inertia
 		SetPostalCode(studentRequest.PostalCode).
 		SetAddress(studentRequest.Address).
 		SetIdentityCard(studentRequest.IdentityCard).
-		SetBirthDate(studentRequest.BirthDate).
+		SetBirthDate(studentRequest.BirthDate.Time).
 		SetCreditUnitsAccumulated(studentRequest.CreditUnitsAccumulated).
 		SetSemester(studentRequest.Semester).
 		SetTotalAverage(studentRequest.TotalAverage).

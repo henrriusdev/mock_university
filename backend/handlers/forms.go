@@ -15,14 +15,13 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		var formData common.LoginDto
 
-		err := c.Bind(&formData)
-		if err != nil {
+		if err := c.Bind(&formData); err != nil {
 			h.Logger.Printf("Error binding form data: %v", err)
 			common.HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
 
-		if err = c.Validate(formData); err != nil {
+		if err := c.Validate(formData); err != nil {
 			h.Logger.Printf("Error validating form data: %v", err)
 			common.HandleBadRequest(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
@@ -30,17 +29,21 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		user, err := h.Repo.GetByEmail(formData.Email, i, c.Response().Writer, c.Request())
 		if err != nil {
+			h.Logger.Printf("Error getting user by email: %v", err)
 			return nil
 		}
 
 		careersArray, err := h.Repo.GetCareers(i, c.Response().Writer, c.Request())
 		if err != nil {
+			h.Logger.Printf("Error getting careers: %v", err)
 			return nil
 		}
+
+		h.Logger.Printf("User: %v", user)
 		if !utils.CheckPassword(user.Password, formData.Password) {
 			err = i.Render(c.Response().Writer, c.Request(), "Auth/Login", inertia.Props{
 				"careers": careersArray,
-				"error":   "Credenciales incorrectas",
+				"error":   "Invalid credentials",
 			})
 			if err != nil {
 				h.Logger.Printf("Error rendering login page: %v", err)

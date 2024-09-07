@@ -75,6 +75,10 @@ func MountApp() {
 	settings.Any("/cycle", handler.SettingsCycle(i))
 	settings.Any("/dates", handler.SettingsDates(i))
 
+	// Students routes
+	student := app.Group("/student", inertiaMiddl)
+	student.GET("", handler.StudentDash(i))
+
 	// Dashboard routes
 	// mux.Handle("/payment", i.Middleware(handler.PaymentsDash(i)))
 	// mux.Handle("/student", i.Middleware(handler.StudentDash(i)))
