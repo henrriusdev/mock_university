@@ -44,7 +44,6 @@ func MountApp() {
 	inertiaMiddl := echo.WrapMiddleware(i.Middleware)
 	app.Use(inertiaMiddl)
 	app.Use(middleware.Recover())
-	app.Use(mocku.JWTMiddleware())
 
 	app.Validator = &CustomValidator{validator: validator.New()}
 
