@@ -1,5 +1,5 @@
 <script>
-  import Avatar from "$lib/components/Avatar.svelte";
+  import Combobox from "$lib/components/Combobox.svelte";
   import DataTableActions from "$lib/components/datatable/data-table-actions.svelte";
   import DataTable from "$lib/components/datatable/data-table.svelte";
   import Button from "$lib/components/ui/button/button.svelte";
@@ -12,11 +12,13 @@
   import {
     addPagination,
     addSortBy,
-    addTableFilter
+    addTableFilter,
   } from "svelte-headless-table/plugins";
   import { readable } from "svelte/store";
   /** @type { Array<{id: number, name: string, leader?: string, leaderId?: number, description: string}>} */
   export let careers = [];
+  /** @type {Array<{id: number,name: string}>} */
+  export let professors = [];
 
   let table = createTable(readable(careers), {
     page: addPagination(),
@@ -28,8 +30,8 @@
     }),
   });
 
-  /** @type {number | null} */
-  let leaderId = null;
+  /** @type {string | undefined} */
+  let leaderId;
 
   /** @type {string | null}*/
   let name = null;
@@ -40,6 +42,8 @@
   /** @type {number | null}*/
   let id = null;
 
+  let checked = false;
+  let edit = false;
 
   const actions = [
     {
@@ -49,8 +53,11 @@
         name = row.name;
         description = row.description;
         id = row.id;
-        if (row.leader){
-          leaderId = careers.find((career) => career.id === row.id)?.leaderId ?? null;
+        if (row.leader) {
+          leaderId =
+            careers
+              .find((career) => career.id === row.id)
+              ?.leaderId?.toString() ?? undefined;
           checked = true;
         }
 
@@ -59,12 +66,9 @@
     },
     {
       label: "Delete",
-      onClick: () => {
-        console.log("Delete");
-      },
+      onClick: () => {},
     },
   ];
-  let edit = false;
 
   const columns = table.createColumns([
     table.column({
@@ -111,8 +115,6 @@
       },
     }),
   ]);
-
-  let checked = false;
 </script>
 
 <DirectiveLayout
@@ -148,13 +150,13 @@
         class="w-1/3 p-10 flex flex-col gap-y-4 border-l-2 border-l-gray-300 dark:border-l-gray-800"
       >
         {#if edit}
-          <input type="hidden" name="id" value={id} />
+          <input type="hidden" name="id" value="{id}" />
         {/if}
         <h2 class="text-2xl font-bold text-center pb-3">
           {#if !edit}
-          Add Career
+            Add Career
           {:else}
-          Modify {name}
+            Modify {name}
           {/if}
         </h2>
         <div class="flex flex-col gap-3">
@@ -165,7 +167,7 @@
             name="name"
             class="input"
             placeholder="Career name"
-            value={name}
+            value="{name}"
           />
         </div>
         <div class="flex flex-col gap-3">
@@ -175,7 +177,7 @@
             name="description"
             class="input"
             placeholder="Career description"
-            value={description}
+            value="{description}"
           />
         </div>
         <div class="flex flex-col gap-3">
@@ -191,25 +193,27 @@
           </div>
           {#if checked}
             <Label for="leader">Leader</Label>
-            <Input
-              type="text"
-              id="leader"
-              name="leader"
-              class="input"
-              placeholder="Leader name"
-              value={leaderId}
+            <Combobox
+              options="{professors.map((professor) => ({
+                value: professor.id.toString(),
+                label: professor.name,
+              }))}"
+              bind:value="{leaderId}"
+              placeholder="Select a leader"
             />
           {/if}
+          <input type="hidden" name="leader" value="{leaderId}" />
         </div>
         <Button
           type="submit"
           variant="default"
           class="w-full"
-          on:click={() => (checked = !checked)}>
+          on:click="{() => (checked = !checked)}"
+        >
           {#if !edit}
-          Add
+            Add
           {:else}
-          Modify
+            Modify
           {/if}
         </Button>
       </form>

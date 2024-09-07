@@ -38,6 +38,10 @@ const (
 	EdgeCareer = "career"
 	// EdgeNotes holds the string denoting the notes edge name in mutations.
 	EdgeNotes = "notes"
+	// EdgeNextSubject holds the string denoting the next_subject edge name in mutations.
+	EdgeNextSubject = "next_subject"
+	// EdgePrerequisites holds the string denoting the prerequisites edge name in mutations.
+	EdgePrerequisites = "prerequisites"
 	// Table holds the table name of the subject in the database.
 	Table = "subjects"
 	// ProfessorTable is the table that holds the professor relation/edge.
@@ -59,6 +63,10 @@ const (
 	NotesInverseTable = "notes"
 	// NotesColumn is the table column denoting the notes relation/edge.
 	NotesColumn = "note_subject"
+	// NextSubjectTable is the table that holds the next_subject relation/edge. The primary key declared below.
+	NextSubjectTable = "subject_prerequisites"
+	// PrerequisitesTable is the table that holds the prerequisites relation/edge. The primary key declared below.
+	PrerequisitesTable = "subject_prerequisites"
 )
 
 // Columns holds all SQL columns for subject fields.
@@ -86,6 +94,12 @@ var (
 	// CareerPrimaryKey and CareerColumn2 are the table columns denoting the
 	// primary key for the career relation (M2M).
 	CareerPrimaryKey = []string{"subject_id", "careers_id"}
+	// NextSubjectPrimaryKey and NextSubjectColumn2 are the table columns denoting the
+	// primary key for the next_subject relation (M2M).
+	NextSubjectPrimaryKey = []string{"subject_id", "next_subject_id"}
+	// PrerequisitesPrimaryKey and PrerequisitesColumn2 are the table columns denoting the
+	// primary key for the prerequisites relation (M2M).
+	PrerequisitesPrimaryKey = []string{"subject_id", "next_subject_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -211,6 +225,34 @@ func ByNotes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newNotesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByNextSubjectCount orders the results by next_subject count.
+func ByNextSubjectCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newNextSubjectStep(), opts...)
+	}
+}
+
+// ByNextSubject orders the results by next_subject terms.
+func ByNextSubject(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newNextSubjectStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByPrerequisitesCount orders the results by prerequisites count.
+func ByPrerequisitesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPrerequisitesStep(), opts...)
+	}
+}
+
+// ByPrerequisites orders the results by prerequisites terms.
+func ByPrerequisites(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPrerequisitesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newProfessorStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -230,5 +272,19 @@ func newNotesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(NotesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, true, NotesTable, NotesColumn),
+	)
+}
+func newNextSubjectStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, NextSubjectTable, NextSubjectPrimaryKey...),
+	)
+}
+func newPrerequisitesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, PrerequisitesTable, PrerequisitesPrimaryKey...),
 	)
 }

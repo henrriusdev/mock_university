@@ -131,6 +131,36 @@ func (sc *SubjectCreate) AddNotes(n ...*Note) *SubjectCreate {
 	return sc.AddNoteIDs(ids...)
 }
 
+// AddNextSubjectIDs adds the "next_subject" edge to the Subject entity by IDs.
+func (sc *SubjectCreate) AddNextSubjectIDs(ids ...int) *SubjectCreate {
+	sc.mutation.AddNextSubjectIDs(ids...)
+	return sc
+}
+
+// AddNextSubject adds the "next_subject" edges to the Subject entity.
+func (sc *SubjectCreate) AddNextSubject(s ...*Subject) *SubjectCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sc.AddNextSubjectIDs(ids...)
+}
+
+// AddPrerequisiteIDs adds the "prerequisites" edge to the Subject entity by IDs.
+func (sc *SubjectCreate) AddPrerequisiteIDs(ids ...int) *SubjectCreate {
+	sc.mutation.AddPrerequisiteIDs(ids...)
+	return sc
+}
+
+// AddPrerequisites adds the "prerequisites" edges to the Subject entity.
+func (sc *SubjectCreate) AddPrerequisites(s ...*Subject) *SubjectCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sc.AddPrerequisiteIDs(ids...)
+}
+
 // Mutation returns the SubjectMutation object of the builder.
 func (sc *SubjectCreate) Mutation() *SubjectMutation {
 	return sc.mutation
@@ -345,6 +375,38 @@ func (sc *SubjectCreate) createSpec() (*Subject, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(note.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sc.mutation.NextSubjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   subject.NextSubjectTable,
+			Columns: subject.NextSubjectPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sc.mutation.PrerequisitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   subject.PrerequisitesTable,
+			Columns: subject.PrerequisitesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subject.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

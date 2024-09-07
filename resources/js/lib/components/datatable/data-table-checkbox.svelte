@@ -5,4 +5,4 @@
   export let checked;
 </script>
 
-<Checkbox bind:checked={$checked} />
+<Checkbox bind:checked="{$checked}" />

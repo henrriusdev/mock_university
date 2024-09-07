@@ -254,7 +254,7 @@ var (
 		{Name: "description", Type: field.TypeString, Size: 2147483647},
 		{Name: "read", Type: field.TypeBool, Default: false},
 		{Name: "create", Type: field.TypeBool, Default: false},
-		{Name: "update", Type: field.TypeBool, Default: false},
+		{Name: "modify", Type: field.TypeBool, Default: false},
 		{Name: "delete", Type: field.TypeBool, Default: false},
 	}
 	// PermissionsTable holds the schema information for the "permissions" table.
@@ -478,6 +478,31 @@ var (
 			},
 		},
 	}
+	// SubjectPrerequisitesColumns holds the columns for the "subject_prerequisites" table.
+	SubjectPrerequisitesColumns = []*schema.Column{
+		{Name: "subject_id", Type: field.TypeInt},
+		{Name: "next_subject_id", Type: field.TypeInt},
+	}
+	// SubjectPrerequisitesTable holds the schema information for the "subject_prerequisites" table.
+	SubjectPrerequisitesTable = &schema.Table{
+		Name:       "subject_prerequisites",
+		Columns:    SubjectPrerequisitesColumns,
+		PrimaryKey: []*schema.Column{SubjectPrerequisitesColumns[0], SubjectPrerequisitesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "subject_prerequisites_subject_id",
+				Columns:    []*schema.Column{SubjectPrerequisitesColumns[0]},
+				RefColumns: []*schema.Column{SubjectsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "subject_prerequisites_next_subject_id",
+				Columns:    []*schema.Column{SubjectPrerequisitesColumns[1]},
+				RefColumns: []*schema.Column{SubjectsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ActivitiesTable,
@@ -499,6 +524,7 @@ var (
 		UsersTable,
 		PermissionRolesTable,
 		SubjectCareerTable,
+		SubjectPrerequisitesTable,
 	}
 )
 
@@ -527,4 +553,6 @@ func init() {
 	PermissionRolesTable.ForeignKeys[1].RefTable = RolesTable
 	SubjectCareerTable.ForeignKeys[0].RefTable = SubjectsTable
 	SubjectCareerTable.ForeignKeys[1].RefTable = CareersTable
+	SubjectPrerequisitesTable.ForeignKeys[0].RefTable = SubjectsTable
+	SubjectPrerequisitesTable.ForeignKeys[1].RefTable = SubjectsTable
 }

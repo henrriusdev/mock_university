@@ -3,10 +3,8 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { Button } from "$lib/components/ui/button";
 
-
   /** @type {Array<{label: string, onClick: (row: any) => void}>} */
   export let actions = [];
-
   export let row;
 </script>
 
@@ -14,7 +12,7 @@
   <DropdownMenu.Trigger asChild let:builder>
     <Button
       variant="ghost"
-      builders={[builder]}
+      builders="{[builder]}"
       size="icon"
       class="relative h-8 w-8 p-0"
     >
@@ -25,7 +23,9 @@
   <DropdownMenu.Content>
     <DropdownMenu.Group>
       {#each actions as { label, onClick }}
-        <DropdownMenu.Item on:click={() => onClick(row)}>{label}</DropdownMenu.Item>
+        <DropdownMenu.Item on:click="{() => onClick(row)}"
+          >{label}</DropdownMenu.Item
+        >
       {/each}
     </DropdownMenu.Group>
   </DropdownMenu.Content>

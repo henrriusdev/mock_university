@@ -1,242 +1,201 @@
 <script>
-    import Activity from "lucide-svelte/icons/activity";
-    import ArrowUpRight from "lucide-svelte/icons/arrow-up-right";
-    import CreditCard from "lucide-svelte/icons/credit-card";
-    import DollarSign from "lucide-svelte/icons/dollar-sign";
-    import Users from "lucide-svelte/icons/users";
-
+    import DataTable from "$lib/components/datatable/data-table.svelte";
+    import {createRender, createTable} from "svelte-headless-table";
+    import {addPagination, addSelectedRows, addSortBy, addTableFilter,} from "svelte-headless-table/plugins";
+    import {readable} from "svelte/store";
+    import DataTableActions from "$lib/components/datatable/data-table-actions.svelte";
+    import StudentLayout from "$lib/layouts/StudentLayout.svelte";
+    import DataTableCheckbox from "$lib/components/datatable/data-table-checkbox.svelte";
+    import Button from "$lib/components/ui/button/button.svelte";
+    import {ChevronRight} from "lucide-svelte";
     import {Badge} from "$lib/components/ui/badge/index.js";
-    import {Button} from "$lib/components/ui/button/index.js";
-    import DirectiveLayout from "$lib/layouts/DirectiveLayout.svelte";
-    import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "$lib/components/ui/card/index.js";
-    import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "$lib/components/ui/table/index.js";
-    import {Avatar, AvatarFallback, AvatarImage} from "$lib/components/ui/avatar/index.js";
+    /** @typedef {{[key: string]: string[]}} Schedule */
+    /** @type { Array<{id: number, subject: string, notes: number[], avg: number}> } */
+    export let notes = [];
+    export let scheduleRegistrationStart = "";
+    export let scheduleRegistrationEnd = "";
+    export let notesNumber = 0;
+
+    let table = createTable(readable(notes), {
+        page: addPagination(),
+        sort: addSortBy(),
+        filter: addTableFilter({
+            /** @param {{filterValue: string, value: string}} param0 */
+            fn: ({filterValue, value}) =>
+                value.toLowerCase().includes(filterValue.toLowerCase()),
+        }),
+        select: addSelectedRows(),
+    });
+
+    const actions = [
+        {
+            label: "Copy subject name",
+            /** @param {{name: string}} param0 */
+            onClick: ({name}) => {
+                window.navigator.clipboard.writeText(name);
+            },
+        },
+        {
+            label: "Copy subject code",
+            /** @param {{code: string}} param0 */
+            onClick: ({code}) => {
+                window.navigator.clipboard.writeText(code);
+            },
+        },
+        {
+            label: "Copy hours",
+            /** @param {{totalHours: number, practiceHours: number, theoryHours: number, labHours: number}} param0 */
+            onClick: ({totalHours, practiceHours, labHours, theoryHours}) => {
+                let hours = `Practice: ${practiceHours}h
+Theory: ${theoryHours}h
+Lab: ${labHours}h
+Total: ${totalHours}h`;
+                window.navigator.clipboard.writeText(hours);
+            },
+        },
+        {
+            label: "Copy careers",
+            /** @param {{careers: Array<{name: string}>}} param0 */
+            onClick: ({careers}) => {
+                const careersNames = careers.map(({name}) => name).join(", ");
+                window.navigator.clipboard.writeText(careersNames);
+            },
+        },
+        {
+            label: "Copy class schedule",
+            /** @param {{classSchedule: Schedule}} param0 */
+            onClick: ({classSchedule}) => {
+                const schedule = Object.entries(classSchedule).map(
+                    ([day, hours]) => `${day}: ${hours.join(", ")}`
+                );
+                window.navigator.clipboard.writeText(schedule.join("\n"));
+            },
+        },
+        {
+            label: "Edit",
+            /** @param {{id: number}} param0 */
+            onClick: ({id}) => {
+                window.location.href = `/directive/subjects/view?id=${id}`;
+            }
+        }
+    ];
+
+    table = createTable(readable(notes), {
+        page: addPagination(),
+        sort: addSortBy(),
+        filter: addTableFilter({
+            /** @param {{filterValue: string, value: string}} param0 */
+            fn: ({filterValue, value}) =>
+                value.toLowerCase().includes(filterValue.toLowerCase()),
+        }),
+        select: addSelectedRows(),
+    });
+
+    /** @type {import('svelte-headless-table').Column<{id: number, subject: string, notes: number[], avg: number}, {page: any, sort: any, filter: any, select: any }>[] } */
+    const noteColumns = [];
+    const cardinal = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"];
+    for (let i = 0; i < notesNumber; i++) {
+        noteColumns.push(
+            table.column({
+                accessor: ({notes}) => notes[i] ?? 0,
+                header: `${cardinal[i]} note`,
+            })
+        );
+    }
+
+    const columns = table.createColumns([
+        table.column({
+            accessor: "id",
+            header: (_, {pluginStates}) => {
+                const {allPageRowsSelected} = pluginStates.select;
+                return createRender(DataTableCheckbox, {
+                    checked: allPageRowsSelected,
+                });
+            },
+            cell: ({row}, {pluginStates}) => {
+                const {getRowState} = pluginStates.select;
+                const {isSelected} = getRowState(row);
+
+                return createRender(DataTableCheckbox, {
+                    checked: isSelected,
+                });
+            },
+            plugins: {
+                sort: {
+                    disable: true,
+                },
+                filter: {
+                    exclude: true,
+                },
+            },
+        }),
+        table.column({
+            accessor: ({subject}) => subject,
+            header: "Subject",
+        }),
+        ...noteColumns,
+        table.column({
+            accessor: (row) => row,
+            header: "Actions",
+            cell: ({value}) => {
+                return createRender(DataTableActions, {row: value, actions});
+            },
+            plugins: {
+                sort: {
+                    disable: true,
+                },
+                filter: {
+                    exclude: true,
+                },
+            },
+        }),
+    ]);
+
+    const scheduleStart = new Date(scheduleRegistrationStart);
+    const scheduleEnd = new Date(scheduleRegistrationEnd);
 </script>
 
-<DirectiveLayout title="Dashboard" description="Dashboard for Acme Inc." keywords="dashboard, acme, inc">
-    <div class="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-        <Card>
-            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle class="text-sm font-medium">Total Revenue</CardTitle>
-                <DollarSign class="h-4 w-4 text-muted-foreground"/>
-            </CardHeader>
-            <CardContent>
-                <div class="text-2xl font-bold">$45,231.89</div>
-                <p class="text-xs text-muted-foreground">+20.1% from last month</p>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle class="text-sm font-medium">Subscriptions</CardTitle>
-                <Users class="h-4 w-4 text-muted-foreground"/>
-            </CardHeader>
-            <CardContent>
-                <div class="text-2xl font-bold">+2350</div>
-                <p class="text-xs text-muted-foreground">+180.1% from last month</p>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle class="text-sm font-medium">Sales</CardTitle>
-                <CreditCard class="h-4 w-4 text-muted-foreground"/>
-            </CardHeader>
-            <CardContent>
-                <div class="text-2xl font-bold">+12,234</div>
-                <p class="text-xs text-muted-foreground">+19% from last month</p>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle class="text-sm font-medium">Active Now</CardTitle>
-                <Activity class="h-4 w-4 text-muted-foreground"/>
-            </CardHeader>
-            <CardContent>
-                <div class="text-2xl font-bold">+573</div>
-                <p class="text-xs text-muted-foreground">+201 since last hour</p>
-            </CardContent>
-        </Card>
+<StudentLayout title="Dashboard" description="Dashboard for Acme Inc." keywords="dashboard, acme, inc">
+  <section
+          class="flex flex-col !items-center justify-center max-w-full md:max-w-[90%] w-full sm:mx-auto p-3"
+  >
+    <div class="w-full flex justify-between items-center">
+      <h2
+              class="text-2xl md:text-3xl xl:text-4xl font-bold w-full text-left pb-1 md:pb-3 flex items-center gap-x-2"
+      >
+        Welcome, Henrry
+        {#if scheduleStart > new Date()}
+          <Badge variant="ghost" class="ml-2">
+            Schedule registration starts on {scheduleStart.toLocaleDateString()}
+          </Badge>
+        {:else if scheduleEnd < new Date()}
+          <Badge variant="destructive" class="ml-2">
+            Schedule registration ended on {scheduleEnd.toLocaleDateString()}
+          </Badge>
+        {:else}
+          <Badge variant="default" class="ml-2">
+            Schedule registration is open until {scheduleEnd.toLocaleDateString()}
+          </Badge>
+        {/if}
+
+      </h2>
+      <Button
+              variant="outline"
+              class="flex justify-center gap-x-3 items-center"
+              href="/directive/subjects/view?id=add"
+      >
+        Register my schedule
+        <ChevronRight class="w-6 h-6"/>
+      </Button>
     </div>
-    <div class="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
-        <Card class="xl:col-span-2">
-            <CardHeader class="flex flex-row items-center">
-                <div class="grid gap-2">
-                    <CardTitle>Transactions</CardTitle>
-                    <CardDescription>Recent transactions from your store.</CardDescription>
-                </div>
-                <Button href="##" size="sm" class="ml-auto gap-1">
-                    View All
-                    <ArrowUpRight class="h-4 w-4"/>
-                </Button>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Customer</TableHead>
-                            <TableHead class="xl:table.-column hidden">Type</TableHead>
-                            <TableHead class="xl:table.-column hidden">Status</TableHead>
-                            <TableHead class="xl:table.-column hidden">Date</TableHead>
-                            <TableHead class="text-right">Amount</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow>
-                            <TableCell>
-                                <div class="font-medium">Liam Johnson</div>
-                                <div class="hidden text-sm text-muted-foreground md:inline">
-                                    liam@example.com
-                                </div>
-                            </TableCell>
-                            <TableCell class="xl:table.-column hidden">Sale</TableCell>
-                            <TableCell class="xl:table.-column hidden">
-                                <Badge class="text-xs" variant="outline">Approved</Badge>
-                            </TableCell>
-                            <TableCell
-                                    class="md:table.-cell xl:table.-column hidden lg:hidden"
-                            >
-                                2023-06-23
-                            </TableCell>
-                            <TableCell class="text-right">$250.00</TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>
-                                <div class="font-medium">Olivia Smith</div>
-                                <div class="hidden text-sm text-muted-foreground md:inline">
-                                    olivia@example.com
-                                </div>
-                            </TableCell>
-                            <TableCell class="xl:table.-column hidden">Refund</TableCell>
-                            <TableCell class="xl:table.-column hidden">
-                                <Badge class="text-xs" variant="outline">Declined</Badge>
-                            </TableCell>
-                            <TableCell
-                                    class="md:table.-cell xl:table.-column hidden lg:hidden"
-                            >
-                                2023-06-24
-                            </TableCell>
-                            <TableCell class="text-right">$150.00</TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>
-                                <div class="font-medium">Noah Williams</div>
-                                <div class="hidden text-sm text-muted-foreground md:inline">
-                                    noah@example.com
-                                </div>
-                            </TableCell>
-                            <TableCell class="xl:table.-column hidden">
-                                Subscription
-                            </TableCell>
-                            <TableCell class="xl:table.-column hidden">
-                                <Badge class="text-xs" variant="outline">Approved</Badge>
-                            </TableCell>
-                            <TableCell
-                                    class="md:table.-cell xl:table.-column hidden lg:hidden"
-                            >
-                                2023-06-25
-                            </TableCell>
-                            <TableCell class="text-right">$350.00</TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>
-                                <div class="font-medium">Emma Brown</div>
-                                <div class="hidden text-sm text-muted-foreground md:inline">
-                                    emma@example.com
-                                </div>
-                            </TableCell>
-                            <TableCell class="xl:table.-column hidden">Sale</TableCell>
-                            <TableCell class="xl:table.-column hidden">
-                                <Badge class="text-xs" variant="outline">Approved</Badge>
-                            </TableCell>
-                            <TableCell
-                                    class="md:table.-cell xl:table.-column hidden lg:hidden"
-                            >
-                                2023-06-26
-                            </TableCell>
-                            <TableCell class="text-right">$450.00</TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>
-                                <div class="font-medium">Liam Johnson</div>
-                                <div class="hidden text-sm text-muted-foreground md:inline">
-                                    liam@example.com
-                                </div>
-                            </TableCell>
-                            <TableCell class="xl:table.-column hidden">Sale</TableCell>
-                            <TableCell class="xl:table.-column hidden">
-                                <Badge class="text-xs" variant="outline">Approved</Badge>
-                            </TableCell>
-                            <TableCell
-                                    class="md:table.-cell xl:table.-column hidden lg:hidden"
-                            >
-                                2023-06-27
-                            </TableCell>
-                            <TableCell class="text-right">$550.00</TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>Recent Sales</CardTitle>
-            </CardHeader>
-            <CardContent class="grid gap-8">
-                <div class="flex items-center gap-4">
-                    <Avatar class="hidden h-9 w-9 sm:flex">
-                        <AvatarImage src="/avatars/01.png" alt="Avatar"/>
-                        <AvatarFallback>OM</AvatarFallback>
-                    </Avatar>
-                    <div class="grid gap-1">
-                        <p class="text-sm font-medium leading-none">Olivia Martin</p>
-                        <p class="text-sm text-muted-foreground">olivia.martin@email.com</p>
-                    </div>
-                    <div class="ml-auto font-medium">+$1,999.00</div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <Avatar class="hidden h-9 w-9 sm:flex">
-                        <AvatarImage src="/avatars/02.png" alt="Avatar"/>
-                        <AvatarFallback>JL</AvatarFallback>
-                    </Avatar>
-                    <div class="grid gap-1">
-                        <p class="text-sm font-medium leading-none">Jackson Lee</p>
-                        <p class="text-sm text-muted-foreground">jackson.lee@email.com</p>
-                    </div>
-                    <div class="ml-auto font-medium">+$39.00</div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <Avatar class="hidden h-9 w-9 sm:flex">
-                        <AvatarImage src="/avatars/03.png" alt="Avatar"/>
-                        <AvatarFallback>IN</AvatarFallback>
-                    </Avatar>
-                    <div class="grid gap-1">
-                        <p class="text-sm font-medium leading-none">Isabella Nguyen</p>
-                        <p class="text-sm text-muted-foreground">isabella.nguyen@email.com</p>
-                    </div>
-                    <div class="ml-auto font-medium">+$299.00</div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <Avatar class="hidden h-9 w-9 sm:flex">
-                        <AvatarImage src="/avatars/04.png" alt="Avatar"/>
-                        <AvatarFallback>WK</AvatarFallback>
-                    </Avatar>
-                    <div class="grid gap-1">
-                        <p class="text-sm font-medium leading-none">William Kim</p>
-                        <p class="text-sm text-muted-foreground">will@email.com</p>
-                    </div>
-                    <div class="ml-auto font-medium">+$99.00</div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <Avatar class="hidden h-9 w-9 sm:flex">
-                        <AvatarImage src="/avatars/05.png" alt="Avatar"/>
-                        <AvatarFallback>SD</AvatarFallback>
-                    </Avatar>
-                    <div class="grid gap-1">
-                        <p class="text-sm font-medium leading-none">Sofia Davis</p>
-                        <p class="text-sm text-muted-foreground">sofia.davis@email.com</p>
-                    </div>
-                    <div class="ml-auto font-medium">+$39.00</div>
-                </div>
-            </CardContent>
-        </Card>
+    <div class="w-full">
+      {#if notes?.length === 0 || notes === null}
+        <p class="text-center text-lg font-semibold text-muted-foreground p-10">
+          No notes found, please register your schedule
+        </p>
+      {:else}
+        <DataTable {table} {columns}/>
+      {/if}
     </div>
-</DirectiveLayout>
+  </section>
+</StudentLayout>

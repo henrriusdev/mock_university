@@ -3,6 +3,11 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
@@ -22,37 +27,6 @@ func HashPassword(password string) (string, error) {
 func CheckPassword(hashedPassword, password string) bool {
 	// Compara la contraseña en texto plano con el hash
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) == nil
-}
-
-func ValidatePassword(password string) []string {
-	// Valida que la contraseña tenga al menos 6 caracteres, 1 mayúscula, 1 minúscula, 1 número, 1 caracter especial, minimo 8 caracteres de longitud y no contenga espacios
-	var errors []string
-
-	if len(password) < 8 {
-		errors = append(errors, "La contraseña debe tener al menos 8 caracteres")
-	}
-
-	if !regexp.MustCompile(`[A-Z]`).Match([]byte(password)) {
-		errors = append(errors, "La contraseña debe tener al menos una mayúscula")
-	}
-
-	if !regexp.MustCompile(`[a-z]`).Match([]byte(password)) {
-		errors = append(errors, "La contraseña debe tener al menos una minúscula")
-	}
-
-	if !regexp.MustCompile(`[0-9]`).Match([]byte(password)) {
-		errors = append(errors, "La contraseña debe tener al menos un número")
-	}
-
-	if !regexp.MustCompile(`[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]`).Match([]byte(password)) {
-		errors = append(errors, "La contraseña debe tener al menos un caracter especial")
-	}
-
-	if regexp.MustCompile(`\s`).Match([]byte(password)) {
-		errors = append(errors, "La contraseña no debe contener espacios")
-	}
-
-	return errors
 }
 
 func ValidateEmail(email string) bool {
@@ -134,4 +108,87 @@ func StructArrayToJson(dtos []interface{}) ([]map[string]interface{}, error) {
 	}
 
 	return result, nil
+}
+
+// Unmarshal takes a JSON string and unmarshals it into the provided target variable.
+func Unmarshal(data string, target interface{}) error {
+	return json.Unmarshal([]byte(data), target)
+}
+
+func StringSliceToIntSlice(slice []string) ([]int, error) {
+	var result []int
+
+	for _, s := range slice {
+		i, err := strconv.Atoi(s)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, i)
+	}
+
+	return result, nil
+}
+
+func ToPercentage(numberNotes int, r *http.Request) ([]float64, error) {
+	notes := make([]float64, numberNotes)
+	for j := 0; j < numberNotes; j++ {
+		note, err := strconv.Atoi(r.FormValue(fmt.Sprintf("note-%d", j+1)))
+		if err != nil {
+			return nil, err
+		}
+
+		notes[j] = float64(note) / 100
+	}
+
+	return notes, nil
+}
+
+func ParseFeeDates(numberFees int, r *http.Request) ([]time.Time, error) {
+	var feesDates []time.Time
+
+	for i := 0; i < numberFees; i++ {
+		feeDate, err := ParseDate(r.FormValue(fmt.Sprintf("payment-%d", i+1)))
+		if err != nil {
+			return nil, err
+		}
+
+		feesDates = append(feesDates, feeDate)
+	}
+
+	return feesDates, nil
+}
+
+func UploadAvatar(username string, handler *multipart.FileHeader) (string, error) {
+	filePath := "./uploads/" + username + "_avatar" + filepath.Ext(handler.Filename)
+	f, err := os.Create(filePath)
+	if err != nil {
+		err = os.MkdirAll("./uploads", os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+	}
+	defer f.Close()
+
+	file, err := handler.Open()
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	_, err = io.Copy(f, file)
+	if err != nil {
+		return "", err
+	}
+
+	return filePath, nil
+}
+
+func Average(notes []float64, percentages []float64) float64 {
+	var sum float64
+	for i, note := range notes {
+		sum += note * percentages[i]
+	}
+
+	return sum
 }

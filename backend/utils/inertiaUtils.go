@@ -3,7 +3,9 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	inertia "github.com/romsar/gonertia"
 	"log"
+	"net/http"
 	"os"
 	"path"
 )
@@ -35,4 +37,22 @@ func Vite(manifestPath, buildDir string) func(path string) (string, error) {
 		}
 		return "", fmt.Errorf("asset %q not found", p)
 	}
+}
+
+func LoginRedirect(role int, w http.ResponseWriter, r *http.Request, i *inertia.Inertia) {
+	var view string
+	switch role {
+	case 1:
+		view = "/directive"
+	case 2:
+		view = "/payments"
+	case 3:
+		view = "/control"
+	case 4, 5:
+		view = "/professor"
+	case 6:
+		view = "/student"
+	}
+
+	i.Redirect(w, r, view, 302)
 }

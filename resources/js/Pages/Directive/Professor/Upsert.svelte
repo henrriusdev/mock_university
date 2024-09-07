@@ -22,9 +22,18 @@
   /** @type {User | null} */
   export let user = null;
 
-  let year = professor?.birthDate ? new Date(professor?.birthDate).getFullYear() : new Date(2003, 1, 16).getFullYear();
-  let month = professor?.birthDate ? new Date(professor?.birthDate).getMonth() : new Date(2003, 1, 16).getMonth();
-  let day = professor?.birthDate ? new Date(professor?.birthDate).getDate() : new Date(2003, 1, 16).getDate();
+  /** @type {Array<{id: number, name: string}>} */
+  export let bosses = [];
+
+  let year = professor?.birthDate
+    ? new Date(professor?.birthDate).getFullYear()
+    : new Date(2003, 1, 16).getFullYear();
+  let month = professor?.birthDate
+    ? new Date(professor?.birthDate).getMonth()
+    : new Date(2003, 1, 16).getMonth();
+  let day = professor?.birthDate
+    ? new Date(professor?.birthDate).getDate()
+    : new Date(2003, 1, 16).getDate();
   let birthDate = new CalendarDate(year, month, day);
 
   /** @type {string | ArrayBuffer | null} */
@@ -80,7 +89,10 @@
             {/if}
           </h1>
         </div>
-        <form method="post" action="/directive/professors/view/submit" enctype="multipart/form-data"
+        <form
+          method="post"
+          action="/directive/professors/view/submit"
+          enctype="multipart/form-data"
           class="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8"
         >
           <div
@@ -98,15 +110,28 @@
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
-                  {#if professor?.id}
-                    <input type="hidden" name="id" value="{professor?.id}" />
-                  {/if}
+                    {#if professor?.id}
+                      <input type="hidden" name="id" value="{professor?.id}" />
+                    {/if}
                     <Label for="phone">Phone</Label>
                     <MaskInput
                       id="phone"
                       imask="{{ mask: '(000) 000-00-00' }}"
                       value="{professor?.phone ?? ''}"
                       name="phone"
+                    />
+                  </span>
+                  <span
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2 flex flex-col justify-between"
+                  >
+                    <Label for="boss">Boss</Label>
+                    <Combobox
+                      placeholder="Select the boss"
+                      options="{bosses.map(({ id, name }) => ({
+                        value: id.toString(),
+                        label: name,
+                      }))}"
+                      class="w-full"
                     />
                   </span>
                   <span
@@ -119,18 +144,6 @@
                       name="address"
                     />
                   </span>
-                </div>
-              </Card.Content>
-            </Card.Root>
-            <Card.Root>
-              <Card.Header>
-                <Card.Title>Personal information</Card.Title>
-                <Card.Description>
-                  Fill the form with the professor's personal information.
-                </Card.Description>
-              </Card.Header>
-              <Card.Content>
-                <div class="grid gap-4 lg:grid-cols-4">
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
@@ -162,8 +175,8 @@
               <Card.Header>
                 <Card.Title>Actions</Card.Title>
                 <Card.Description>
-                  Save or cancel the changes made to the professor. Also inactive
-                  the professor.
+                  Save or cancel the changes made to the professor. Also
+                  inactive the professor.
                 </Card.Description>
               </Card.Header>
               <Card.Content>
