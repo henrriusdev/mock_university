@@ -12,7 +12,6 @@
   import DatePicker from "$lib/components/DatePicker.svelte";
   import Textarea from "$lib/components/ui/textarea/textarea.svelte";
   import { identityMask } from "$lib/utils";
-  import * as Select from "$lib/components/ui/select/index.js";
   import Combobox from "$lib/components/Combobox.svelte";
   import { CalendarDate } from "@internationalized/date";
 

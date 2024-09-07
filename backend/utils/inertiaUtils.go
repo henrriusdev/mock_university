@@ -3,11 +3,12 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	inertia "github.com/romsar/gonertia"
 	"log"
 	"net/http"
 	"os"
 	"path"
+
+	inertia "github.com/romsar/gonertia"
 )
 
 func Vite(manifestPath, buildDir string) func(path string) (string, error) {
@@ -22,7 +23,6 @@ func Vite(manifestPath, buildDir string) func(path string) (string, error) {
 		Source string `json:"src"`
 	})
 	err = json.NewDecoder(f).Decode(&viteAssets)
-	// print content of viteAssets
 	for k, v := range viteAssets {
 		log.Printf("%s: %s\n", k, v.File)
 	}

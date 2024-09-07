@@ -1,17 +1,19 @@
 package repos
 
 import (
+	"net/http"
+	"time"
+
 	inertia "github.com/romsar/gonertia"
 	"mocku/backend/common"
 	"mocku/backend/ent"
 	"mocku/backend/ent/configuration"
 	"mocku/backend/ent/cycle"
-	"net/http"
-	"time"
 )
 
 func (r *Repo) UpdateNumberNotes(notesNumber int, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
-	_, err := r.DB.Configuration.Update().
+	_, err := r.DB.Configuration.
+		Update().
 		Where(configuration.HasCycleWith(cycle.Active(true))).
 		SetNumberNotes(notesNumber).
 		Save(req.Context())
@@ -25,7 +27,8 @@ func (r *Repo) UpdateNumberNotes(notesNumber int, i *inertia.Inertia, w http.Res
 }
 
 func (r *Repo) UpdateDates(startSubjects, endSubjects, cycleStart, cycleEnd time.Time, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
-	_, err := r.DB.Cycle.Update().
+	_, err := r.DB.Cycle.
+		Update().
 		Where(cycle.ActiveEQ(true)).
 		SetStartDate(cycleStart).
 		SetEndDate(cycleEnd).
@@ -36,7 +39,8 @@ func (r *Repo) UpdateDates(startSubjects, endSubjects, cycleStart, cycleEnd time
 		return err
 	}
 
-	_, err = r.DB.Configuration.Update().
+	_, err = r.DB.Configuration.
+		Update().
 		Where(configuration.HasCycleWith(cycle.ActiveEQ(true))).
 		SetStartRegistrationSubjects(startSubjects).
 		SetEndRegistrationSubjects(endSubjects).
@@ -51,7 +55,8 @@ func (r *Repo) UpdateDates(startSubjects, endSubjects, cycleStart, cycleEnd time
 }
 
 func (r *Repo) UpdateNumberFees(feesNumber int, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
-	_, err := r.DB.Configuration.Update().
+	_, err := r.DB.Configuration.
+		Update().
 		Where(configuration.HasCycleWith(cycle.Active(true))).
 		SetNumberFees(feesNumber).
 		Save(req.Context())
@@ -65,7 +70,8 @@ func (r *Repo) UpdateNumberFees(feesNumber int, i *inertia.Inertia, w http.Respo
 }
 
 func (r *Repo) GetConfiguration(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Configuration, error) {
-	config, err := r.DB.Configuration.Query().
+	config, err := r.DB.Configuration.
+		Query().
 		Where(configuration.HasCycleWith(cycle.Active(true))).
 		WithCycle().
 		First(req.Context())
@@ -79,7 +85,8 @@ func (r *Repo) GetConfiguration(i *inertia.Inertia, w http.ResponseWriter, req *
 }
 
 func (r *Repo) UpdateNotesPercentages(percentages []float64, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
-	_, err := r.DB.Configuration.Update().
+	_, err := r.DB.Configuration.
+		Update().
 		Where(configuration.HasCycleWith(cycle.Active(true))).
 		SetNotesPercentages(percentages).
 		Save(req.Context())
@@ -93,7 +100,8 @@ func (r *Repo) UpdateNotesPercentages(percentages []float64, i *inertia.Inertia,
 }
 
 func (r *Repo) UpdateFeeDates(payments []time.Time, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
-	_, err := r.DB.Configuration.Update().
+	_, err := r.DB.Configuration.
+		Update().
 		Where(configuration.HasCycleWith(cycle.Active(true))).
 		SetFeeDates(payments).
 		Save(req.Context())
@@ -107,7 +115,8 @@ func (r *Repo) UpdateFeeDates(payments []time.Time, i *inertia.Inertia, w http.R
 }
 
 func (r *Repo) GetCurrentCycle(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Cycle, error) {
-	current, err := r.DB.Cycle.Query().
+	current, err := r.DB.Cycle.
+		Query().
 		Where(cycle.ActiveEQ(true)).
 		First(req.Context())
 	if err != nil {
@@ -120,7 +129,8 @@ func (r *Repo) GetCurrentCycle(i *inertia.Inertia, w http.ResponseWriter, req *h
 }
 
 func (r *Repo) InactivateCycle(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
-	_, err := r.DB.Cycle.Update().
+	_, err := r.DB.Cycle.
+		Update().
 		Where(cycle.ActiveEQ(true)).
 		SetActive(false).
 		Save(req.Context())
@@ -134,7 +144,8 @@ func (r *Repo) InactivateCycle(i *inertia.Inertia, w http.ResponseWriter, req *h
 }
 
 func (r *Repo) NewCycle(name string, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Cycle, error) {
-	newCycle, err := r.DB.Cycle.Create().
+	newCycle, err := r.DB.Cycle.
+		Create().
 		SetActive(true).
 		SetName(name).
 		SetStartDate(time.Now()).
@@ -150,7 +161,8 @@ func (r *Repo) NewCycle(name string, i *inertia.Inertia, w http.ResponseWriter, 
 }
 
 func (r *Repo) NewConfiguration(currentCycle *ent.Cycle, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
-	_, err := r.DB.Configuration.Create().
+	_, err := r.DB.Configuration.
+		Create().
 		SetNumberNotes(0).
 		SetNumberFees(0).
 		SetStartRegistrationSubjects(time.Now()).

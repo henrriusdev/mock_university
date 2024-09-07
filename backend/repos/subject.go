@@ -1,11 +1,12 @@
 package repos
 
 import (
+	"net/http"
+
 	inertia "github.com/romsar/gonertia"
 	"mocku/backend/common"
 	"mocku/backend/ent"
 	"mocku/backend/ent/subject"
-	"net/http"
 )
 
 func (r *Repo) CreateSubject(subjectRequest common.SubjectRequestDto, carersIDs, subjectsIDs []int, classSchedule map[string][]string, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
@@ -13,7 +14,8 @@ func (r *Repo) CreateSubject(subjectRequest common.SubjectRequestDto, carersIDs,
 		return r.UpdateSubject(subjectRequest, carersIDs, subjectsIDs, classSchedule, i, w, req)
 	}
 
-	_, err := r.DB.Subject.Create().
+	_, err := r.DB.Subject.
+		Create().
 		SetName(subjectRequest.Name).
 		SetDescription(subjectRequest.Description).
 		SetCreditUnits(subjectRequest.CreditUnits).
@@ -38,7 +40,8 @@ func (r *Repo) CreateSubject(subjectRequest common.SubjectRequestDto, carersIDs,
 }
 
 func (r *Repo) GetSubjectById(id int, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Subject, error) {
-	sub, err := r.DB.Subject.Query().
+	sub, err := r.DB.Subject.
+		Query().
 		Where(subject.IDEQ(id)).
 		WithProfessor(func(query *ent.ProfessorQuery) { query.WithUser() }).
 		WithCareer().
@@ -54,7 +57,8 @@ func (r *Repo) GetSubjectById(id int, i *inertia.Inertia, w http.ResponseWriter,
 }
 
 func (r *Repo) UpdateSubject(subjectRequest common.SubjectRequestDto, careerIDs, subjectsIDs []int, classSchedule map[string][]string, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
-	_, err := r.DB.Subject.UpdateOneID(subjectRequest.ID).
+	_, err := r.DB.Subject.
+		UpdateOneID(subjectRequest.ID).
 		SetName(subjectRequest.Name).
 		SetDescription(subjectRequest.Description).
 		SetCreditUnits(subjectRequest.CreditUnits).
@@ -79,9 +83,13 @@ func (r *Repo) UpdateSubject(subjectRequest common.SubjectRequestDto, careerIDs,
 }
 
 func (r *Repo) GetSubjects(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) ([]*ent.Subject, error) {
-	subjectsArray, err := r.DB.Subject.Query().WithProfessor(func(query *ent.ProfessorQuery) {
-		query.WithUser()
-	}).WithCareer().All(req.Context())
+	subjectsArray, err := r.DB.Subject.
+		Query().
+		WithProfessor(func(query *ent.ProfessorQuery) {
+			query.WithUser()
+		}).
+		WithCareer().
+		All(req.Context())
 	if err != nil {
 		r.Logger.Printf("Error querying subjects: %v", err)
 		common.HandleServerErr(i, err).ServeHTTP(w, req)
@@ -92,9 +100,14 @@ func (r *Repo) GetSubjects(i *inertia.Inertia, w http.ResponseWriter, req *http.
 }
 
 func (r *Repo) GetSubjectsNotID(id int, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) ([]*ent.Subject, error) {
-	subjectsArray, err := r.DB.Subject.Query().Where(subject.IDNEQ(id)).WithProfessor(func(query *ent.ProfessorQuery) {
-		query.WithUser()
-	}).WithCareer().All(req.Context())
+	subjectsArray, err := r.DB.Subject.
+		Query().
+		Where(subject.IDNEQ(id)).
+		WithProfessor(func(query *ent.ProfessorQuery) {
+			query.WithUser()
+		}).
+		WithCareer().
+		All(req.Context())
 	if err != nil {
 		r.Logger.Printf("Error querying subjects: %v", err)
 		common.HandleServerErr(i, err).ServeHTTP(w, req)

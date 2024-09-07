@@ -1,7 +1,7 @@
 <script>
   /** @typedef {{id: number, identityCard: string, phone: string, totalAverage: number, birthDate: string, address: string, district: string, city: string, postalCode: string, creditUnitsAccumulated: number, semester: number, career: number}} Student */
-
   /** @typedef{{id: number, name: string, email: string, username: string, avatar: string, active: boolean}} User */
+
   import { Camera, ChevronLeft } from "lucide-svelte";
 
   import { Button } from "$lib/components/ui/button/index.js";
@@ -12,7 +12,6 @@
   import DatePicker from "$lib/components/DatePicker.svelte";
   import Textarea from "$lib/components/ui/textarea/textarea.svelte";
   import { identityMask } from "$lib/utils";
-  import * as Select from "$lib/components/ui/select/index.js";
   import Combobox from "$lib/components/Combobox.svelte";
   import { CalendarDate } from "@internationalized/date";
 
@@ -25,15 +24,20 @@
   /** @type {Array<{id: number, name: string}>} */
   export let careers = [];
 
-  // birth date is a string, so, parse it to a CalendarDate object, its format is 'YYYY-MM-DD'
-  let year = student?.birthDate ? new Date(student?.birthDate).getFullYear() : new Date(2003, 1, 16).getFullYear();
-  let month = student?.birthDate ? new Date(student?.birthDate).getMonth() : new Date(2003, 1, 16).getMonth();
-  let day = student?.birthDate ? new Date(student?.birthDate).getDate() : new Date(2003, 1, 16).getDate();
+  let year = student?.birthDate
+    ? new Date(student?.birthDate).getFullYear()
+    : new Date(2003, 1, 16).getFullYear();
+  let month = student?.birthDate
+    ? new Date(student?.birthDate).getMonth()
+    : new Date(2003, 1, 16).getMonth();
+  let day = student?.birthDate
+    ? new Date(student?.birthDate).getDate()
+    : new Date(2003, 1, 16).getDate();
   let birthDate = new CalendarDate(year, month, day);
 
   /** @type {string | ArrayBuffer | null} */
   let avatar = user?.avatar || "";
-  let career = student?.career?.toString() ?? ''
+  let career = student?.career?.toString() ?? "";
 
   /** @type {File | null} */
   let imageFile = null;
@@ -89,7 +93,10 @@
             {/if}
           </h1>
         </div>
-        <form method="post" action="/directive/students/view/submit" enctype="multipart/form-data"
+        <form
+          method="post"
+          action="/directive/students/view/submit"
+          enctype="multipart/form-data"
           class="grid gap-4 md:grid-cols-[1fr_250px] lg:grid-cols-3 lg:gap-8"
         >
           <div
@@ -107,9 +114,9 @@
                   <span
                     class="text-sm font-semibold text-muted-foreground lg:col-span-2"
                   >
-                  {#if student?.id}
-                    <input type="hidden" name="id" value="{student?.id}" />
-                  {/if}
+                    {#if student?.id}
+                      <input type="hidden" name="id" value="{student?.id}" />
+                    {/if}
                     <Label for="phone">Phone</Label>
                     <MaskInput
                       id="phone"
@@ -149,7 +156,7 @@
                       unmask="none"
                       imask="{{ mask: '00000' }}"
                       value="{student?.id !== 0
-                        ? student?.postalCode ?? ''
+                        ? (student?.postalCode ?? '')
                         : ''}"
                       name="postalCode"
                     />
@@ -254,10 +261,22 @@
                     />
                   </span>
                   <span
-                    class="text-sm font-semibold text-muted-foreground lg:col-span-2 flex flex-col justify-end gap-y-2">
+                    class="text-sm font-semibold text-muted-foreground lg:col-span-2 flex flex-col justify-end gap-y-2"
+                  >
                     <Label for="career">Career</Label>
-                    <Combobox options={careers.map((c) => ({ value: c.id.toString(), label: c.name }))} bind:value={career} />
-                    <input type="hidden" id="career" name="career" bind:value={career} />
+                    <Combobox
+                      options="{careers.map((c) => ({
+                        value: c.id.toString(),
+                        label: c.name,
+                      }))}"
+                      bind:value="{career}"
+                    />
+                    <input
+                      type="hidden"
+                      id="career"
+                      name="career"
+                      bind:value="{career}"
+                    />
                   </span>
                 </div>
               </Card.Content>

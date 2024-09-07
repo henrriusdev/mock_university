@@ -1,11 +1,12 @@
 package repos
 
 import (
+	"net/http"
+
 	inertia "github.com/romsar/gonertia"
 	"mocku/backend/common"
 	"mocku/backend/ent"
 	"mocku/backend/ent/professor"
-	"net/http"
 )
 
 func (r *Repo) CreateProfessor(professorRequest common.ProfessorRequestDto, user *ent.Users, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
@@ -13,7 +14,8 @@ func (r *Repo) CreateProfessor(professorRequest common.ProfessorRequestDto, user
 		return r.UpdateProfessor(professorRequest, i, w, req)
 	}
 
-	_, err := r.DB.Professor.Create().
+	_, err := r.DB.Professor.
+		Create().
 		SetAddress(professorRequest.Address).
 		SetBirthDate(professorRequest.BirthDate.Time).
 		SetPhone(professorRequest.Phone).
@@ -31,7 +33,8 @@ func (r *Repo) CreateProfessor(professorRequest common.ProfessorRequestDto, user
 }
 
 func (r *Repo) GetProfessorById(id int, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Professor, error) {
-	prof, err := r.DB.Professor.Query().
+	prof, err := r.DB.Professor.
+		Query().
 		Where(professor.IDEQ(id)).
 		WithUser().
 		First(req.Context())
@@ -45,7 +48,8 @@ func (r *Repo) GetProfessorById(id int, i *inertia.Inertia, w http.ResponseWrite
 }
 
 func (r *Repo) UpdateProfessor(professorRequest common.ProfessorRequestDto, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) error {
-	_, err := r.DB.Professor.UpdateOneID(professorRequest.ID).
+	_, err := r.DB.Professor.
+		UpdateOneID(professorRequest.ID).
 		SetAddress(professorRequest.Address).
 		SetBirthDate(professorRequest.BirthDate.Time).
 		SetPhone(professorRequest.Phone).
@@ -62,7 +66,10 @@ func (r *Repo) UpdateProfessor(professorRequest common.ProfessorRequestDto, i *i
 }
 
 func (r *Repo) GetProfessors(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) ([]*ent.Professor, error) {
-	professorsArray, err := r.DB.Professor.Query().WithUser().All(req.Context())
+	professorsArray, err := r.DB.Professor.
+		Query().
+		WithUser().
+		All(req.Context())
 	if err != nil {
 		r.Logger.Printf("Error querying professors: %v", err)
 		common.HandleServerErr(i, err).ServeHTTP(w, req)
@@ -73,7 +80,8 @@ func (r *Repo) GetProfessors(i *inertia.Inertia, w http.ResponseWriter, req *htt
 }
 
 func (r *Repo) GetProfessorsWithoutBoss(i *inertia.Inertia, w http.ResponseWriter, req *http.Request) ([]*ent.Professor, error) {
-	professorsArray, err := r.DB.Professor.Query().
+	professorsArray, err := r.DB.Professor.
+		Query().
 		Where(professor.Not(professor.HasBoss())).
 		WithUser().
 		All(req.Context())

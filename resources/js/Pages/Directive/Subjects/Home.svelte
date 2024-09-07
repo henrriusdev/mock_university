@@ -44,42 +44,42 @@
         window.navigator.clipboard.writeText(code);
       },
     },
-      {
-          label: "Copy hours",
-          /** @param {{totalHours: number, practiceHours: number, theoryHours: number, labHours: number}} param0 */
-          onClick: ({ totalHours,  practiceHours, labHours, theoryHours}) => {
-              let hours = `Practice: ${practiceHours}h
+    {
+      label: "Copy hours",
+      /** @param {{totalHours: number, practiceHours: number, theoryHours: number, labHours: number}} param0 */
+      onClick: ({ totalHours, practiceHours, labHours, theoryHours }) => {
+        let hours = `Practice: ${practiceHours}h
 Theory: ${theoryHours}h
 Lab: ${labHours}h
 Total: ${totalHours}h`;
-              window.navigator.clipboard.writeText(hours);
-          },
+        window.navigator.clipboard.writeText(hours);
       },
-      {
-          label: "Copy careers",
-          /** @param {{careers: Array<{name: string}>}} param0 */
-          onClick: ({ careers }) => {
-              const careersNames = careers.map(({ name }) => name).join(", ");
-              window.navigator.clipboard.writeText(careersNames);
-          },
+    },
+    {
+      label: "Copy careers",
+      /** @param {{careers: Array<{name: string}>}} param0 */
+      onClick: ({ careers }) => {
+        const careersNames = careers.map(({ name }) => name).join(", ");
+        window.navigator.clipboard.writeText(careersNames);
       },
-      {
-          label: "Copy class schedule",
-          /** @param {{classSchedule: Schedule}} param0 */
-          onClick: ({ classSchedule }) => {
-              const schedule = Object.entries(classSchedule).map(
-                  ([day, hours]) => `${day}: ${hours.join(", ")}`
-              );
-              window.navigator.clipboard.writeText(schedule.join("\n"));
-          },
+    },
+    {
+      label: "Copy class schedule",
+      /** @param {{classSchedule: Schedule}} param0 */
+      onClick: ({ classSchedule }) => {
+        const schedule = Object.entries(classSchedule).map(
+          ([day, hours]) => `${day}: ${hours.join(", ")}`
+        );
+        window.navigator.clipboard.writeText(schedule.join("\n"));
       },
-      {
-          label:"Edit",
-          /** @param {{id: number}} param0 */
-          onClick: ({ id }) => {
-              window.location.href = `/directive/subjects/view?id=${id}`;
-          }
-      }
+    },
+    {
+      label: "Edit",
+      /** @param {{id: number}} param0 */
+      onClick: ({ id }) => {
+        window.location.href = `/directive/subjects/view?id=${id}`;
+      },
+    },
   ];
 
   table = createTable(readable(subjects), {
@@ -130,18 +130,18 @@ Total: ${totalHours}h`;
     table.column({
       accessor: ({ creditUnits }) => creditUnits,
       header: "C.U",
-        plugins: {
-            sort: {
-                disable: true,
-            },
-        }
+      plugins: {
+        sort: {
+          disable: true,
+        },
+      },
     }),
     table.column({
       accessor: ({ semester }) => semester,
       header: "Semester",
     }),
     table.column({
-      accessor: ({careers}) => {
+      accessor: ({ careers }) => {
         const careersNames = careers.map(({ name }) => name).join(", ");
         if (careersNames.length > 50) {
           return careersNames.slice(0, 30) + "...";
@@ -153,73 +153,73 @@ Total: ${totalHours}h`;
     table.column({
       accessor: ({ practiceHours }) => practiceHours,
       header: "P.H",
-        plugins: {
-            sort: {
-                disable: true,
-            },
-        }
+      plugins: {
+        sort: {
+          disable: true,
+        },
+      },
     }),
     table.column({
       accessor: ({ theoryHours }) => theoryHours,
       header: "T.H",
-        plugins: {
-            sort: {
-                disable: true,
-            },
-        }
+      plugins: {
+        sort: {
+          disable: true,
+        },
+      },
     }),
     table.column({
       accessor: ({ labHours }) => labHours,
       header: "L.H",
-        plugins: {
-            sort: {
-                disable: true,
-            },
-        }
+      plugins: {
+        sort: {
+          disable: true,
+        },
+      },
     }),
-      table.column({
-          accessor: ({ totalHours }) => totalHours,
-          header: "Total",
-          plugins: {
-              sort: {
-                  disable: true,
-              },
-          }
-      }),
-      table.column({
-          accessor: ({ classSchedule }) => {
-              if (classSchedule === undefined) {
-                  return "No schedule";
-              }
-              const schedule = Object.entries(classSchedule).map(
-                  ([day, hours]) => `${day}: ${hours.join("-")}`
-              );
-              if (schedule.join(", ").length > 50) {
-                  return schedule.join(", ").slice(0, 30) + "...";
-              }
+    table.column({
+      accessor: ({ totalHours }) => totalHours,
+      header: "Total",
+      plugins: {
+        sort: {
+          disable: true,
+        },
+      },
+    }),
+    table.column({
+      accessor: ({ classSchedule }) => {
+        if (classSchedule === undefined) {
+          return "No schedule";
+        }
+        const schedule = Object.entries(classSchedule).map(
+          ([day, hours]) => `${day}: ${hours.join("-")}`
+        );
+        if (schedule.join(", ").length > 50) {
+          return schedule.join(", ").slice(0, 30) + "...";
+        }
 
-              return schedule.join(", ");
-          },
-          header: "Schedule",
-          cell: ({ value }) => {
-              return value.replace(/, /g, "\n");
-          },
-      }),
-      table.column({
-          accessor: (row) => row,
-          header: "Actions",
-          cell: ({ value }) => {
-              return createRender(DataTableActions, { row: value, actions });
-          },
-          plugins: {
-              sort: {
-                  disable: true,
-              },
-              filter: {
-                  exclude: true,
-              },
-          },
-      }),
+        return schedule.join(", ");
+      },
+      header: "Schedule",
+      cell: ({ value }) => {
+        return value.replace(/, /g, "\n");
+      },
+    }),
+    table.column({
+      accessor: (row) => row,
+      header: "Actions",
+      cell: ({ value }) => {
+        return createRender(DataTableActions, { row: value, actions });
+      },
+      plugins: {
+        sort: {
+          disable: true,
+        },
+        filter: {
+          exclude: true,
+        },
+      },
+    }),
   ]);
 </script>
 
