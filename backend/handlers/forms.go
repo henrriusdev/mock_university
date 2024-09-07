@@ -1,9 +1,13 @@
 package handlers
 
 import (
+	"github.com/golang-jwt/jwt/v5"
+	"mocku/backend/ent"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"mocku/backend/common"
 	"mocku/backend/utils"
@@ -45,18 +49,34 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 		}
 
 		if !utils.CheckPassword(user.Password, formData.Password) {
-			err = i.Render(c.Response().Writer, c.Request(), "Auth/Login", inertia.Props{
-				"careers": careersArray,
-				"error":   "Invalid credentials",
-			})
-			if err != nil {
-				h.Logger.Printf("Error rendering login page: %v", err)
-				common.HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
-				return nil
-			}
+			return h.invalidCredentials(i, c.Response().Writer, c.Request(), careersArray)
+		}
 
+		claims := jwt.MapClaims{
+			"user_id":  user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+			"exp":      time.Now().Add(24 * time.Hour).Unix(), // Expira en 24 horas
+		}
+
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+		tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+		if err != nil {
+			h.Logger.Printf("Error generating JWT: %v", err)
+			common.HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
 			return nil
 		}
+
+		// Almacenar el JWT en una cookie segura
+		c.SetCookie(&http.Cookie{
+			Name:     "jwt",
+			Value:    tokenString,
+			Expires:  time.Now().Add(5 * time.Hour),
+			HttpOnly: true,
+			Secure:   true,
+			Path:     "/",
+		})
 
 		utils.LoginRedirect(user.Edges.Role.ID, c.Response().Writer, c.Request(), i)
 
@@ -64,6 +84,18 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 	}
 
 	return fn
+}
+
+func (h *Handler) invalidCredentials(i *inertia.Inertia, w http.ResponseWriter, r *http.Request, careersArray []*ent.Careers) error {
+	err := i.Render(w, r, "Auth/Login", inertia.Props{
+		"careers": careersArray,
+		"error":   "Invalid credentials",
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (h *Handler) SettingsNotesPost(i *inertia.Inertia) echo.HandlerFunc {
