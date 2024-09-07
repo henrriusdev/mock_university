@@ -50,7 +50,7 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 			return h.invalidCredentials(i, c.Response().Writer, c.Request(), careersArray)
 		}
 
-		tokenString, err := utils.GenerateJWT(user.ID, user.Username, user.Email, user.Edges.Role.Name)
+		tokenString, err := utils.GenerateJWT(user.ID, user.Name, user.Email, user.Edges.Role.Name)
 		if err != nil {
 			return c.Redirect(http.StatusFound, "/login?error=token generation failed")
 		}

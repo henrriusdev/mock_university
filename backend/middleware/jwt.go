@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -45,11 +46,11 @@ func JWTMiddleware() echo.MiddlewareFunc {
 
 			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 				if isTokenExpired(claims) {
-					return c.Redirect(http.StatusFound, "/login?error=expired session")
+					return c.Redirect(http.StatusFound, "/login?error=expired")
 				}
 
 				c.Set("user_id", claims["user_id"])
-				c.Set("username", claims["username"])
+				c.Set("name", claims["name"])
 				c.Set("email", claims["email"])
 				c.Set("role", claims["role"])
 			} else {
@@ -64,6 +65,7 @@ func JWTMiddleware() echo.MiddlewareFunc {
 // Verifica que el rol del usuario coincida con el requerido
 func roleIsAuthorized(c echo.Context, requiredRole string) bool {
 	role := c.Get("role")
+	fmt.Println(role, requiredRole)
 	return strings.ToLower(role.(string)) == strings.ToLower(requiredRole)
 }
 

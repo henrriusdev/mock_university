@@ -192,13 +192,13 @@ func Average(notes []float64, percentages []float64) float64 {
 	return sum
 }
 
-func GenerateJWT(userID int, username, email, role string) (string, error) {
+func GenerateJWT(userID int, name, email, role string) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id":  userID,
-		"username": username,
-		"email":    email,
-		"role":     role,
-		"exp":      time.Now().Add(24 * time.Hour).Unix(), // Expira en 24 horas
+		"user_id": userID,
+		"name":    name,
+		"email":   email,
+		"role":    role,
+		"exp":     time.Now().Add(5 * time.Hour).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

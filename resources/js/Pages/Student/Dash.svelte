@@ -15,6 +15,7 @@
     export let scheduleRegistrationStart = "";
     export let scheduleRegistrationEnd = "";
     export let notesNumber = 0;
+    export let userName = "";
 
     let table = createTable(readable(notes), {
         page: addPagination(),
@@ -157,13 +158,13 @@ Total: ${totalHours}h`;
 
 <StudentLayout title="Dashboard" description="Dashboard for Acme Inc." keywords="dashboard, acme, inc">
   <section
-          class="flex flex-col !items-center justify-center max-w-full md:max-w-[90%] w-full sm:mx-auto p-3"
+          class="flex flex-col !items-start justify-center max-w-full md:max-w-[90%] w-full sm:mx-auto p-3"
   >
-    <div class="w-full flex justify-between items-center">
+    <div class="w-full flex justify-between items-start">
       <h2
-              class="text-2xl md:text-3xl xl:text-4xl font-bold w-full text-left pb-1 md:pb-3 flex items-center gap-x-2"
+              class="text-2xl md:text-3xl xl:text-4xl font-bold w-full text-left pb-1 md:pb-3 flex items-start flex-col gap-y-2"
       >
-        Welcome, Henrry
+        <span class="text-capitalize">Welcome, {userName}!</span>
         {#if scheduleStart > new Date()}
           <Badge variant="ghost" class="ml-2">
             Schedule registration starts on {scheduleStart.toLocaleDateString()}

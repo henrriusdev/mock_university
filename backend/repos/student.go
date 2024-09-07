@@ -1,6 +1,7 @@
 package repos
 
 import (
+	"mocku/backend/ent/users"
 	"net/http"
 
 	inertia "github.com/romsar/gonertia"
@@ -91,4 +92,20 @@ func (r *Repo) GetStudents(i *inertia.Inertia, w http.ResponseWriter, req *http.
 	}
 
 	return students, nil
+}
+
+func (r *Repo) GetStudentByUserId(userId int, i *inertia.Inertia, w http.ResponseWriter, req *http.Request) (*ent.Student, error) {
+	st, err := r.DB.Student.
+		Query().
+		Where(student.HasUserWith(users.IDEQ(userId))).
+		WithUser().
+		WithCareer().
+		First(req.Context())
+	if err != nil {
+		r.Logger.Printf("Error querying student: %v", err)
+		common.HandleServerErr(i, err).ServeHTTP(w, req)
+		return nil, err
+	}
+
+	return st, nil
 }
