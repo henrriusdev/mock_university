@@ -164,7 +164,10 @@ func (h *Handler) StudentDash(i *inertia.Inertia) echo.HandlerFunc {
 	fn := func(c echo.Context) error {
 		w, r := c.Response().Writer, c.Request()
 
-		userID := c.Get("user_id").(int)
+		user := c.Get("user_id").(float64)
+		userID := int(user)
+
+		userName := c.Get("name").(string)
 
 		config, err := h.Repo.GetConfiguration(i, w, r)
 		if err != nil {
@@ -191,6 +194,7 @@ func (h *Handler) StudentDash(i *inertia.Inertia) echo.HandlerFunc {
 			"notesNumber":               config.NumberNotes,
 			"scheduleRegistrationStart": utils.FormatDate(config.StartRegistrationSubjects),
 			"scheduleRegistrationEnd":   utils.FormatDate(config.EndRegistrationSubjects),
+			"userName":                  userName,
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering student dash: %v", err)
