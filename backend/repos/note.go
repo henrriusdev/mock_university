@@ -20,7 +20,7 @@ func (r *Repo) GetStudentNotes(id int, i *inertia.Inertia, w http.ResponseWriter
 
 	notes, err := r.DB.Note.
 		Query().
-		Where(note.HasStudentWith(student.ID(id))).
+		Where(note.HasStudentWith(student.ID(st.ID))).
 		All(req.Context())
 
 	if err != nil {
