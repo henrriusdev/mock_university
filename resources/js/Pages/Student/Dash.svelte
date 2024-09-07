@@ -15,10 +15,13 @@
     import Button from "$lib/components/ui/button/button.svelte";
     import { ChevronRight } from "lucide-svelte";
     /** @typedef {{[key: string]: string[]}} Schedule */
-    /** @type { Array<{id: number, name: string, creditUnits: number, semester: number, careers: Array<{id: number, name: string}>, code: string, practiceHours: number, theoryHours: number, labHours: number, totalHours: number, classSchedule: Schedule }>} */
-    export let subjects = [];
+    /** @type { Array<{id: number, subject: string, notes: number[], avg: number}> } */
+    export let notes = [];
+    export let scheduleRegistrationStart = "";
+    export let scheduleRegistrationEnd = "";
+    export let notesNumber = 0;
 
-    let table = createTable(readable(subjects), {
+    let table = createTable(readable(notes), {
         page: addPagination(),
         sort: addSortBy(),
         filter: addTableFilter({
@@ -82,7 +85,7 @@ Total: ${totalHours}h`;
         }
     ];
 
-    table = createTable(readable(subjects), {
+    table = createTable(readable(notes), {
         page: addPagination(),
         sort: addSortBy(),
         filter: addTableFilter({
@@ -92,6 +95,18 @@ Total: ${totalHours}h`;
         }),
         select: addSelectedRows(),
     });
+
+    /** @type {import('svelte-headless-table').Column<{id: number, subject: string, notes: number[], avg: number}, {page: any, sort: any, filter: any, select: any }>[] } */
+    const noteColumns = [];
+    const cardinal = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"];
+    for (let i = 0; i < notesNumber; i++) {
+        noteColumns.push(
+            table.column({
+                accessor: ({ notes }) => notes[i] ?? 0,
+                header: `${cardinal[i]} note`,
+            })
+        );
+    }
 
     const columns = table.createColumns([
         table.column({
@@ -120,91 +135,10 @@ Total: ${totalHours}h`;
             },
         }),
         table.column({
-            accessor: ({ name }) => name,
+            accessor: ({ subject }) => subject,
             header: "Subject",
         }),
-        table.column({
-            accessor: ({ code }) => code,
-            header: "Code",
-        }),
-        table.column({
-            accessor: ({ creditUnits }) => creditUnits,
-            header: "C.U",
-            plugins: {
-                sort: {
-                    disable: true,
-                },
-            }
-        }),
-        table.column({
-            accessor: ({ semester }) => semester,
-            header: "Semester",
-        }),
-        table.column({
-            accessor: ({careers}) => {
-                const careersNames = careers.map(({ name }) => name).join(", ");
-                if (careersNames.length > 50) {
-                    return careersNames.slice(0, 30) + "...";
-                }
-                return careersNames;
-            },
-            header: "Careers",
-        }),
-        table.column({
-            accessor: ({ practiceHours }) => practiceHours,
-            header: "P.H",
-            plugins: {
-                sort: {
-                    disable: true,
-                },
-            }
-        }),
-        table.column({
-            accessor: ({ theoryHours }) => theoryHours,
-            header: "T.H",
-            plugins: {
-                sort: {
-                    disable: true,
-                },
-            }
-        }),
-        table.column({
-            accessor: ({ labHours }) => labHours,
-            header: "L.H",
-            plugins: {
-                sort: {
-                    disable: true,
-                },
-            }
-        }),
-        table.column({
-            accessor: ({ totalHours }) => totalHours,
-            header: "Total",
-            plugins: {
-                sort: {
-                    disable: true,
-                },
-            }
-        }),
-        table.column({
-            accessor: ({ classSchedule }) => {
-                if (classSchedule === undefined) {
-                    return "No schedule";
-                }
-                const schedule = Object.entries(classSchedule).map(
-                    ([day, hours]) => `${day}: ${hours.join("-")}`
-                );
-                if (schedule.join(", ").length > 50) {
-                    return schedule.join(", ").slice(0, 30) + "...";
-                }
-
-                return schedule.join(", ");
-            },
-            header: "Schedule",
-            cell: ({ value }) => {
-                return value.replace(/, /g, "\n");
-            },
-        }),
+        ...noteColumns,
         table.column({
             accessor: (row) => row,
             header: "Actions",
@@ -221,11 +155,12 @@ Total: ${totalHours}h`;
             },
         }),
     ]);
+
+    const scheduleStart = new Date(scheduleRegistrationStart);
+    const scheduleEnd = new Date(scheduleRegistrationEnd);
 </script>
 
-
 <StudentLayout title="Dashboard" description="Dashboard for Acme Inc." keywords="dashboard, acme, inc">
-
   <section
           class="flex flex-col !items-center justify-center max-w-full md:max-w-[90%] w-full sm:mx-auto p-3"
   >
@@ -235,19 +170,32 @@ Total: ${totalHours}h`;
       >
         Welcome
       </h2>
+      {#if scheduleStart > new Date()}
+        <p class="text-lg font-semibold text-muted-foreground">
+          Your schedule registration starts on {scheduleStart.toLocaleDateString()}
+        </p>
+      {:else if scheduleEnd < new Date()}
+        <p class="text-lg font-semibold text-muted-foreground">
+          Your schedule registration ended on {scheduleEnd.toLocaleDateString()}
+        </p>
+      {:else}
+        <p class="text-lg font-semibold text-muted-foreground">
+          Your schedule registration is open until {scheduleEnd.toLocaleDateString()}
+        </p>
+      {/if}
       <Button
               variant="outline"
               class="flex justify-center gap-x-3 items-center"
               href="/directive/subjects/view?id=add"
       >
-        Add subject
+        Register my schedule
         <ChevronRight class="w-6 h-6" />
       </Button>
     </div>
     <div class="w-full">
-      {#if subjects?.length === 0 || subjects === null}
+      {#if notes?.length === 0 || notes === null}
         <p class="text-center text-lg font-semibold text-muted-foreground p-10">
-          No subjects found. Add one.
+          No notes found, please register your schedule
         </p>
       {:else}
         <DataTable {table} {columns} />

@@ -144,3 +144,10 @@ type SubjectRequestDto struct {
 type Date struct {
 	time.Time
 }
+
+type NoteDto struct {
+	ID      int       `json:"id"`
+	Subject string    `json:"subject"`
+	Notes   []float64 `json:"notes"`
+	Average float64   `json:"avg"`
+}
