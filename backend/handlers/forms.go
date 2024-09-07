@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"github.com/golang-jwt/jwt/v5"
 	"mocku/backend/ent"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -52,21 +50,20 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 			return h.invalidCredentials(i, c.Response().Writer, c.Request(), careersArray)
 		}
 
-		claims := jwt.MapClaims{
-			"user_id":  user.ID,
-			"username": user.Username,
-			"email":    user.Email,
-			"exp":      time.Now().Add(24 * time.Hour).Unix(), // Expira en 24 horas
-		}
-
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-		tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+		tokenString, err := utils.GenerateJWT(user.ID, user.Username, user.Email, user.Edges.Role.Name)
 		if err != nil {
-			h.Logger.Printf("Error generating JWT: %v", err)
-			common.HandleServerErr(i, err).ServeHTTP(c.Response().Writer, c.Request())
-			return nil
+			return c.Redirect(http.StatusFound, "/login?error=token generation failed")
 		}
+
+		// Almacenar el JWT en una cookie segura
+		c.SetCookie(&http.Cookie{
+			Name:     "jwt",
+			Value:    tokenString,
+			Expires:  time.Now().Add(24 * time.Hour),
+			HttpOnly: true,
+			Secure:   true,
+			Path:     "/",
+		})
 
 		// Almacenar el JWT en una cookie segura
 		c.SetCookie(&http.Cookie{
