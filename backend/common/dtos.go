@@ -88,21 +88,21 @@ type SubjectDto struct {
 }
 
 type StudentRequestDto struct {
-	ID                     int       `form:"id"`
-	Phone                  string    `form:"phone"`
-	District               string    `form:"district"`
-	City                   string    `form:"city"`
-	Address                string    `form:"address"`
-	IdentityCard           string    `form:"identityCard"`
-	PostalCode             int       `form:"postalCode"`
-	CreditUnitsAccumulated int       `form:"creditUnitsAccumulated"`
-	Semester               int       `form:"semester"`
-	TotalAverage           float64   `form:"totalAverage"`
-	BirthDate              time.Time `form:"birthDate"`
-	CareerId               int       `form:"career"`
-	Name                   string    `form:"name"`
-	Email                  string    `form:"email"`
-	Username               string    `form:"username"`
+	ID                     int     `form:"id"`
+	Phone                  string  `form:"phone"`
+	District               string  `form:"district"`
+	City                   string  `form:"city"`
+	Address                string  `form:"address"`
+	IdentityCard           string  `form:"identityCard"`
+	PostalCode             int     `form:"postalCode"`
+	CreditUnitsAccumulated int     `form:"creditUnitsAccumulated"`
+	Semester               int     `form:"semester"`
+	TotalAverage           float64 `form:"totalAverage"`
+	BirthDate              Date    `form:"birthDate"`
+	CareerId               int     `form:"career"`
+	Name                   string  `form:"name"`
+	Email                  string  `form:"email"`
+	Username               string  `form:"username"`
 }
 
 type CareerRequestDto struct {
@@ -113,15 +113,15 @@ type CareerRequestDto struct {
 }
 
 type ProfessorRequestDto struct {
-	ID           int       `form:"id"`
-	IdentityCard string    `form:"identityCard"`
-	Name         string    `form:"name"`
-	Email        string    `form:"email"`
-	Phone        string    `form:"phone"`
-	Username     string    `form:"username"`
-	BirthDate    time.Time `form:"birthDate"`
-	Address      string    `form:"address"`
-	BossId       *int      `form:"bossId"`
+	ID           int    `form:"id"`
+	IdentityCard string `form:"identityCard"`
+	Name         string `form:"name"`
+	Email        string `form:"email"`
+	Phone        string `form:"phone"`
+	Username     string `form:"username"`
+	BirthDate    Date   `form:"birthDate"`
+	Address      string `form:"address"`
+	BossId       *int   `form:"bossId"`
 }
 
 type SubjectRequestDto struct {
@@ -139,4 +139,8 @@ type SubjectRequestDto struct {
 	ProfessorId   int    `form:"professorId"`
 	CareerIds     string `form:"careers"`
 	PreqIds       string `form:"prerequisites"`
+}
+
+type Date struct {
+	time.Time
 }
