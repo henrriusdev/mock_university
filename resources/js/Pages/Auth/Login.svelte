@@ -9,12 +9,22 @@
 
   /** @type {string} */
   export let error = "";
+  console.log(error);
+
+
+  $: if (error === "expired") {
+    error = "Your session has expired. Please login again";
+  } else if (error === "invalid credentials") {
+    error = "Invalid email or password";
+  } else if (error === "error generating token") {
+    error = "An error occurred while generating your token. Please try again";
+  }
 
   $: if (error) {
     setTimeout(() => {
       error = "";
       window.history.replaceState({}, "", "/login");
-    }, 2000);
+    }, 4000);
   }
 </script>
 
