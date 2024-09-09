@@ -43,60 +43,84 @@
         return Math.ceil((end - start) / 30); // Cada fila representa 30 minutos
     }
 
-    // Generar un color único para cada materia
+    // Generar un color pastel dinámico basado en el ID
     /**
      * @param {number} id
      * @returns {string}
      */
     function generateColor(id) {
-        const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#FFA133', '#33FFA5', '#A533FF'];
-        return colors[id % colors.length];
+        const hue = id * 137.508; // Constante irracional para distribuir colores uniformemente
+        return `hsl(${hue}, 60%, 80%)`; // Colores pastel con saturación baja y luminosidad alta
     }
 
-    // Verificar si varias materias se deben mostrar en la hora y día actual
+    // Preprocesar los datos para crear una lista plana de celdas (días y horas)
     /**
      * @param {ScheduleSubjectDto[]} subjects
-     * @param {string} day
-     * @param {string} currentHour
-     * @returns {ScheduleSubjectDto[]}
+     * @returns {Array<{day: string, hour: string, subject: ScheduleSubjectDto | null}>}
      */
-    function getSubjectsForTime(subjects, day, currentHour) {
-        return subjects.filter(subject => {
-            const schedule = subject.classSchedule[day.toLowerCase()];
-            if (schedule && schedule.length === 2) {
-                const [startTime, endTime] = schedule;
+    function processSchedule(subjects) {
+        /** @type {Array<{day: string, hour: string, subject: ScheduleSubjectDto | null}>} */
+        let scheduleCells = [];
 
-                // Verificar si el currentHour cae dentro del rango de startTime y endTime
-                const currentTimeMinutes = timeToMinutes(currentHour);
-                const startTimeMinutes = timeToMinutes(startTime);
-                const endTimeMinutes = timeToMinutes(endTime);
+        // Recorremos horas y días, creando celdas planas con su contenido
+        hours.forEach(hour => {
+            days.forEach(day => {
+                /** @type {{day: string, hour: string, subject: ScheduleSubjectDto | null}} */
+                const cell = { day, hour, subject: null }; // Inicializamos cada celda con nulo
 
-                return currentTimeMinutes >= startTimeMinutes && currentTimeMinutes < endTimeMinutes;
-            }
-            return false;
+                subjects.forEach(subject => {
+                    if (subject.classSchedule[day.toLowerCase()]) {
+                        const [startTime, endTime] = subject.classSchedule[day.toLowerCase()];
+                        const start = timeToMinutes(startTime);
+                        const end = timeToMinutes(endTime);
+                        const hourInMinutes = timeToMinutes(hour);
+
+                        if (hourInMinutes >= start && hourInMinutes < end) {
+
+                            cell.subject = subject; // Asignamos la materia a la celda correcta
+                        }
+                    }
+                });
+
+                scheduleCells.push(cell); // Agregamos la celda a la lista plana
+            });
         });
+
+        return scheduleCells;
     }
 
-    // Marcar las horas ocupadas por una materia en occupiedHours
+    // Procesar los datos antes de renderizar
+    let scheduleCells = processSchedule(subjects);
+
+    // Mantenemos un registro de las horas ocupadas
+    let occupiedCells = new Set();
+
     /**
-     * @param {Set<string>} occupiedHours
+     * @param {string} day
+     * @param {string} hour
+     * @returns {boolean}
+     */
+    function isCellOccupied(day, hour) {
+        return occupiedCells.has(`${day}-${hour}`);
+    }
+
+    /**
      * @param {string} day
      * @param {string} startTime
      * @param {string} endTime
-     * @returns {Set<string>}
+     * @returns {string}
      */
-    function markOccupiedHours(occupiedHours, day, startTime, endTime) {
-        const start = timeToMinutes(startTime);
-        const end = timeToMinutes(endTime);
+    function markCellOccupied(day, startTime, endTime) {
+        const startMinutes = timeToMinutes(startTime);
+        const endMinutes = timeToMinutes(endTime);
 
         hours.forEach(hour => {
-            const time = timeToMinutes(hour);
-            if (time >= start && time < end) {
-                occupiedHours.add(day + hour);
+            const hourInMinutes = timeToMinutes(hour);
+            if (hourInMinutes >= startMinutes && hourInMinutes < endMinutes) {
+                occupiedCells.add(`${day}-${hour}`);
             }
         });
-
-        return occupiedHours;
+        return '';
     }
 </script>
 
@@ -118,41 +142,30 @@
     </Table.Header>
 
     <Table.Body>
+      <!-- Iteramos sobre las celdas preprocesadas sin bucles anidados -->
       {#each hours as hour}
         <Table.Row>
           <!-- Mostrar la hora de la fila -->
           <Table.Cell class="font-medium">{hour}</Table.Cell>
 
-          <!-- Lista para rastrear las horas ocupadas -->
-          {@const occupiedHours = new Set()}
-
           {#each days as day}
-            {#if !occupiedHours.has(day + hour)}
-              {@const subjectInfos = getSubjectsForTime(subjects, day, hour)}
+            {@const cell = scheduleCells.find(cell => cell.day === day && cell.hour === hour)}
+            {#if cell && cell.subject && !isCellOccupied(day, hour)}
+              <!-- Marcar las horas ocupadas por esta celda -->
+              {markCellOccupied(day, cell.subject.classSchedule[day.toLowerCase()][0], cell.subject.classSchedule[day.toLowerCase()][1])}
 
-              {#if subjectInfos.length > 0}
-                <!-- Marcar las horas cubiertas por cada materia como ocupadas -->
-                {#each subjectInfos as subjectInfo}
-                  {@const one = markOccupiedHours(occupiedHours, day, subjectInfo.classSchedule[day.toLowerCase()][0], subjectInfo.classSchedule[day.toLowerCase()][1])}
-
-                  <!-- Mostrar la materia -->
-                  <Table.Cell
-                          rowspan={calculateRowSpan(subjectInfo.classSchedule[day.toLowerCase()][0], subjectInfo.classSchedule[day.toLowerCase()][1])}
-                          class="relative" style="background-color: {generateColor(subjectInfo.id)};">
-                    <div class="text-white font-bold p-2">
-                      <strong>{subjectInfo.name}</strong> <br/>
-                      <span>Código: {subjectInfo.code}</span> <br/>
-                      <span>Créditos: {subjectInfo.credits}</span> <br/>
-                      <span>Semestre: {subjectInfo.semester}</span>
-                    </div>
-                  </Table.Cell>
-                {/each}
-              {:else}
-                <!-- Celda vacía si no hay materia -->
-                <Table.Cell></Table.Cell>
-              {/if}
+              <Table.Cell rowspan={calculateRowSpan(cell.subject.classSchedule[day.toLowerCase()][0], cell.subject.classSchedule[day.toLowerCase()][1])}
+                          class="relative" style="background-color: {generateColor(cell.subject.id)};">
+                <div class="text-white font-bold p-2 flex flex-col">
+                  <strong>{cell.subject.name}</strong>
+                  <span>Código: {cell.subject.code}</span>
+                  <span>Créditos: {cell.subject.credits}</span>
+                  <span>Semestre: {cell.subject.semester}</span>
+                  <span>Horas: {cell.subject.pHours}P {cell.subject.tHours}T {cell.subject.lHours}L</span>
+                </div>
+              </Table.Cell>
             {:else}
-              <!-- Celda vacía si está ocupada por un rowspan anterior -->
+              <!-- Celda vacía si no hay materia o si ya fue ocupada -->
               <Table.Cell></Table.Cell>
             {/if}
           {/each}
