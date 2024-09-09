@@ -183,7 +183,7 @@ Total: ${totalHours}h`;
       <Button
               variant="outline"
               class="flex justify-center gap-x-3 items-center"
-              href="/directive/subjects/view?id=add"
+              href="/student/schedule"
       >
         Register my schedule
         <ChevronRight class="w-6 h-6"/>
