@@ -628,3 +628,42 @@ func (h *Handler) Subject(i *inertia.Inertia) echo.HandlerFunc {
 
 	return fn
 }
+
+func (h *Handler) StudentSchedule(i *inertia.Inertia) echo.HandlerFunc {
+	fn := func(c echo.Context) error {
+		w, r := c.Response().Writer, c.Request()
+
+		subjects, err := h.Repo.GetSubjects(i, w, r)
+		if err != nil {
+			return nil
+		}
+
+		var subjectsDto []common.ScheduleSubjectDto
+		for _, subj := range subjects {
+			subjectsDto = append(subjectsDto, common.ScheduleSubjectDto{
+				ID:            subj.ID,
+				Name:          subj.Name,
+				Description:   subj.Description,
+				Code:          subj.Code,
+				Credits:       subj.CreditUnits,
+				Semester:      subj.Semester,
+				PHours:        subj.PracticeHours,
+				THours:        subj.TheoryHours,
+				LHours:        subj.LabHours,
+				ClassSchedule: subj.ClassSchedule,
+			})
+		}
+
+		err = i.Render(w, r, "Student/Schedule/Register", inertia.Props{
+			"subjects": subjectsDto,
+		})
+		if err != nil {
+			h.Logger.Printf("Error rendering schedules: %v", err)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
+		}
+
+		return nil
+	}
+	return fn
+}

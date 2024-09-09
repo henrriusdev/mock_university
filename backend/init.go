@@ -80,6 +80,7 @@ func MountApp() {
 	// Students routes
 	student := app.Group("/student", inertiaMiddl, mocku.JWTMiddleware(), mocku.RoleMiddleware("student"))
 	student.GET("", handler.StudentDash(i))
+	student.GET("/schedule", handler.StudentSchedule(i))
 
 	// Dashboard routes
 	// mux.Handle("/payment", i.Middleware(handler.PaymentsDash(i)))
