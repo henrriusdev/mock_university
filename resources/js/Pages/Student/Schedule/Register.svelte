@@ -43,14 +43,22 @@
         return Math.ceil((end - start) / 30); // Cada fila representa 30 minutos
     }
 
-    // Generar un color pastel dinámico basado en el ID
+    // Generar clases de color usando Tailwind CSS para modo claro y oscuro
     /**
      * @param {number} id
      * @returns {string}
      */
-    function generateColor(id) {
-        const hue = id * 137.508; // Constante irracional para distribuir colores uniformemente
-        return `hsl(${hue}, 60%, 80%)`; // Colores pastel con saturación baja y luminosidad alta
+    function generateTailwindColorClass(id) {
+        const colors = [
+            'bg-blue-500 text-white dark:bg-blue-700 dark:text-white',
+            'bg-green-500 text-white dark:bg-green-700 dark:text-white',
+            'bg-pink-500 text-white dark:bg-pink-700 dark:text-white',
+            'bg-yellow-500 text-black dark:bg-yellow-700 dark:text-black',
+            'bg-purple-500 text-white dark:bg-purple-700 dark:text-white',
+            'bg-red-500 text-white dark:bg-red-700 dark:text-white',
+            'bg-indigo-500 text-white dark:bg-indigo-700 dark:text-white'
+        ];
+        return colors[id % colors.length]; // Usa el ID para generar una clase de color de Tailwind
     }
 
     // Preprocesar los datos para crear una lista plana de celdas (días y horas)
@@ -76,7 +84,6 @@
                         const hourInMinutes = timeToMinutes(hour);
 
                         if (hourInMinutes >= start && hourInMinutes < end) {
-
                             cell.subject = subject; // Asignamos la materia a la celda correcta
                         }
                     }
@@ -120,7 +127,8 @@
                 occupiedCells.add(`${day}-${hour}`);
             }
         });
-        return '';
+
+        return "";
     }
 </script>
 
@@ -133,7 +141,7 @@
   <Table.Root>
     <Table.Caption>Schedule</Table.Caption>
     <Table.Header>
-      <Table.Row>
+      <Table.Row class="hover:bg-initial">
         <Table.Head class="w-1/12">Hour</Table.Head>
         {#each days as day}
           <Table.Head>{day}</Table.Head>
@@ -144,7 +152,7 @@
     <Table.Body>
       <!-- Iteramos sobre las celdas preprocesadas sin bucles anidados -->
       {#each hours as hour}
-        <Table.Row>
+        <Table.Row class="!w-full hover:bg-initial">
           <!-- Mostrar la hora de la fila -->
           <Table.Cell class="font-medium">{hour}</Table.Cell>
 
@@ -154,9 +162,10 @@
               <!-- Marcar las horas ocupadas por esta celda -->
               {markCellOccupied(day, cell.subject.classSchedule[day.toLowerCase()][0], cell.subject.classSchedule[day.toLowerCase()][1])}
 
+              <!-- Usar Tailwind CSS para el color dinámico -->
               <Table.Cell rowspan={calculateRowSpan(cell.subject.classSchedule[day.toLowerCase()][0], cell.subject.classSchedule[day.toLowerCase()][1])}
-                          class="relative" style="background-color: {generateColor(cell.subject.id)};">
-                <div class="text-white font-bold p-2 flex flex-col">
+                          class={`relative ${generateTailwindColorClass(cell.subject.id)}`}>
+                <div class="p-1 flex flex-col items-center">
                   <strong>{cell.subject.name}</strong>
                   <span>Código: {cell.subject.code}</span>
                   <span>Créditos: {cell.subject.credits}</span>
@@ -166,7 +175,7 @@
               </Table.Cell>
             {:else}
               <!-- Celda vacía si no hay materia o si ya fue ocupada -->
-              <Table.Cell></Table.Cell>
+              <Table.Cell class="w-1/6"></Table.Cell>
             {/if}
           {/each}
         </Table.Row>
