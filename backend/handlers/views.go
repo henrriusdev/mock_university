@@ -43,8 +43,11 @@ func (h *Handler) Login(i *inertia.Inertia) echo.HandlerFunc {
 			return nil
 		}
 
+		errorQuery := c.QueryParam("error")
+
 		err = i.Render(c.Response().Writer, c.Request(), "Auth/Login", inertia.Props{
 			"careers": careers,
+			"error":   errorQuery,
 		})
 		if err != nil {
 			h.Logger.Printf("Error rendering login: %v", err)

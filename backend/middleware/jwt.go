@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"net/http"
 	"strings"
 	"time"
@@ -41,7 +42,8 @@ func JWTMiddleware() echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			token, err := parseJWT(c)
 			if err != nil {
-				return err
+				log.Error(err)
+				return c.Redirect(http.StatusFound, "/login?error=expired")
 			}
 
 			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {

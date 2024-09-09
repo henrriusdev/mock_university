@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"mocku/backend/ent"
 	"net/http"
 	"strconv"
 	"strings"
@@ -40,19 +39,14 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 			return nil
 		}
 
-		careersArray, err := h.Repo.GetCareers(i, c.Response().Writer, c.Request())
-		if err != nil {
-			h.Logger.Printf("Error getting careers: %v", err)
-			return nil
-		}
-
 		if !utils.CheckPassword(user.Password, formData.Password) {
-			return h.invalidCredentials(i, c.Response().Writer, c.Request(), careersArray)
+			i.Redirect(c.Response().Writer, c.Request(), "/login?error=invalid credentials", 302)
 		}
 
 		tokenString, err := utils.GenerateJWT(user.ID, user.Name, user.Email, user.Edges.Role.Name)
 		if err != nil {
-			return c.Redirect(http.StatusFound, "/login?error=token generation failed")
+			i.Redirect(c.Response().Writer, c.Request(), "/login?error=error generating token", 302)
+			return nil
 		}
 
 		// Almacenar el JWT en una cookie segura
@@ -81,18 +75,6 @@ func (h *Handler) LoginPost(i *inertia.Inertia) echo.HandlerFunc {
 	}
 
 	return fn
-}
-
-func (h *Handler) invalidCredentials(i *inertia.Inertia, w http.ResponseWriter, r *http.Request, careersArray []*ent.Careers) error {
-	err := i.Render(w, r, "Auth/Login", inertia.Props{
-		"careers": careersArray,
-		"error":   "Invalid credentials",
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (h *Handler) SettingsNotesPost(i *inertia.Inertia) echo.HandlerFunc {
@@ -365,13 +347,9 @@ func (h *Handler) StudentPost(i *inertia.Inertia) echo.HandlerFunc {
 
 		handler, err := c.FormFile("avatar")
 		if err != nil {
-			if err.Error() != "http: no such file" {
-				h.Logger.Printf("Error getting file: %v", err)
-				common.HandleServerErr(i, err).ServeHTTP(w, r)
-				return nil
-			}
-
-			handler = nil
+			h.Logger.Printf("Error getting file: %v", err)
+			common.HandleServerErr(i, err).ServeHTTP(w, r)
+			return nil
 		}
 
 		// Guarda el archivo si se ha subido
