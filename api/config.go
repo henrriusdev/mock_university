@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"mocku/backend/database"
-	"mocku/backend/ent"
-	"mocku/backend/handlers"
-	"mocku/backend/repos"
+	"mocku/pkg/repository"
+	"mocku/pkg/service"
+	"mocku/pkg/store"
 	"net/http"
 	"os"
 
@@ -33,14 +32,10 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 
 func MountApp() {
 	i := initInertia()
-	client := initDatabase()
+	db := initDatabase()
 
-	repo := repos.NewRepo(client, log.New(os.Stdout, "mocku_repo: ", log.LstdFlags))
-
-	handler := handlers.Handler{
-		Repo:   repo,
-		Logger: log.New(os.Stdout, "mocku: ", log.LstdFlags),
-	}
+	repos := NewRepositories(db)
+	services := NewServices(repos)
 
 	app := echo.New()
 
@@ -98,43 +93,49 @@ func MountApp() {
 	app.Start(":3000")
 }
 
-// initDatabase initializes the database connection and creates the schema
-func initDatabase() *ent.Client {
+// initDatabase initializes the database connection
+func initDatabase() store.Queryable {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", os.Getenv("PG_HOST"), os.Getenv("PG_PORT"), os.Getenv("PG_USER"), os.Getenv("PG_PASSWORD"), os.Getenv("PG_DATABASE"))
 
-	client, err := ent.Open("postgres", dsn)
+	db, err := store.NewConnection(dsn)
 	if err != nil {
 		log.Fatalf("failed opening connection to postgres: %v", err)
 	}
 
-	if err := client.Schema.Create(context.Background()); err != nil {
-		log.Fatalf("failed creating schema resources: %v", err)
-	}
+	// TODO: Replace with migrations or schema creation using sqlx
+	// For now, we'll assume the schema already exists
 
-	if err := database.InsertDefaultRoles(context.Background(), client); err != nil {
-		log.Fatalf("failed inserting default roles: %v", err)
-	}
+	// TODO: Replace with direct inserts using repositories
+	// Insert default data if needed
+	// insertDefaultData(context.Background(), db)
 
-	// Insert default users if they don't exist.
-	if err := database.InsertDefaultUsers(context.Background(), client); err != nil {
-		log.Fatalf("failed inserting default users: %v", err)
-	}
-
-	if err := database.InsertDefaultCycle(context.Background(), client); err != nil {
-		log.Fatalf("failed inserting default cycle: %v", err)
-	}
-
-	if err := database.InsertDefaultConfig(context.Background(), client); err != nil {
-		log.Fatalf("failed inserting default config: %v", err)
-	}
-
-	return client
+	return db
 }
 
-func NewServices() {
-
+// insertDefaultData inserts default data into the database
+func insertDefaultData(ctx context.Context, db store.Queryable, repos *repository.Repositories, services *service.Services) {
+	// TODO: Implement default data insertion using repositories
+	// Example:
+	// Insert default roles
+	// Insert default users
+	// Insert default cycle
+	// Insert default configurations
 }
 
-func NewRepos() {
-
+func NewRepositories(db store.Queryable) *repository.Repositories {
+	return &repository.Repositories{
+		Users:         repository.NewUsers(db),
+		Role:          repository.NewRole(db),
+		Cycle:         repository.NewCycle(db),
+		Configuration: repository.NewConfiguration(db),
+		Student:       repository.NewStudent(db),
+		Professor:     repository.NewProfessor(db),
+		Subject:       repository.NewSubject(db),
+		Module:        repository.NewModule(db),
+		Blog:          repository.NewBlog(db),
+		Payment:       repository.NewPayment(db),
+		PaymentMethod: repository.NewPaymentMethod(db),
+		Careers:       repository.NewCareers(db),
+		Note:          repository.NewNote(db),
+	}
 }

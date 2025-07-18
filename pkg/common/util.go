@@ -1,9 +1,8 @@
-package utils
+package common
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -13,8 +12,28 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang-jwt/jwt"
+	inertia "github.com/romsar/gonertia"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func LoginRedirect(role int, w http.ResponseWriter, r *http.Request, i *inertia.Inertia) {
+	var view string
+	switch role {
+	case 1:
+		view = "/directive"
+	case 2:
+		view = "/payments"
+	case 3:
+		view = "/control"
+	case 4, 5:
+		view = "/professor"
+	case 6:
+		view = "/student"
+	}
+
+	i.Redirect(w, r, view, 302)
+}
 
 func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
