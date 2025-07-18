@@ -58,7 +58,7 @@ type (
 		TotalHours    int    `form:"totalHours"`
 		ClassSchedule string `form:"classSchedule"`
 		ProfessorId   int    `form:"professorId"`
-		CareerIds     string `form:"careers"`
+		CareerId      int    `form:"careerId"`
 		PreqIds       string `form:"prerequisites"`
 	}
 

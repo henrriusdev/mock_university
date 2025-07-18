@@ -14,15 +14,15 @@ type Users struct {
 	Avatar    string    `json:"avatar" db:"avatar"`
 	IsActive  bool      `json:"is_active" db:"is_active"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	
+
 	// Relationships
-	RoleID     uint       `json:"role_id" db:"role_id"`
-	Role       Role       `json:"role" db:"-"`
-	
+	RoleID uint `json:"role_id" db:"role_id"`
+	Role   Role `json:"role" db:"-"`
+
 	// Reverse relationships
-	RequestsMade     []Request     `json:"requests_made" db:"-"`
-	RequestsReceived []Request     `json:"requests_received" db:"-"`
-	Blogs            []Blog        `json:"blogs" db:"-"`
+	RequestsMade     []Request      `json:"requests_made" db:"-"`
+	RequestsReceived []Request      `json:"requests_received" db:"-"`
+	Blogs            []Blog         `json:"blogs" db:"-"`
 	Notifications    []Notification `json:"notifications" db:"-"`
 	Activities       []Activity     `json:"activities" db:"-"`
 	Student          *Student       `json:"student" db:"-"`
@@ -31,24 +31,24 @@ type Users struct {
 
 // Student represents the student entity
 type Student struct {
-	ID                     uint      `json:"id" db:"id"`
-	IdentityCard           string    `json:"identity_card" db:"identity_card"`
-	BirthDate              time.Time `json:"birth_date" db:"birth_date"`
-	Phone                  string    `json:"phone" db:"phone"`
-	Address                string    `json:"address" db:"address"`
-	District               string    `json:"district" db:"district"`
-	City                   string    `json:"city" db:"city"`
-	PostalCode             int       `json:"postal_code" db:"postal_code"`
-	CreditUnitsAccumulated int       `json:"credit_units_accumulated" db:"credit_units_accumulated"`
-	TotalAverage           float64   `json:"total_average" db:"total_average"`
-	Semester               int       `json:"semester" db:"semester"`
-	
+	ID                     uint    `json:"id" db:"id"`
+	IdentityCard           string  `json:"identity_card" db:"identity_card"`
+	BirthDate              Date    `json:"birth_date" db:"birth_date"`
+	Phone                  string  `json:"phone" db:"phone"`
+	Address                string  `json:"address" db:"address"`
+	District               string  `json:"district" db:"district"`
+	City                   string  `json:"city" db:"city"`
+	PostalCode             int     `json:"postal_code" db:"postal_code"`
+	CreditUnitsAccumulated int     `json:"credit_units_accumulated" db:"credit_units_accumulated"`
+	TotalAverage           float64 `json:"total_average" db:"total_average"`
+	Semester               int     `json:"semester" db:"semester"`
+
 	// Relationships
-	UserID   uint   `json:"user_id" db:"user_id"`
-	User     Users  `json:"user" db:"-"`
-	CareerID uint   `json:"career_id" db:"career_id"`
+	UserID   uint    `json:"user_id" db:"user_id"`
+	User     Users   `json:"user" db:"-"`
+	CareerID uint    `json:"career_id" db:"career_id"`
 	Career   Careers `json:"career" db:"-"`
-	
+
 	// Reverse relationships
 	Notes    []Note    `json:"notes" db:"-"`
 	Payments []Payment `json:"payments" db:"-"`
@@ -56,18 +56,18 @@ type Student struct {
 
 // Professor represents the professor entity
 type Professor struct {
-	ID           uint      `json:"id" db:"id"`
-	IdentityCard string    `json:"identity_card" db:"identity_card"`
-	BirthDate    time.Time `json:"birth_date" db:"birth_date"`
-	Phone        string    `json:"phone" db:"phone"`
-	Address      string    `json:"address" db:"address"`
-	
+	ID           uint   `json:"id" db:"id"`
+	IdentityCard string `json:"identity_card" db:"identity_card"`
+	BirthDate    Date   `json:"birth_date" db:"birth_date"`
+	Phone        string `json:"phone" db:"phone"`
+	Address      string `json:"address" db:"address"`
+
 	// Relationships
-	UserID uint  `json:"user_id" db:"user_id"`
-	User   Users `json:"user" db:"-"`
-	BossID *uint `json:"boss_id" db:"boss_id"`
+	UserID uint       `json:"user_id" db:"user_id"`
+	User   Users      `json:"user" db:"-"`
+	BossID *uint      `json:"boss_id" db:"boss_id"`
 	Boss   *Professor `json:"boss" db:"-"`
-	
+
 	// Reverse relationships
 	Subordinates []Professor `json:"subordinates" db:"-"`
 	Subjects     []Subject   `json:"subjects" db:"-"`
@@ -76,31 +76,38 @@ type Professor struct {
 
 // Subject represents the subject entity
 type Subject struct {
-	ID            uint   `json:"id" db:"id"`
-	Name          string `json:"name" db:"name"`
-	Description   string `json:"description" db:"description"`
-	CreditUnits   int    `json:"credit_units" db:"credit_units"`
-	Semester      int    `json:"semester" db:"semester"`
-	Code          string `json:"code" db:"code"`
-	PracticeHours int    `json:"practice_hours" db:"practice_hours"`
-	TheoryHours   int    `json:"theory_hours" db:"theory_hours"`
-	LabHours      int    `json:"lab_hours" db:"lab_hours"`
-	TotalHours    int    `json:"total_hours" db:"total_hours"`
-	ClassSchedule string `json:"class_schedule" db:"class_schedule"`
-	
+	ID            uint                `json:"id" db:"id"`
+	Name          string              `json:"name" db:"name"`
+	Description   string              `json:"description" db:"description"`
+	CreditUnits   int                 `json:"credit_units" db:"credit_units"`
+	Semester      int                 `json:"semester" db:"semester"`
+	Code          string              `json:"code" db:"code"`
+	PracticeHours int                 `json:"practice_hours" db:"practice_hours"`
+	TheoryHours   int                 `json:"theory_hours" db:"theory_hours"`
+	LabHours      int                 `json:"lab_hours" db:"lab_hours"`
+	TotalHours    int                 `json:"total_hours" db:"total_hours"`
+	ClassSchedule map[string][]string `json:"class_schedule" db:"class_schedule"`
+
 	// Relationships
 	ProfessorID uint      `json:"professor_id" db:"professor_id"`
 	Professor   Professor `json:"professor" db:"-"`
 	CareerID    uint      `json:"career_id" db:"career_id"`
 	Career      Careers   `json:"career" db:"-"`
-	
-	// Self-referencing relationship for prerequisites
-	PrerequisiteIDs []uint    `json:"prerequisite_ids" db:"-"`
-	Prerequisites   []Subject `json:"prerequisites" db:"-"`
-	NextSubjects    []Subject `json:"next_subjects" db:"-"`
-	
+
 	// Reverse relationships
-	Notes []Note `json:"notes" db:"-"`
+	Notes         []Note         `json:"notes" db:"-"`
+	Prerequisites []Prerequisite `json:"prerequisites" db:"-"`
+}
+
+// Prerequisite represents a prerequisite relationship between subjects
+type Prerequisite struct {
+	ID             uint `json:"id" db:"id"`
+	SubjectID      uint `json:"subject_id" db:"subject_id"`
+	PrerequisiteID uint `json:"prerequisite_id" db:"prerequisite_id"`
+
+	// Non-DB fields for convenience
+	Subject      Subject `json:"subject" db:"-"`
+	Prerequisite Subject `json:"prerequisite" db:"-"`
 }
 
 // Note represents the note entity
@@ -108,7 +115,7 @@ type Note struct {
 	ID      uint    `json:"id" db:"id"`
 	Notes   string  `json:"notes" db:"notes"` // JSON array of float64
 	Average float32 `json:"average" db:"average"`
-	
+
 	// Relationships
 	StudentID uint    `json:"student_id" db:"student_id"`
 	Student   Student `json:"student" db:"-"`
@@ -123,10 +130,10 @@ type Role struct {
 	ID          uint   `json:"id" db:"id"`
 	Name        string `json:"name" db:"name"`
 	Description string `json:"description" db:"description"`
-	
+
 	// Relationships
 	Permissions []Permission `json:"permissions" db:"-"`
-	
+
 	// Reverse relationships
 	Users []Users `json:"users" db:"-"`
 }
@@ -137,7 +144,7 @@ type Permission struct {
 	Name        string `json:"name" db:"name"`
 	Description string `json:"description" db:"description"`
 	Module      string `json:"module" db:"module"`
-	
+
 	// Relationships
 	Roles []Role `json:"roles" db:"-"`
 }
@@ -147,11 +154,11 @@ type Careers struct {
 	ID          uint   `json:"id" db:"id"`
 	Name        string `json:"name" db:"name"`
 	Description string `json:"description" db:"description"`
-	
+
 	// Relationships
-	LeaderID uint      `json:"leader_id" db:"leader_id"`
-	Leader   Professor `json:"leader" db:"-"`
-	
+	LeaderID uint       `json:"leader_id" db:"leader_id"`
+	Leader   *Professor `json:"leader" db:"-"`
+
 	// Reverse relationships
 	Students []Student `json:"students" db:"-"`
 	Subjects []Subject `json:"subjects" db:"-"`
@@ -163,7 +170,7 @@ type Cycle struct {
 	Name      string    `json:"name" db:"name"`
 	StartDate time.Time `json:"start_date" db:"start_date"`
 	EndDate   time.Time `json:"end_date" db:"end_date"`
-	
+
 	// Reverse relationships
 	Notes []Note `json:"notes" db:"-"`
 }
@@ -176,7 +183,7 @@ type Blog struct {
 	Image     string    `json:"image" db:"image"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	
+
 	// Relationships
 	OwnerID uint  `json:"owner_id" db:"owner_id"`
 	Owner   Users `json:"owner" db:"-"`
@@ -190,7 +197,7 @@ type Request struct {
 	Status      string    `json:"status" db:"status"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
-	
+
 	// Relationships
 	RequesterID uint  `json:"requester_id" db:"requester_id"`
 	Requester   Users `json:"requester" db:"-"`
@@ -205,7 +212,7 @@ type Notification struct {
 	Content   string    `json:"content" db:"content"`
 	IsRead    bool      `json:"is_read" db:"is_read"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	
+
 	// Relationships
 	RecipientID uint  `json:"recipient_id" db:"recipient_id"`
 	Recipient   Users `json:"recipient" db:"-"`
@@ -216,7 +223,7 @@ type Activity struct {
 	ID        uint      `json:"id" db:"id"`
 	Action    string    `json:"action" db:"action"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	
+
 	// Relationships
 	UserID uint  `json:"user_id" db:"user_id"`
 	User   Users `json:"user" db:"-"`
@@ -230,7 +237,7 @@ type Payment struct {
 	Status      string    `json:"status" db:"status"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
-	
+
 	// Relationships
 	StudentID       uint          `json:"student_id" db:"student_id"`
 	Student         Student       `json:"student" db:"-"`
@@ -243,7 +250,7 @@ type PaymentMethod struct {
 	ID          uint   `json:"id" db:"id"`
 	Name        string `json:"name" db:"name"`
 	Description string `json:"description" db:"description"`
-	
+
 	// Reverse relationships
 	Payments []Payment `json:"payments" db:"-"`
 }

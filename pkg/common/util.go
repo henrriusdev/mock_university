@@ -148,6 +148,21 @@ func StringSliceToIntSlice(slice []string) ([]int, error) {
 	return result, nil
 }
 
+func StringSliceToUintSlice(slice []string) ([]uint, error) {
+	var result []uint
+
+	for _, s := range slice {
+		i, err := strconv.Atoi(s)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, uint(i))
+	}
+
+	return result, nil
+}
+
 func ToPercentage(numberNotes int, r *http.Request) ([]float64, error) {
 	notes := make([]float64, numberNotes)
 	for j := 0; j < numberNotes; j++ {

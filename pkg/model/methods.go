@@ -1,10 +1,9 @@
-package common
+package model
 
 import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"mocku/backend/ent"
 	"reflect"
 	"strings"
 	"time"
@@ -37,13 +36,9 @@ func getNestedFieldValue(item interface{}, fieldPath string) (reflect.Value, boo
 	return value, true
 }
 
-func FillSelectDto[T any](array []*T, idField, nameField string) []SelectDto {
-	var result []SelectDto
+func FillSelectResponse[T any](array []T, idField, nameField string) []SelectResponse {
+	var result []SelectResponse
 	for _, item := range array {
-		if item == nil {
-			continue // Si el item es nil, saltamos esta iteración
-		}
-
 		// Obtener los valores de los campos, incluyendo los campos anidados
 		idFieldValue, idOk := getNestedFieldValue(item, idField)
 		nameFieldValue, nameOk := getNestedFieldValue(item, nameField)
@@ -53,8 +48,8 @@ func FillSelectDto[T any](array []*T, idField, nameField string) []SelectDto {
 			continue // Si alguno de los campos no es válido o es nil, lo saltamos
 		}
 
-		// Agregamos los valores al slice de SelectDto
-		result = append(result, SelectDto{
+		// Agregamos los valores al slice de SelectResponse
+		result = append(result, SelectResponse{
 			ID:   idFieldValue.Interface().(int),
 			Name: nameFieldValue.Interface().(string),
 		})
@@ -62,16 +57,11 @@ func FillSelectDto[T any](array []*T, idField, nameField string) []SelectDto {
 	return result
 }
 
-func FillSelectDtoSubject(array []*ent.Subject) []SelectDtoSubject {
-	var result []SelectDtoSubject
+func FillSelectResponseSubject(array []Subject) []SelectResponseSubject {
+	var result []SelectResponseSubject
 	for _, item := range array {
-		if item == nil {
-			continue // Si el item es nil, saltamos esta iteración
-		}
-
-		// Agregamos los valores al slice de SelectDto
-		result = append(result, SelectDtoSubject{
-			ID:       item.ID,
+		result = append(result, SelectResponseSubject{
+			ID:       int(item.ID),
 			Name:     item.Name,
 			Code:     item.Code,
 			Semester: item.Semester,

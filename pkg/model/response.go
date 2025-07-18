@@ -64,20 +64,20 @@ type (
 	}
 
 	SubjectResponse struct {
-		ID            int                 `json:"id"`
-		Name          string              `json:"name"`
-		Description   string              `json:"description"`
-		CreditUnits   int                 `json:"creditUnits"`
-		Semester      int                 `json:"semester"`
-		Code          string              `json:"code"`
-		PracticeHours int                 `json:"practiceHours"`
-		TheoryHours   int                 `json:"theoryHours"`
-		LabHours      int                 `json:"labHours"`
-		TotalHours    int                 `json:"totalHours"`
-		ClassSchedule map[string][]string `json:"classSchedule"`
-		ProfessorId   int                 `json:"professorId"`
-		ProfessorName string              `json:"professorName"`
-		Careers       []SelectResponse    `json:"careers"`
-		Prerequisites []SelectResponse    `json:"prerequisites"`
+		ID            int                     `json:"id"`
+		Name          string                  `json:"name"`
+		Description   string                  `json:"description"`
+		CreditUnits   int                     `json:"creditUnits"`
+		Semester      int                     `json:"semester"`
+		Code          string                  `json:"code"`
+		PracticeHours int                     `json:"practiceHours"`
+		TheoryHours   int                     `json:"theoryHours"`
+		LabHours      int                     `json:"labHours"`
+		TotalHours    int                     `json:"totalHours"`
+		ClassSchedule map[string][]string     `json:"classSchedule"`
+		ProfessorId   int                     `json:"professorId"`
+		ProfessorName string                  `json:"professorName"`
+		Careers       []SelectResponse        `json:"careers"`
+		Prerequisites []SelectResponseSubject `json:"prerequisites"`
 	}
 )

@@ -9,11 +9,11 @@ import (
 
 type Student interface {
 	GetAll(ctx context.Context) ([]model.Student, error)
-	GetByID(ctx context.Context, id string) (model.Student, error)
+	GetByID(ctx context.Context, id uint) (model.Student, error)
 	Create(ctx context.Context, student model.Student) (model.Student, error)
 	Update(ctx context.Context, student model.Student) (model.Student, error)
-	Delete(ctx context.Context, id string) error
-	GetByUserID(ctx context.Context, userID string) (model.Student, error)
+	Delete(ctx context.Context, id uint) error
+	GetByUserID(ctx context.Context, userID uint) (model.Student, error)
 	GetByIdentityCard(ctx context.Context, identityCard string) (model.Student, error)
 }
 
@@ -29,7 +29,7 @@ func (s *StudentService) GetAll(ctx context.Context) ([]model.Student, error) {
 	return s.repos.Student.GetAll(ctx)
 }
 
-func (s *StudentService) GetByID(ctx context.Context, id string) (model.Student, error) {
+func (s *StudentService) GetByID(ctx context.Context, id uint) (model.Student, error) {
 	return s.repos.Student.GetOneById(ctx, id)
 }
 
@@ -41,11 +41,11 @@ func (s *StudentService) Update(ctx context.Context, student model.Student) (mod
 	return s.repos.Student.Update(ctx, student)
 }
 
-func (s *StudentService) Delete(ctx context.Context, id string) error {
+func (s *StudentService) Delete(ctx context.Context, id uint) error {
 	return s.repos.Student.Delete(ctx, id)
 }
 
-func (s *StudentService) GetByUserID(ctx context.Context, userID string) (model.Student, error) {
+func (s *StudentService) GetByUserID(ctx context.Context, userID uint) (model.Student, error) {
 	return s.repos.Student.GetOne(ctx, filters.IsSelectFilter("user_id", userID))
 }
 

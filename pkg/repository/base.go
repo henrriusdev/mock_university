@@ -144,7 +144,7 @@ func (b *Base[T]) GetOne(ctx context.Context, filter ...filters.SelectFilterBuil
 	return result, nil
 }
 
-func (b *Base[T]) GetOneById(ctx context.Context, id string) (T, error) {
+func (b *Base[T]) GetOneById(ctx context.Context, id uint) (T, error) {
 	query := filters.ApplyFilters(
 		b.baseQuery(),
 		filters.IsSelectFilter("id", id),
@@ -163,7 +163,7 @@ func (b *Base[T]) GetOneById(ctx context.Context, id string) (T, error) {
 	return result, nil
 }
 
-func (b *Base[T]) UpdateOneById(ctx context.Context, id string, model T, updateFilters ...filters.UpdateFilterBuilder) (T, error) {
+func (b *Base[T]) UpdateOneById(ctx context.Context, id uint, model T, updateFilters ...filters.UpdateFilterBuilder) (T, error) {
 	query := b.BaseQueryUpdate().
 		Set(model).
 		Where(goqu.Ex{"id": id})
@@ -287,7 +287,7 @@ func (b *Base[T]) Insert(ctx context.Context, model T) (T, error) {
 }
 
 // Delete deletes a model by ID
-func (b *Base[T]) Delete(ctx context.Context, id string) error {
+func (b *Base[T]) Delete(ctx context.Context, id uint) error {
 	delete := b.BaseQueryDelete().Where(goqu.Ex{"id": id})
 	q, args, err := delete.ToSQL()
 	if err != nil {
