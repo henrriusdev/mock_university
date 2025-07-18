@@ -46,24 +46,7 @@ func MountApp() {
 	app.Validator = &CustomValidator{validator: validator.New()}
 
 	// Routes
-	app.GET("/", handler.Home(i))
-	app.GET("/login", handler.Login(i))
-	app.Any("/login_post", handler.LoginPost(i))
-
-	// Directives routes
-	directive := app.Group("/directive", inertiaMiddl, mocku.JWTMiddleware(), mocku.RoleMiddleware("directive"))
-	directive.GET("", handler.DirectiveDash(i))
-	directive.GET("/students", handler.Students(i))
-	directive.GET("/students/view", handler.Student(i))
-	directive.Any("/students/view/submit", handler.StudentPost(i))
-	directive.GET("/careers", handler.Careers(i))
-	directive.Any("/careers/submit", handler.Career(i))
-	directive.GET("/professors", handler.Professors(i))
-	directive.GET("/professors/view", handler.Professor(i))
-	directive.Any("/professors/view/submit", handler.ProfessorPost(i))
-	directive.GET("/subjects", handler.Subjects(i))
-	directive.GET("/subjects/view", handler.Subject(i))
-	directive.Any("/subjects/view/submit", handler.SubjectPost(i))
+	authRoutes(app, i, services)
 
 	// Settings routes
 	settings := app.Group("/settings", inertiaMiddl, mocku.JWTMiddleware(), mocku.RoleMiddleware("directive"))
