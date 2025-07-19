@@ -15,6 +15,7 @@ type Student interface {
 	Delete(ctx context.Context, id uint) error
 	GetByUserID(ctx context.Context, userID uint) (model.Student, error)
 	GetByIdentityCard(ctx context.Context, identityCard string) (model.Student, error)
+	GetStudentNotes(ctx context.Context, id uint) ([]model.Note, error)
 }
 
 type StudentService struct {
@@ -51,4 +52,18 @@ func (s *StudentService) GetByUserID(ctx context.Context, userID uint) (model.St
 
 func (s *StudentService) GetByIdentityCard(ctx context.Context, identityCard string) (model.Student, error) {
 	return s.repos.Student.GetOne(ctx, filters.IsSelectFilter("identity_card", identityCard))
+}
+
+func (s *StudentService) GetStudentNotes(ctx context.Context, id uint) ([]model.Note, error) {
+	student, err := s.GetByUserID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	notes, err := s.repos.Note.GetAll(ctx, filters.IsSelectFilter("student_id", student.ID))
+	if err != nil {
+		return nil, err
+	}
+
+	return notes, nil
 }

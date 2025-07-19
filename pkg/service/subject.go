@@ -26,9 +26,6 @@ type SubjectService struct {
 
 // CreatePrerequisite creates a new prerequisite relationship between subjects
 func (s *SubjectService) CreatePrerequisite(ctx context.Context, prerequisite model.Prerequisite) (model.Prerequisite, error) {
-	// Since we don't have a separate repository for prerequisites, we'll handle it in the subject repository
-	// This could be implemented in the subject repository or directly here
-	// For now, we'll assume the subject repository has a CreatePrerequisite method
 	return s.repos.Subject.CreatePrerequisite(ctx, prerequisite)
 }
 

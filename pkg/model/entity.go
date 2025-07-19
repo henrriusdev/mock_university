@@ -112,9 +112,9 @@ type Prerequisite struct {
 
 // Note represents the note entity
 type Note struct {
-	ID      uint    `json:"id" db:"id"`
-	Notes   string  `json:"notes" db:"notes"` // JSON array of float64
-	Average float32 `json:"average" db:"average"`
+	ID      uint      `json:"id" db:"id"`
+	Notes   []float64 `json:"notes" db:"notes"` // JSON array of float64
+	Average float32   `json:"average" db:"average"`
 
 	// Relationships
 	StudentID uint    `json:"student_id" db:"student_id"`
@@ -170,6 +170,7 @@ type Cycle struct {
 	Name      string    `json:"name" db:"name"`
 	StartDate time.Time `json:"start_date" db:"start_date"`
 	EndDate   time.Time `json:"end_date" db:"end_date"`
+	Active    bool      `json:"active" db:"active"`
 
 	// Reverse relationships
 	Notes []Note `json:"notes" db:"-"`
@@ -257,9 +258,18 @@ type PaymentMethod struct {
 
 // Configuration represents the configuration entity
 type Configuration struct {
-	ID    uint   `json:"id" gorm:"primaryKey"`
-	Key   string `json:"key" db:"key"`
-	Value string `json:"value" db:"value"`
+	ID                        uint        `json:"id" db:"id"`
+	StartRegistrationSubjects time.Time   `json:"start_registration_subjects" db:"start_registration_subjects"`
+	EndRegistrationSubjects   time.Time   `json:"end_registration_subjects" db:"end_registration_subjects"`
+	BlockNotPayInscription    bool        `json:"block_not_pay_inscription" db:"block_not_pay_inscription"`
+	FeeDates                  []time.Time `json:"fee_dates" db:"fee_dates"`
+	NumberFees                int         `json:"number_fees" db:"number_fees"`
+	NumberNotes               int         `json:"number_notes" db:"number_notes"`
+	NotesPercentages          []float64   `json:"notes_percentages" db:"notes_percentages"`
+
+	// Relationships
+	CycleID uint  `json:"cycle_id" db:"cycle_id"`
+	Cycle   Cycle `json:"cycle" db:"-"`
 }
 
 // Module represents the module entity

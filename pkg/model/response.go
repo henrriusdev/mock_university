@@ -80,4 +80,24 @@ type (
 		Careers       []SelectResponse        `json:"careers"`
 		Prerequisites []SelectResponseSubject `json:"prerequisites"`
 	}
+
+	NoteResponse struct {
+		ID      uint      `json:"id"`
+		Subject string    `json:"subject"`
+		Notes   []float64 `json:"notes"`
+		Average float64   `json:"avg"`
+	}
+
+	ScheduleSubjectResponse struct {
+		ID            uint                `json:"id"`
+		Name          string              `json:"name"`
+		Description   string              `json:"description"`
+		Code          string              `json:"code"`
+		Semester      int                 `json:"semester"`
+		Credits       int                 `json:"credits"`
+		PHours        int                 `json:"pHours"`
+		THours        int                 `json:"tHours"`
+		LHours        int                 `json:"lHours"`
+		ClassSchedule map[string][]string `json:"classSchedule"`
+	}
 )

@@ -24,7 +24,7 @@ func NewDirective(i *gonertia.Inertia, services *service.Services) *Directive {
 	}
 }
 
-func (d *Directive) RegisterRoutes(e *echo.Echo) {
+func (d *Directive) RegisterRoutes(e *echo.Group) {
 	e.GET("/", d.DirectiveDash)
 	e.GET("/students", d.Students)
 	e.GET("/students/view", d.Student)

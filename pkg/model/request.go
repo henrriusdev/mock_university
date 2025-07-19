@@ -65,24 +65,4 @@ type (
 	Date struct {
 		time.Time
 	}
-
-	NoteRequest struct {
-		ID      int       `json:"id"`
-		Subject string    `json:"subject"`
-		Notes   []float64 `json:"notes"`
-		Average float64   `json:"avg"`
-	}
-
-	ScheduleSubjectRequest struct {
-		ID            int                 `json:"id"`
-		Name          string              `json:"name"`
-		Description   string              `json:"description"`
-		Code          string              `json:"code"`
-		Semester      int                 `json:"semester"`
-		Credits       int                 `json:"credits"`
-		PHours        int                 `json:"pHours"`
-		THours        int                 `json:"tHours"`
-		LHours        int                 `json:"lHours"`
-		ClassSchedule map[string][]string `json:"classSchedule"`
-	}
 )

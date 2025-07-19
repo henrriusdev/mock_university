@@ -47,21 +47,9 @@ func MountApp() {
 
 	// Routes
 	authRoutes(app, i, services)
-
-	// Settings routes
-	settings := app.Group("/settings", inertiaMiddl, mocku.JWTMiddleware(), mocku.RoleMiddleware("directive"))
-	settings.GET("", handler.Settings(i))
-	settings.Any("/notes", handler.SettingsNotesPost(i))
-	settings.Any("/notes/percentages", handler.SettingsNotesPercentage(i))
-	settings.Any("/payment", handler.SettingsPayments(i))
-	settings.Any("/payment/dates", handler.SettingsPaymentsDates(i))
-	settings.Any("/cycle", handler.SettingsCycle(i))
-	settings.Any("/dates", handler.SettingsDates(i))
-
-	// Students routes
-	student := app.Group("/student", inertiaMiddl, mocku.JWTMiddleware(), mocku.RoleMiddleware("student"))
-	student.GET("", handler.StudentDash(i))
-	student.GET("/schedule", handler.StudentSchedule(i))
+	directiveRoutes(app, i, services)
+	settingRoutes(app, i, services)
+	studentRoutes(app, i, services)
 
 	// Dashboard routes
 	// mux.Handle("/payment", i.Middleware(handler.PaymentsDash(i)))
@@ -120,5 +108,23 @@ func NewRepositories(db store.Queryable) *repository.Repositories {
 		PaymentMethod: repository.NewPaymentMethod(db),
 		Careers:       repository.NewCareers(db),
 		Note:          repository.NewNote(db),
+	}
+}
+
+func NewServices(repos *repository.Repositories) *service.Services {
+	return &service.Services{
+		Users:         service.NewUsers(repos),
+		Role:          service.NewRole(repos),
+		Cycle:         service.NewCycle(repos),
+		Configuration: service.NewConfiguration(repos),
+		Student:       service.NewStudent(repos),
+		Professor:     service.NewProfessor(repos),
+		Subject:       service.NewSubject(repos),
+		Module:        service.NewModule(repos),
+		Blog:          service.NewBlog(repos),
+		Payment:       service.NewPayment(repos),
+		PaymentMethod: service.NewPaymentMethod(repos),
+		Careers:       service.NewCareers(repos),
+		Note:          service.NewNote(repos),
 	}
 }

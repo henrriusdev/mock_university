@@ -110,3 +110,13 @@ func ApplyDeleteFilters(query *goqu.DeleteDataset, filters ...DeleteFilterBuilde
 	}
 	return query
 }
+
+// WithJoin creates a filter that joins a table
+func WithJoin(table, leftKey, rightKey string) SelectFilterBuilder {
+	return func(query *goqu.SelectDataset) *goqu.SelectDataset {
+		return query.Join(
+			goqu.T(table),
+			goqu.On(goqu.I(table+"."+rightKey), goqu.I(leftKey)),
+		)
+	}
+}
