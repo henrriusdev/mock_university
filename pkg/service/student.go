@@ -19,39 +19,40 @@ type Student interface {
 }
 
 type StudentService struct {
-	repos *repository.Repositories
+	repo *repository.Student
+	note *repository.Note
 }
 
-func NewStudent(repos *repository.Repositories) Student {
-	return &StudentService{repos: repos}
+func NewStudent(repo *repository.Student, note *repository.Note) Student {
+	return &StudentService{repo: repo, note: note}
 }
 
 func (s *StudentService) GetAll(ctx context.Context) ([]model.Student, error) {
-	return s.repos.Student.GetAll(ctx)
+	return s.repo.GetAll(ctx)
 }
 
 func (s *StudentService) GetByID(ctx context.Context, id uint) (model.Student, error) {
-	return s.repos.Student.GetOneById(ctx, id)
+	return s.repo.GetOneById(ctx, id)
 }
 
 func (s *StudentService) Create(ctx context.Context, student model.Student) (model.Student, error) {
-	return s.repos.Student.Insert(ctx, student)
+	return s.repo.Insert(ctx, student)
 }
 
 func (s *StudentService) Update(ctx context.Context, student model.Student) (model.Student, error) {
-	return s.repos.Student.Update(ctx, student)
+	return s.repo.Update(ctx, student)
 }
 
 func (s *StudentService) Delete(ctx context.Context, id uint) error {
-	return s.repos.Student.Delete(ctx, id)
+	return s.repo.Delete(ctx, id)
 }
 
 func (s *StudentService) GetByUserID(ctx context.Context, userID uint) (model.Student, error) {
-	return s.repos.Student.GetOne(ctx, filters.IsSelectFilter("user_id", userID))
+	return s.repo.GetOne(ctx, filters.IsSelectFilter("user_id", userID))
 }
 
 func (s *StudentService) GetByIdentityCard(ctx context.Context, identityCard string) (model.Student, error) {
-	return s.repos.Student.GetOne(ctx, filters.IsSelectFilter("identity_card", identityCard))
+	return s.repo.GetOne(ctx, filters.IsSelectFilter("identity_card", identityCard))
 }
 
 func (s *StudentService) GetStudentNotes(ctx context.Context, id uint) ([]model.Note, error) {
@@ -60,7 +61,7 @@ func (s *StudentService) GetStudentNotes(ctx context.Context, id uint) ([]model.
 		return nil, err
 	}
 
-	notes, err := s.repos.Note.GetAll(ctx, filters.IsSelectFilter("student_id", student.ID))
+	notes, err := s.note.GetAll(ctx, filters.IsSelectFilter("student_id", student.ID))
 	if err != nil {
 		return nil, err
 	}

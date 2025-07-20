@@ -72,7 +72,7 @@ func (s *Setting) SettingsNotesPost(c echo.Context) error {
 		return nil
 	}
 
-	err = s.services.Configuration.UpdateNumberNotes(notesNumber, s.i, w, r)
+	err = s.services.Configuration.UpdateNumberNotes(c.Request().Context(), notesNumber)
 	if err != nil {
 		return nil
 	}
@@ -115,7 +115,7 @@ func (s *Setting) SettingsDates(c echo.Context) error {
 		return nil
 	}
 
-	err = s.services.Configuration.UpdateDates(startRegistrationSubjects, endRegistrationSubjects, cycleStart, cycleEnd, s.i, w, r)
+	err = s.services.Configuration.UpdateDates(c.Request().Context(), startRegistrationSubjects, endRegistrationSubjects, cycleStart, cycleEnd)
 	if err != nil {
 		return nil
 	}
@@ -140,7 +140,7 @@ func (s *Setting) SettingsPayments(c echo.Context) error {
 		return nil
 	}
 
-	err = s.services.Configuration.UpdateNumberFees(numberFees, s.i, w, r)
+	err = s.services.Configuration.UpdateNumberFees(c.Request().Context(), numberFees)
 	if err != nil {
 		return nil
 	}
@@ -171,7 +171,7 @@ func (s *Setting) SettingsNotesPercentage(c echo.Context) error {
 			return nil
 		}
 
-		err = s.services.Configuration.UpdateNotesPercentages(notes, s.i, w, r)
+		err = s.services.Configuration.UpdateNotesPercentages(c.Request().Context(), notes)
 		if err != nil {
 			return nil
 		}
@@ -202,7 +202,7 @@ func (s *Setting) SettingsPaymentsDates(c echo.Context) error {
 		return nil
 	}
 
-	err = s.services.Configuration.UpdateFeeDates(payments, s.i, w, r)
+	err = s.services.Configuration.UpdateFeeDates(c.Request().Context(), payments)
 	if err != nil {
 		common.HandleServerErr(s.i, err).ServeHTTP(w, r)
 		return nil
@@ -215,24 +215,24 @@ func (s *Setting) SettingsPaymentsDates(c echo.Context) error {
 func (s *Setting) SettingsCycle(c echo.Context) error {
 	w, r := c.Response().Writer, c.Request()
 
-	currentCycle, err := s.services.Configuration.GetCurrentCycle(s.i, w, r)
+	currentCycle, err := s.services.Configuration.GetCurrentCycle(c.Request().Context())
 	if err != nil {
 		return nil
 	}
 
 	newCycle := common.SplitCycle(currentCycle.Name)
 
-	err = s.services.Configuration.InactivateCycle(s.i, w, r)
+	err = s.services.Configuration.InactivateCycle(c.Request().Context())
 	if err != nil {
 		return nil
 	}
 
-	currentCycle, err = s.services.Configuration.NewCycle(newCycle, s.i, w, r)
+	currentCycle, err = s.services.Configuration.NewCycle(c.Request().Context(), newCycle)
 	if err != nil {
 		return nil
 	}
 
-	err = s.services.Configuration.NewConfiguration(currentCycle, s.i, w, r)
+	err = s.services.Configuration.NewConfiguration(c.Request().Context(), currentCycle)
 	if err != nil {
 		return nil
 	}

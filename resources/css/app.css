@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/* PrimeReact and Tailwind CSS integration */
+
+/* Ensure PrimeReact components work well with dark mode */
+[data-theme*="dark"] .p-component {
+  --text-color: #f8f9fa;
+  --text-color-secondary: #e9ecef;
+  --surface-ground: #121212;
+  --surface-section: #1e1e1e;
+  --surface-card: #262626;
+  --surface-overlay: #2d2d2d;
+  --surface-border: #383838;
+}
+
+/* Fix z-index conflicts between Tailwind and PrimeReact */
+.p-component-overlay {
+  z-index: 1000;
+}
+
+.p-datepicker,
+.p-dropdown-panel,
+.p-menu,
+.p-dialog {
+  z-index: 1001;
+}
+
+/* Ensure PrimeReact focus rings work well with Tailwind */
+.p-component:focus {
+  outline: none;
+}
+
+/* Custom styling for theme transitions */
+body {
+  transition: background-color 0.2s, color 0.2s;
+}

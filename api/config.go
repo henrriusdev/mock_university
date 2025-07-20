@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"mocku/pkg/database"
 	"mocku/pkg/repository"
 	"mocku/pkg/service"
 	"mocku/pkg/store"
@@ -34,8 +35,16 @@ func MountApp() {
 	i := initInertia()
 	db := initDatabase()
 
+	// Create repositories and services
 	repos := NewRepositories(db)
 	services := NewServices(repos)
+
+	// Insert default data using the new service layer
+	ctx := context.Background()
+	err := database.InsertDefaultData(ctx, services)
+	if err != nil {
+		log.Printf("Warning: Failed to insert default data: %v", err)
+	}
 
 	app := echo.New()
 
@@ -73,24 +82,7 @@ func initDatabase() store.Queryable {
 		log.Fatalf("failed opening connection to postgres: %v", err)
 	}
 
-	// TODO: Replace with migrations or schema creation using sqlx
-	// For now, we'll assume the schema already exists
-
-	// TODO: Replace with direct inserts using repositories
-	// Insert default data if needed
-	// insertDefaultData(context.Background(), db)
-
 	return db
-}
-
-// insertDefaultData inserts default data into the database
-func insertDefaultData(ctx context.Context, db store.Queryable, repos *repository.Repositories, services *service.Services) {
-	// TODO: Implement default data insertion using repositories
-	// Example:
-	// Insert default roles
-	// Insert default users
-	// Insert default cycle
-	// Insert default configurations
 }
 
 func NewRepositories(db store.Queryable) *repository.Repositories {
@@ -113,18 +105,18 @@ func NewRepositories(db store.Queryable) *repository.Repositories {
 
 func NewServices(repos *repository.Repositories) *service.Services {
 	return &service.Services{
-		Users:         service.NewUsers(repos),
-		Role:          service.NewRole(repos),
-		Cycle:         service.NewCycle(repos),
-		Configuration: service.NewConfiguration(repos),
-		Student:       service.NewStudent(repos),
-		Professor:     service.NewProfessor(repos),
-		Subject:       service.NewSubject(repos),
-		Module:        service.NewModule(repos),
-		Blog:          service.NewBlog(repos),
-		Payment:       service.NewPayment(repos),
-		PaymentMethod: service.NewPaymentMethod(repos),
-		Careers:       service.NewCareers(repos),
-		Note:          service.NewNote(repos),
+		Users:         service.NewUsers(repos.Users),
+		Role:          service.NewRole(repos.Role),
+		Cycle:         service.NewCycle(repos.Cycle),
+		Configuration: service.NewConfiguration(repos.Configuration, repos.Cycle),
+		Student:       service.NewStudent(repos.Student, repos.Note),
+		Professor:     service.NewProfessor(repos.Professor),
+		Subject:       service.NewSubject(repos.Subject),
+		Module:        service.NewModule(repos.Module),
+		Blog:          service.NewBlog(repos.Blog),
+		Payment:       service.NewPayment(repos.Payment),
+		PaymentMethod: service.NewPaymentMethod(repos.PaymentMethod),
+		Careers:       service.NewCareers(repos.Careers),
+		Note:          service.NewNote(repos.Note),
 	}
 }

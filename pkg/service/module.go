@@ -9,46 +9,46 @@ import (
 
 type Module interface {
 	GetAll(ctx context.Context) ([]model.Module, error)
-	GetByID(ctx context.Context, id string) (model.Module, error)
+	GetByID(ctx context.Context, id uint) (model.Module, error)
 	Create(ctx context.Context, module model.Module) (model.Module, error)
 	Update(ctx context.Context, module model.Module) (model.Module, error)
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id uint) error
 	GetByName(ctx context.Context, name string) (model.Module, error)
 	GetActive(ctx context.Context) ([]model.Module, error)
 }
 
 type ModuleService struct {
-	repos *repository.Repositories
+	repo *repository.Module
 }
 
-func NewModule(repos *repository.Repositories) Module {
-	return &ModuleService{repos: repos}
+func NewModule(repo *repository.Module) Module {
+	return &ModuleService{repo: repo}
 }
 
 func (s *ModuleService) GetAll(ctx context.Context) ([]model.Module, error) {
-	return s.repos.Module.GetAll(ctx)
+	return s.repo.GetAll(ctx)
 }
 
-func (s *ModuleService) GetByID(ctx context.Context, id string) (model.Module, error) {
-	return s.repos.Module.GetOneById(ctx, id)
+func (s *ModuleService) GetByID(ctx context.Context, id uint) (model.Module, error) {
+	return s.repo.GetOneById(ctx, id)
 }
 
 func (s *ModuleService) Create(ctx context.Context, module model.Module) (model.Module, error) {
-	return s.repos.Module.Insert(ctx, module)
+	return s.repo.Insert(ctx, module)
 }
 
 func (s *ModuleService) Update(ctx context.Context, module model.Module) (model.Module, error) {
-	return s.repos.Module.Update(ctx, module)
+	return s.repo.Update(ctx, module)
 }
 
-func (s *ModuleService) Delete(ctx context.Context, id string) error {
-	return s.repos.Module.Delete(ctx, id)
+func (s *ModuleService) Delete(ctx context.Context, id uint) error {
+	return s.repo.Delete(ctx, id)
 }
 
 func (s *ModuleService) GetByName(ctx context.Context, name string) (model.Module, error) {
-	return s.repos.Module.GetOne(ctx, filters.IsSelectFilter("name", name))
+	return s.repo.GetOne(ctx, filters.IsSelectFilter("name", name))
 }
 
 func (s *ModuleService) GetActive(ctx context.Context) ([]model.Module, error) {
-	return s.repos.Module.GetAll(ctx, filters.IsSelectFilter("active", true))
+	return s.repo.GetAll(ctx, filters.IsSelectFilter("active", true))
 }

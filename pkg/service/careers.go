@@ -9,46 +9,46 @@ import (
 
 type Careers interface {
 	GetAll(ctx context.Context) ([]model.Careers, error)
-	GetByID(ctx context.Context, id string) (model.Careers, error)
+	GetByID(ctx context.Context, id uint) (model.Careers, error)
 	Create(ctx context.Context, career model.Careers) (model.Careers, error)
 	Update(ctx context.Context, career model.Careers) (model.Careers, error)
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id uint) error
 	GetByName(ctx context.Context, name string) (model.Careers, error)
-	GetByLeaderID(ctx context.Context, leaderID string) ([]model.Careers, error)
+	GetByLeaderID(ctx context.Context, leaderID uint) ([]model.Careers, error)
 }
 
 type CareersService struct {
-	repos *repository.Repositories
+	repo *repository.Careers
 }
 
-func NewCareers(repos *repository.Repositories) Careers {
-	return &CareersService{repos: repos}
+func NewCareers(repo *repository.Careers) Careers {
+	return &CareersService{repo: repo}
 }
 
 func (s *CareersService) GetAll(ctx context.Context) ([]model.Careers, error) {
-	return s.repos.Careers.GetAll(ctx)
+	return s.repo.GetAll(ctx)
 }
 
-func (s *CareersService) GetByID(ctx context.Context, id string) (model.Careers, error) {
-	return s.repos.Careers.GetOneById(ctx, id)
+func (s *CareersService) GetByID(ctx context.Context, id uint) (model.Careers, error) {
+	return s.repo.GetOneById(ctx, id)
 }
 
 func (s *CareersService) Create(ctx context.Context, career model.Careers) (model.Careers, error) {
-	return s.repos.Careers.Insert(ctx, career)
+	return s.repo.Insert(ctx, career)
 }
 
 func (s *CareersService) Update(ctx context.Context, career model.Careers) (model.Careers, error) {
-	return s.repos.Careers.Update(ctx, career)
+	return s.repo.Update(ctx, career)
 }
 
-func (s *CareersService) Delete(ctx context.Context, id string) error {
-	return s.repos.Careers.Delete(ctx, id)
+func (s *CareersService) Delete(ctx context.Context, id uint) error {
+	return s.repo.Delete(ctx, id)
 }
 
 func (s *CareersService) GetByName(ctx context.Context, name string) (model.Careers, error) {
-	return s.repos.Careers.GetOne(ctx, filters.IsSelectFilter("name", name))
+	return s.repo.GetOne(ctx, filters.IsSelectFilter("name", name))
 }
 
-func (s *CareersService) GetByLeaderID(ctx context.Context, leaderID string) ([]model.Careers, error) {
-	return s.repos.Careers.GetAll(ctx, filters.IsSelectFilter("leader_id", leaderID))
+func (s *CareersService) GetByLeaderID(ctx context.Context, leaderID uint) ([]model.Careers, error) {
+	return s.repo.GetAll(ctx, filters.IsSelectFilter("leader_id", leaderID))
 }

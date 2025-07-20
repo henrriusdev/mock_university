@@ -9,46 +9,46 @@ import (
 
 type Permission interface {
 	GetAll(ctx context.Context) ([]model.Permission, error)
-	GetByID(ctx context.Context, id string) (model.Permission, error)
+	GetByID(ctx context.Context, id uint) (model.Permission, error)
 	Create(ctx context.Context, permission model.Permission) (model.Permission, error)
 	Update(ctx context.Context, permission model.Permission) (model.Permission, error)
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id uint) error
 	GetByName(ctx context.Context, name string) (model.Permission, error)
 	GetByModule(ctx context.Context, module string) ([]model.Permission, error)
 }
 
 type PermissionService struct {
-	repos *repository.Repositories
+	repo *repository.Permission
 }
 
-func NewPermission(repos *repository.Repositories) Permission {
-	return &PermissionService{repos: repos}
+func NewPermission(repo *repository.Permission) Permission {
+	return &PermissionService{repo: repo}
 }
 
 func (s *PermissionService) GetAll(ctx context.Context) ([]model.Permission, error) {
-	return s.repos.Permission.GetAll(ctx)
+	return s.repo.GetAll(ctx)
 }
 
-func (s *PermissionService) GetByID(ctx context.Context, id string) (model.Permission, error) {
-	return s.repos.Permission.GetOneById(ctx, id)
+func (s *PermissionService) GetByID(ctx context.Context, id uint) (model.Permission, error) {
+	return s.repo.GetOneById(ctx, id)
 }
 
 func (s *PermissionService) Create(ctx context.Context, permission model.Permission) (model.Permission, error) {
-	return s.repos.Permission.Insert(ctx, permission)
+	return s.repo.Insert(ctx, permission)
 }
 
 func (s *PermissionService) Update(ctx context.Context, permission model.Permission) (model.Permission, error) {
-	return s.repos.Permission.Update(ctx, permission)
+	return s.repo.Update(ctx, permission)
 }
 
-func (s *PermissionService) Delete(ctx context.Context, id string) error {
-	return s.repos.Permission.Delete(ctx, id)
+func (s *PermissionService) Delete(ctx context.Context, id uint) error {
+	return s.repo.Delete(ctx, id)
 }
 
 func (s *PermissionService) GetByName(ctx context.Context, name string) (model.Permission, error) {
-	return s.repos.Permission.GetOne(ctx, filters.IsSelectFilter("name", name))
+	return s.repo.GetOne(ctx, filters.IsSelectFilter("name", name))
 }
 
 func (s *PermissionService) GetByModule(ctx context.Context, module string) ([]model.Permission, error) {
-	return s.repos.Permission.GetAll(ctx, filters.IsSelectFilter("module", module))
+	return s.repo.GetAll(ctx, filters.IsSelectFilter("module", module))
 }

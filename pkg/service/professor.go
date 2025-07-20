@@ -19,41 +19,41 @@ type Professor interface {
 }
 
 type ProfessorService struct {
-	repos *repository.Repositories
+	repo *repository.Professor
 }
 
-func NewProfessor(repos *repository.Repositories) Professor {
-	return &ProfessorService{repos: repos}
+func NewProfessor(repo *repository.Professor) Professor {
+	return &ProfessorService{repo: repo}
 }
 
 func (s *ProfessorService) GetAll(ctx context.Context) ([]model.Professor, error) {
-	return s.repos.Professor.GetAll(ctx)
+	return s.repo.GetAll(ctx)
 }
 
 func (s *ProfessorService) GetByID(ctx context.Context, id uint) (model.Professor, error) {
-	return s.repos.Professor.GetOneById(ctx, id)
+	return s.repo.GetOneById(ctx, id)
 }
 
 func (s *ProfessorService) Create(ctx context.Context, professor model.Professor) (model.Professor, error) {
-	return s.repos.Professor.Insert(ctx, professor)
+	return s.repo.Insert(ctx, professor)
 }
 
 func (s *ProfessorService) Update(ctx context.Context, professor model.Professor) (model.Professor, error) {
-	return s.repos.Professor.Update(ctx, professor)
+	return s.repo.Update(ctx, professor)
 }
 
 func (s *ProfessorService) Delete(ctx context.Context, id uint) error {
-	return s.repos.Professor.Delete(ctx, id)
+	return s.repo.Delete(ctx, id)
 }
 
 func (s *ProfessorService) GetByUserID(ctx context.Context, userID uint) (model.Professor, error) {
-	return s.repos.Professor.GetOne(ctx, filters.IsSelectFilter("user_id", userID))
+	return s.repo.GetOne(ctx, filters.IsSelectFilter("user_id", userID))
 }
 
 func (s *ProfessorService) GetByIdentityCard(ctx context.Context, identityCard string) (model.Professor, error) {
-	return s.repos.Professor.GetOne(ctx, filters.IsSelectFilter("identity_card", identityCard))
+	return s.repo.GetOne(ctx, filters.IsSelectFilter("identity_card", identityCard))
 }
 
 func (s *ProfessorService) GetSubordinates(ctx context.Context, professorID uint) ([]model.Professor, error) {
-	return s.repos.Professor.GetAll(ctx, filters.IsSelectFilter("boss_id", professorID))
+	return s.repo.GetAll(ctx, filters.IsSelectFilter("boss_id", professorID))
 }

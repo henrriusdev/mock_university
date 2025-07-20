@@ -5,10 +5,7 @@ import (
 	"mocku/pkg/model"
 	"mocku/pkg/repository"
 	"mocku/pkg/repository/filters"
-	"net/http"
 	"time"
-
-	inertia "github.com/romsar/gonertia"
 )
 
 type Configuration interface {
@@ -19,87 +16,92 @@ type Configuration interface {
 	Delete(ctx context.Context, id uint) error
 	GetByKey(ctx context.Context, key string) (model.Configuration, error)
 	GetByModule(ctx context.Context, module string) ([]model.Configuration, error)
-	
-	// New methods for the old functionality
-	UpdateNumberNotes(notesNumber int, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error
-	UpdateDates(startSubjects, endSubjects, cycleStart, cycleEnd time.Time, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error
-	UpdateNumberFees(feesNumber int, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error
-	UpdateNotesPercentages(percentages []float64, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error
-	UpdateFeeDates(payments []time.Time, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error
-	GetCurrentCycle(i *inertia.Inertia, w http.ResponseWriter, r *http.Request) (*model.Cycle, error)
-	InactivateCycle(i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error
-	NewCycle(name string, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) (*model.Cycle, error)
-	NewConfiguration(currentCycle *model.Cycle, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error
+	GetActiveCycleConfiguration(ctx context.Context) (model.Configuration, error)
+	UpdateNumberNotes(ctx context.Context, notesNumber int) error
+	UpdateDates(ctx context.Context, startSubjects, endSubjects, cycleStart, cycleEnd time.Time) error
+	UpdateNumberFees(ctx context.Context, feesNumber int) error
+	UpdateNotesPercentages(ctx context.Context, percentages []float64) error
+	UpdateFeeDates(ctx context.Context, payments []time.Time) error
+	GetCurrentCycle(ctx context.Context) (*model.Cycle, error)
+	InactivateCycle(ctx context.Context) error
+	NewCycle(ctx context.Context, name string) (*model.Cycle, error)
+	NewConfiguration(ctx context.Context, currentCycle *model.Cycle) error
 }
 
 type ConfigurationService struct {
-	repos *repository.Repositories
+	repo  *repository.Configuration
+	cycle *repository.Cycle
 }
 
-func NewConfiguration(repos *repository.Repositories) Configuration {
-	return &ConfigurationService{repos: repos}
+func NewConfiguration(repo *repository.Configuration, cycle *repository.Cycle) Configuration {
+	return &ConfigurationService{repo: repo, cycle: cycle}
 }
 
 func (s *ConfigurationService) GetAll(ctx context.Context) ([]model.Configuration, error) {
-	return s.repos.Configuration.GetAll(ctx)
+	return s.repo.GetAll(ctx)
 }
 
 func (s *ConfigurationService) GetByID(ctx context.Context, id uint) (model.Configuration, error) {
-	return s.repos.Configuration.GetOneById(ctx, id)
+	return s.repo.GetOneById(ctx, id)
 }
 
 func (s *ConfigurationService) Create(ctx context.Context, configuration model.Configuration) (model.Configuration, error) {
-	return s.repos.Configuration.Insert(ctx, configuration)
+	return s.repo.Insert(ctx, configuration)
 }
 
 func (s *ConfigurationService) Update(ctx context.Context, configuration model.Configuration) (model.Configuration, error) {
-	return s.repos.Configuration.Update(ctx, configuration)
+	return s.repo.Update(ctx, configuration)
 }
 
 func (s *ConfigurationService) Delete(ctx context.Context, id uint) error {
-	return s.repos.Configuration.Delete(ctx, id)
+	return s.repo.Delete(ctx, id)
 }
 
 func (s *ConfigurationService) GetByKey(ctx context.Context, key string) (model.Configuration, error) {
-	return s.repos.Configuration.GetOne(ctx, filters.IsSelectFilter("key", key))
+	return s.repo.GetOne(ctx, filters.IsSelectFilter("key", key))
 }
 
 func (s *ConfigurationService) GetByModule(ctx context.Context, module string) ([]model.Configuration, error) {
-	return s.repos.Configuration.GetAll(ctx, filters.IsSelectFilter("module", module))
+	return s.repo.GetAll(ctx, filters.IsSelectFilter("module", module))
+}
+
+// GetActiveCycleConfiguration gets the configuration for the active cycle
+func (s *ConfigurationService) GetActiveCycleConfiguration(ctx context.Context) (model.Configuration, error) {
+	return s.repo.GetActiveCycleConfiguration(ctx)
 }
 
 // UpdateNumberNotes updates the number of notes for the active cycle configuration
-func (s *ConfigurationService) UpdateNumberNotes(notesNumber int, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error {
-	_, err := s.repos.Configuration.UpdateNumberNotes(r.Context(), notesNumber)
+func (s *ConfigurationService) UpdateNumberNotes(ctx context.Context, notesNumber int) error {
+	_, err := s.repo.UpdateNumberNotes(ctx, notesNumber)
 	return err
 }
 
 // UpdateDates updates the registration dates for the active cycle configuration and the cycle dates
-func (s *ConfigurationService) UpdateDates(startSubjects, endSubjects, cycleStart, cycleEnd time.Time, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error {
-	return s.repos.Configuration.UpdateDates(r.Context(), startSubjects, endSubjects, cycleStart, cycleEnd, s.repos.Cycle)
+func (s *ConfigurationService) UpdateDates(ctx context.Context, startSubjects, endSubjects, cycleStart, cycleEnd time.Time) error {
+	return s.repo.UpdateDates(ctx, startSubjects, endSubjects, cycleStart, cycleEnd, s.cycle)
 }
 
 // UpdateNumberFees updates the number of fees for the active cycle configuration
-func (s *ConfigurationService) UpdateNumberFees(feesNumber int, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error {
-	_, err := s.repos.Configuration.UpdateNumberFees(r.Context(), feesNumber)
+func (s *ConfigurationService) UpdateNumberFees(ctx context.Context, feesNumber int) error {
+	_, err := s.repo.UpdateNumberFees(ctx, feesNumber)
 	return err
 }
 
 // UpdateNotesPercentages updates the notes percentages for the active cycle configuration
-func (s *ConfigurationService) UpdateNotesPercentages(percentages []float64, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error {
-	_, err := s.repos.Configuration.UpdateNotesPercentages(r.Context(), percentages)
+func (s *ConfigurationService) UpdateNotesPercentages(ctx context.Context, percentages []float64) error {
+	_, err := s.repo.UpdateNotesPercentages(ctx, percentages)
 	return err
 }
 
 // UpdateFeeDates updates the fee dates for the active cycle configuration
-func (s *ConfigurationService) UpdateFeeDates(payments []time.Time, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error {
-	_, err := s.repos.Configuration.UpdateFeeDates(r.Context(), payments)
+func (s *ConfigurationService) UpdateFeeDates(ctx context.Context, payments []time.Time) error {
+	_, err := s.repo.UpdateFeeDates(ctx, payments)
 	return err
 }
 
 // GetCurrentCycle gets the active cycle
-func (s *ConfigurationService) GetCurrentCycle(i *inertia.Inertia, w http.ResponseWriter, r *http.Request) (*model.Cycle, error) {
-	cycle, err := s.repos.Cycle.GetActiveCycle(r.Context())
+func (s *ConfigurationService) GetCurrentCycle(ctx context.Context) (*model.Cycle, error) {
+	cycle, err := s.cycle.GetActiveCycle(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -107,13 +109,13 @@ func (s *ConfigurationService) GetCurrentCycle(i *inertia.Inertia, w http.Respon
 }
 
 // InactivateCycle sets the active cycle to inactive
-func (s *ConfigurationService) InactivateCycle(i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error {
-	return s.repos.Cycle.InactivateCycle(r.Context())
+func (s *ConfigurationService) InactivateCycle(ctx context.Context) error {
+	return s.cycle.InactivateCycle(ctx)
 }
 
 // NewCycle creates a new active cycle with the given name
-func (s *ConfigurationService) NewCycle(name string, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) (*model.Cycle, error) {
-	cycle, err := s.repos.Cycle.CreateCycle(r.Context(), name)
+func (s *ConfigurationService) NewCycle(ctx context.Context, name string) (*model.Cycle, error) {
+	cycle, err := s.cycle.CreateCycle(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +123,7 @@ func (s *ConfigurationService) NewCycle(name string, i *inertia.Inertia, w http.
 }
 
 // NewConfiguration creates a new configuration for a cycle
-func (s *ConfigurationService) NewConfiguration(currentCycle *model.Cycle, i *inertia.Inertia, w http.ResponseWriter, r *http.Request) error {
-	_, err := s.repos.Configuration.CreateConfiguration(r.Context(), *currentCycle)
+func (s *ConfigurationService) NewConfiguration(ctx context.Context, currentCycle *model.Cycle) error {
+	_, err := s.repo.CreateConfiguration(ctx, *currentCycle)
 	return err
 }
