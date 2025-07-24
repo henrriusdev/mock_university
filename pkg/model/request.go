@@ -9,7 +9,7 @@ type (
 	}
 
 	StudentRequest struct {
-		ID                     int     `form:"id"`
+		ID                     string  `form:"id"`
 		Phone                  string  `form:"phone"`
 		District               string  `form:"district"`
 		City                   string  `form:"city"`
@@ -20,33 +20,33 @@ type (
 		Semester               int     `form:"semester"`
 		TotalAverage           float64 `form:"totalAverage"`
 		BirthDate              Date    `form:"birthDate"`
-		CareerId               int     `form:"career"`
+		CareerId               string  `form:"career"`
 		Name                   string  `form:"name"`
 		Email                  string  `form:"email"`
 		Username               string  `form:"username"`
 	}
 
 	CareerRequest struct {
-		ID          int    `form:"id"`
-		Name        string `form:"name"`
-		Description string `form:"description"`
-		LeaderId    *int   `form:"leaderId"`
+		ID          string  `form:"id"`
+		Name        string  `form:"name"`
+		Description string  `form:"description"`
+		LeaderId    *string `form:"leaderId"`
 	}
 
 	ProfessorRequest struct {
-		ID           int    `form:"id"`
-		IdentityCard string `form:"identityCard"`
-		Name         string `form:"name"`
-		Email        string `form:"email"`
-		Phone        string `form:"phone"`
-		Username     string `form:"username"`
-		BirthDate    Date   `form:"birthDate"`
-		Address      string `form:"address"`
-		BossId       *int   `form:"bossId"`
+		ID           string  `form:"id"`
+		IdentityCard string  `form:"identityCard"`
+		Name         string  `form:"name"`
+		Email        string  `form:"email"`
+		Phone        string  `form:"phone"`
+		Username     string  `form:"username"`
+		BirthDate    Date    `form:"birthDate"`
+		Address      string  `form:"address"`
+		BossId       *string `form:"bossId"`
 	}
 
 	SubjectRequest struct {
-		ID            int    `form:"id"`
+		ID            string `form:"id"`
 		Name          string `form:"name"`
 		Description   string `form:"description"`
 		CreditUnits   int    `form:"creditUnits"`
@@ -57,8 +57,8 @@ type (
 		LabHours      int    `form:"labHours"`
 		TotalHours    int    `form:"totalHours"`
 		ClassSchedule string `form:"classSchedule"`
-		ProfessorId   int    `form:"professorId"`
-		CareerId      int    `form:"careerId"`
+		ProfessorId   string `form:"professorId"`
+		CareerId      string `form:"careerId"`
 		PreqIds       string `form:"prerequisites"`
 	}
 

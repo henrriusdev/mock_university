@@ -2,7 +2,7 @@ package model
 
 type (
 	StudentResponse struct {
-		ID                     int     `json:"id"`
+		ID                     string  `json:"id"`
 		IdentityCard           string  `json:"identityCard"`
 		BirthDate              string  `json:"birthDate"`
 		Phone                  string  `json:"phone"`
@@ -15,7 +15,7 @@ type (
 	}
 
 	StudentsTableResponse struct {
-		ID           int     `json:"id"`
+		ID           string  `json:"id"`
 		IdentityCard string  `json:"identityCard"`
 		Avatar       string  `json:"avatar"`
 		Name         string  `json:"name"`
@@ -26,7 +26,7 @@ type (
 	}
 
 	UserResponse struct {
-		ID       int    `json:"id"`
+		ID       string `json:"id"`
 		Name     string `json:"name"`
 		Email    string `json:"email"`
 		Username string `json:"username"`
@@ -35,27 +35,27 @@ type (
 	}
 
 	SelectResponse struct {
-		ID   int    `json:"id"`
+		ID   string `json:"id"`
 		Name string `json:"name"`
 	}
 
 	SelectResponseSubject struct {
-		ID       int    `json:"id"`
+		ID       string `json:"id"`
 		Name     string `json:"name"`
 		Code     string `json:"code"`
 		Semester int    `json:"semester"`
 	}
 
 	CareerResponse struct {
-		ID          int    `json:"id"`
+		ID          string `json:"id"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
 		LeaderName  string `json:"leader"`
-		LeaderId    int    `json:"leaderId"`
+		LeaderId    string `json:"leaderId"`
 	}
 
 	ProfessorResponse struct {
-		ID           int    `json:"id"`
+		ID           string `json:"id"`
 		IdentityCard string `json:"identityCard"`
 		Avatar       string `json:"avatar"`
 		Name         string `json:"name"`
@@ -64,7 +64,7 @@ type (
 	}
 
 	SubjectResponse struct {
-		ID            int                     `json:"id"`
+		ID            string                  `json:"id"`
 		Name          string                  `json:"name"`
 		Description   string                  `json:"description"`
 		CreditUnits   int                     `json:"creditUnits"`
@@ -75,21 +75,21 @@ type (
 		LabHours      int                     `json:"labHours"`
 		TotalHours    int                     `json:"totalHours"`
 		ClassSchedule map[string][]string     `json:"classSchedule"`
-		ProfessorId   int                     `json:"professorId"`
+		ProfessorId   string                  `json:"professorId"`
 		ProfessorName string                  `json:"professorName"`
 		Careers       []SelectResponse        `json:"careers"`
 		Prerequisites []SelectResponseSubject `json:"prerequisites"`
 	}
 
 	NoteResponse struct {
-		ID      uint      `json:"id"`
+		ID      string    `json:"id"`
 		Subject string    `json:"subject"`
 		Notes   []float64 `json:"notes"`
 		Average float64   `json:"avg"`
 	}
 
 	ScheduleSubjectResponse struct {
-		ID            uint                `json:"id"`
+		ID            string              `json:"id"`
 		Name          string              `json:"name"`
 		Description   string              `json:"description"`
 		Code          string              `json:"code"`

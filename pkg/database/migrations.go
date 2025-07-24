@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"log"
 	"mocku/pkg/model"
 	"mocku/pkg/repository"
@@ -44,12 +45,12 @@ func InsertDefaultData(ctx context.Context, services *service.Services) error {
 func insertDefaultRoles(ctx context.Context, services *service.Services) error {
 	// Define the roles
 	defaultRoles := []model.Role{
-		{Name: "Directivo", Description: "Rol de directivo"},
-		{Name: "Cajero", Description: "Rol de cajero"},
-		{Name: "Control de estudio", Description: "Rol de control de estudio"},
-		{Name: "Profesor", Description: "Rol de profesor"},
-		{Name: "Profesor líder", Description: "Rol de jefe de escuela"},
-		{Name: "Estudiante", Description: "Rol de estudiante"},
+		{Name: "Directive", Description: "Directive role"},
+		{Name: "Cashier", Description: "Cashier role"},
+		{Name: "Study control", Description: "Study control role"},
+		{Name: "Professor", Description: "Professor role"},
+		{Name: "Profesor leader", Description: "Profesor leader role"},
+		{Name: "Student", Description: "Student role"},
 	}
 
 	// Insert roles if they don't exist
@@ -62,7 +63,7 @@ func insertDefaultRoles(ctx context.Context, services *service.Services) error {
 		}
 
 		// If error is not "not found", return it
-		if err != repository.ErrNotFound {
+		if !errors.Is(err, repository.ErrNotFound) {
 			return err
 		}
 
@@ -87,18 +88,18 @@ func insertDefaultUsers(ctx context.Context, services *service.Services) error {
 	}
 
 	// If error is not "not found", return it
-	if err != repository.ErrNotFound {
+	if !errors.Is(err, repository.ErrNotFound) {
 		return err
 	}
 
 	// Get the admin role
 	adminRole, err := services.Role.GetByName(ctx, "Directivo")
 	if err != nil {
-		if err == repository.ErrNotFound {
-			log.Println("Admin role not found, skipping admin user creation")
-			return nil
+		if !errors.Is(err, repository.ErrNotFound) {
+			return err
 		}
-		return err
+		log.Println("Admin role not found, skipping admin user creation")
+		return nil
 	}
 
 	// Hash the password
@@ -138,7 +139,7 @@ func insertDefaultCycle(ctx context.Context, services *service.Services) (model.
 	}
 
 	// If error is not "not found", return it
-	if err != repository.ErrNotFound {
+	if !errors.Is(err, repository.ErrNotFound) {
 		return model.Cycle{}, err
 	}
 
@@ -169,7 +170,7 @@ func insertDefaultConfig(ctx context.Context, services *service.Services, active
 	}
 
 	// If error is not "not found", return it
-	if err != repository.ErrNotFound {
+	if !errors.Is(err, repository.ErrNotFound) {
 		return err
 	}
 

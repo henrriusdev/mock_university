@@ -9,10 +9,10 @@ import (
 
 type Users interface {
 	GetAll(ctx context.Context) ([]model.Users, error)
-	GetByID(ctx context.Context, id uint) (model.Users, error)
+	GetByID(ctx context.Context, id string) (model.Users, error)
 	Create(ctx context.Context, user model.Users) (model.Users, error)
 	Update(ctx context.Context, user model.Users) (model.Users, error)
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id string) error
 	GetByUsername(ctx context.Context, username string) (model.Users, error)
 	GetByEmail(ctx context.Context, email string) (model.Users, error)
 }
@@ -29,19 +29,19 @@ func (s *UsersService) GetAll(ctx context.Context) ([]model.Users, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *UsersService) GetByID(ctx context.Context, id uint) (model.Users, error) {
+func (s *UsersService) GetByID(ctx context.Context, id string) (model.Users, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
 func (s *UsersService) Create(ctx context.Context, user model.Users) (model.Users, error) {
-	return s.repo.Insert(ctx, user)
+	return s.repo.InsertOne(ctx, user)
 }
 
 func (s *UsersService) Update(ctx context.Context, user model.Users) (model.Users, error) {
-	return s.repo.Update(ctx, user)
+	return s.repo.UpdateOneById(ctx, user.ID, user)
 }
 
-func (s *UsersService) Delete(ctx context.Context, id uint) error {
+func (s *UsersService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 

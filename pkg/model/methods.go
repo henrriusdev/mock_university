@@ -50,7 +50,7 @@ func FillSelectResponse[T any](array []T, idField, nameField string) []SelectRes
 
 		// Agregamos los valores al slice de SelectResponse
 		result = append(result, SelectResponse{
-			ID:   idFieldValue.Interface().(int),
+			ID:   idFieldValue.Interface().(string),
 			Name: nameFieldValue.Interface().(string),
 		})
 	}
@@ -61,7 +61,7 @@ func FillSelectResponseSubject(array []Subject) []SelectResponseSubject {
 	var result []SelectResponseSubject
 	for _, item := range array {
 		result = append(result, SelectResponseSubject{
-			ID:       int(item.ID),
+			ID:       item.ID,
 			Name:     item.Name,
 			Code:     item.Code,
 			Semester: item.Semester,

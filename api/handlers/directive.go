@@ -99,15 +99,13 @@ func (d *Directive) Student(c echo.Context) error {
 	var userDto model.UserResponse
 
 	if id != "add" {
-		studentId, _ := strconv.Atoi(id)
-
-		student, err := d.services.Student.GetByID(c.Request().Context(), uint(studentId))
+		student, err := d.services.Student.GetByID(c.Request().Context(), id)
 		if err != nil {
 			return nil
 		}
 
 		studentDto = model.StudentResponse{
-			ID:                     studentId,
+			ID:                     id,
 			Phone:                  student.Phone,
 			Address:                student.Address,
 			District:               student.District,
@@ -120,7 +118,7 @@ func (d *Directive) Student(c echo.Context) error {
 		}
 
 		userDto = model.UserResponse{
-			ID:       int(student.User.ID),
+			ID:       student.User.ID,
 			Name:     student.User.Name,
 			Email:    student.User.Email,
 			Username: student.User.Username,
@@ -137,7 +135,7 @@ func (d *Directive) Student(c echo.Context) error {
 	var careerDtos []model.SelectResponse
 	for _, career := range careers {
 		careerDtos = append(careerDtos, model.SelectResponse{
-			ID:   int(career.ID),
+			ID:   career.ID,
 			Name: career.Name,
 		})
 	}
@@ -243,25 +241,19 @@ func (d *Directive) Professor(c echo.Context) error {
 	var userDto model.UserResponse
 
 	if id != "add" {
-		professorId, err := strconv.Atoi(id)
-		if err != nil {
-			common.HandleServerErr(d.i, err).ServeHTTP(c.Response().Writer, c.Request())
-			return nil
-		}
-
-		professor, err := d.services.Professor.GetByID(c.Request().Context(), uint(professorId))
+		professor, err := d.services.Professor.GetByID(c.Request().Context(), id)
 		if err != nil {
 			return nil
 		}
 
 		professorDto = model.ProfessorResponse{
-			ID:           int(professor.ID),
+			ID:           professor.ID,
 			IdentityCard: professor.IdentityCard,
 			Phone:        professor.Phone,
 		}
 
 		userDto = model.UserResponse{
-			ID:       0,
+			ID:       "",
 			Name:     professor.User.Name,
 			Email:    professor.User.Email,
 			Username: professor.User.Username,
@@ -279,7 +271,7 @@ func (d *Directive) Professor(c echo.Context) error {
 	bossesDto := make([]model.SelectResponse, len(professors))
 	for i, professor := range professors {
 		bossesDto[i] = model.SelectResponse{
-			ID:   int(professor.ID),
+			ID:   professor.ID,
 			Name: professor.User.Name,
 		}
 	}
@@ -346,15 +338,13 @@ func (d *Directive) Subject(c echo.Context) error {
 	var subjectDto model.SubjectResponse
 
 	if id != "add" {
-		subjectId, _ := strconv.Atoi(id)
-
-		subj, err := d.services.Subject.GetByID(c.Request().Context(), uint(subjectId))
+		subj, err := d.services.Subject.GetByID(c.Request().Context(), id)
 		if err != nil {
 			return nil
 		}
 
 		subjectDto = model.SubjectResponse{
-			ID:            int(subj.ID),
+			ID:            subj.ID,
 			Name:          subj.Name,
 			Description:   subj.Description,
 			Code:          subj.Code,
@@ -365,13 +355,13 @@ func (d *Directive) Subject(c echo.Context) error {
 			LabHours:      subj.LabHours,
 			TotalHours:    subj.TotalHours,
 			ClassSchedule: subj.ClassSchedule,
-			ProfessorId:   int(subj.ProfessorID),
+			ProfessorId:   subj.ProfessorID,
 			ProfessorName: subj.Professor.User.Name,
 		}
 
 		// Now we only have a single career
 		subjectDto.Careers = []model.SelectResponse{{
-			ID:   int(subj.CareerID),
+			ID:   subj.CareerID,
 			Name: subj.Career.Name,
 		}}
 
@@ -393,7 +383,13 @@ func (d *Directive) Subject(c echo.Context) error {
 	if err != nil {
 		return nil
 	}
-	professorDtos := model.FillSelectResponse(professors, "ID", "Edges.User.Name")
+	professorDtos := make([]model.SelectResponse, len(professors))
+	for i, professor := range professors {
+		professorDtos[i] = model.SelectResponse{
+			ID:   professor.ID,
+			Name: professor.User.Name,
+		}
+	}
 
 	subjects, err := d.services.Subject.GetAll(c.Request().Context())
 	if err != nil {
@@ -463,7 +459,7 @@ func (d *Directive) StudentPost(c echo.Context) error {
 		Semester:               studentRequest.Semester,
 		TotalAverage:           studentRequest.TotalAverage,
 		BirthDate:              studentRequest.BirthDate,
-		CareerID:               uint(studentRequest.CareerId),
+		CareerID:               studentRequest.CareerId,
 		UserID:                 user.ID,
 	})
 	if err != nil {

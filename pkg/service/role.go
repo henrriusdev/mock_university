@@ -9,10 +9,10 @@ import (
 
 type Role interface {
 	GetAll(ctx context.Context) ([]model.Role, error)
-	GetByID(ctx context.Context, id uint) (model.Role, error)
+	GetByID(ctx context.Context, id string) (model.Role, error)
 	Create(ctx context.Context, role model.Role) (model.Role, error)
 	Update(ctx context.Context, role model.Role) (model.Role, error)
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id string) error
 	GetByName(ctx context.Context, name string) (model.Role, error)
 }
 
@@ -28,19 +28,19 @@ func (s *RoleService) GetAll(ctx context.Context) ([]model.Role, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *RoleService) GetByID(ctx context.Context, id uint) (model.Role, error) {
+func (s *RoleService) GetByID(ctx context.Context, id string) (model.Role, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
 func (s *RoleService) Create(ctx context.Context, role model.Role) (model.Role, error) {
-	return s.repo.Insert(ctx, role)
+	return s.repo.InsertOne(ctx, role)
 }
 
 func (s *RoleService) Update(ctx context.Context, role model.Role) (model.Role, error) {
-	return s.repo.Update(ctx, role)
+	return s.repo.UpdateOneById(ctx, role.ID, role)
 }
 
-func (s *RoleService) Delete(ctx context.Context, id uint) error {
+func (s *RoleService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 

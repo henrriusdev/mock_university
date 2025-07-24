@@ -28,17 +28,15 @@ func (s *Student) RegisterRoutes(e *echo.Group) {
 func (s *Student) Dashboard(c echo.Context) error {
 	w, r := c.Response().Writer, c.Request()
 
-	user := c.Get("user_id").(float64)
-	userID := int(user)
-
+	user := c.Get("user_id").(string)
 	userName := c.Get("name").(string)
 
-	config, err := s.config.GetByID(c.Request().Context(), uint(1))
+	config, err := s.config.GetByID(c.Request().Context(), "1")
 	if err != nil {
 		return nil
 	}
 
-	notes, err := s.service.GetStudentNotes(c.Request().Context(), uint(userID))
+	notes, err := s.service.GetStudentNotes(c.Request().Context(), user)
 	if err != nil {
 		return nil
 	}

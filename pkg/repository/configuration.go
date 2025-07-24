@@ -57,7 +57,7 @@ func (c *Configuration) UpdateDates(ctx context.Context, startSubjects, endSubje
 
 	config.StartRegistrationSubjects = startSubjects
 	config.EndRegistrationSubjects = endSubjects
-	_, err = c.Update(ctx, config)
+	_, err = c.UpdateOneById(ctx, config.ID, config)
 	return err
 }
 
@@ -69,7 +69,7 @@ func (c *Configuration) UpdateNumberFees(ctx context.Context, feesNumber int) (m
 	}
 
 	config.NumberFees = feesNumber
-	return c.Update(ctx, config)
+	return c.UpdateOneById(ctx, config.ID, config)
 }
 
 // UpdateNotesPercentages updates the notes percentages for the active cycle configuration
@@ -80,7 +80,7 @@ func (c *Configuration) UpdateNotesPercentages(ctx context.Context, percentages 
 	}
 
 	config.NotesPercentages = percentages
-	return c.Update(ctx, config)
+	return c.UpdateOneById(ctx, config.ID, config)
 }
 
 // UpdateFeeDates updates the fee dates for the active cycle configuration
@@ -91,20 +91,21 @@ func (c *Configuration) UpdateFeeDates(ctx context.Context, payments []time.Time
 	}
 
 	config.FeeDates = payments
-	return c.Update(ctx, config)
+	return c.UpdateOneById(ctx, config.ID, config)
 }
 
 // CreateConfiguration creates a new configuration for a cycle
 func (c *Configuration) CreateConfiguration(ctx context.Context, cycle model.Cycle) (model.Configuration, error) {
+	// Create a new configuration
 	config := model.Configuration{
-		NumberNotes:               0,
-		NumberFees:                0,
-		StartRegistrationSubjects: time.Now(),
-		EndRegistrationSubjects:   time.Now(),
-		NotesPercentages:          []float64{},
-		FeeDates:                  []time.Time{},
 		CycleID:                   cycle.ID,
+		StartRegistrationSubjects: time.Now(),
+		EndRegistrationSubjects:   time.Now().AddDate(0, 0, 30),
+		BlockNotPayInscription:    false,
+		NumberFees:                3,
+		NumberNotes:               3,
+		NotesPercentages:          []float64{0.3, 0.3, 0.4},
 	}
 
-	return c.Insert(ctx, config)
+	return c.InsertOne(ctx, config)
 }

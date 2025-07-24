@@ -9,12 +9,12 @@ import (
 
 type Subject interface {
 	GetAll(ctx context.Context) ([]model.Subject, error)
-	GetByID(ctx context.Context, id uint) (model.Subject, error)
+	GetByID(ctx context.Context, id string) (model.Subject, error)
 	Create(ctx context.Context, subject model.Subject) (model.Subject, error)
 	Update(ctx context.Context, subject model.Subject) (model.Subject, error)
-	Delete(ctx context.Context, id uint) error
-	GetByProfessorID(ctx context.Context, professorID uint) ([]model.Subject, error)
-	GetByCareerID(ctx context.Context, careerID uint) ([]model.Subject, error)
+	Delete(ctx context.Context, id string) error
+	GetByProfessorID(ctx context.Context, professorID string) ([]model.Subject, error)
+	GetByCareerID(ctx context.Context, careerID string) ([]model.Subject, error)
 	GetByCode(ctx context.Context, code string) (model.Subject, error)
 	GetBySemester(ctx context.Context, semester int) ([]model.Subject, error)
 	CreatePrerequisite(ctx context.Context, prerequisite model.Prerequisite) (model.Prerequisite, error)
@@ -37,27 +37,27 @@ func (s *SubjectService) GetAll(ctx context.Context) ([]model.Subject, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *SubjectService) GetByID(ctx context.Context, id uint) (model.Subject, error) {
+func (s *SubjectService) GetByID(ctx context.Context, id string) (model.Subject, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
 func (s *SubjectService) Create(ctx context.Context, subject model.Subject) (model.Subject, error) {
-	return s.repo.Insert(ctx, subject)
+	return s.repo.InsertOne(ctx, subject)
 }
 
 func (s *SubjectService) Update(ctx context.Context, subject model.Subject) (model.Subject, error) {
-	return s.repo.Update(ctx, subject)
+	return s.repo.UpdateOneById(ctx, subject.ID, subject)
 }
 
-func (s *SubjectService) Delete(ctx context.Context, id uint) error {
+func (s *SubjectService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *SubjectService) GetByProfessorID(ctx context.Context, professorID uint) ([]model.Subject, error) {
+func (s *SubjectService) GetByProfessorID(ctx context.Context, professorID string) ([]model.Subject, error) {
 	return s.repo.GetAll(ctx, filters.IsSelectFilter("professor_id", professorID))
 }
 
-func (s *SubjectService) GetByCareerID(ctx context.Context, careerID uint) ([]model.Subject, error) {
+func (s *SubjectService) GetByCareerID(ctx context.Context, careerID string) ([]model.Subject, error) {
 	return s.repo.GetAll(ctx, filters.IsSelectFilter("career_id", careerID))
 }
 

@@ -34,7 +34,7 @@ func (s *Setting) RegisterRoutes(e *echo.Group) {
 func (s *Setting) Settings(c echo.Context) error {
 	w, r := c.Response().Writer, c.Request()
 
-	config, err := s.services.Configuration.GetByID(c.Request().Context(), uint(1))
+	config, err := s.services.Configuration.GetByID(c.Request().Context(), "1")
 	if err != nil {
 		return nil
 	}
@@ -159,7 +159,7 @@ func (s *Setting) SettingsNotesPercentage(c echo.Context) error {
 		return nil
 	}
 
-	config, err := s.services.Configuration.GetByID(c.Request().Context(), uint(1))
+	config, err := s.services.Configuration.GetByID(c.Request().Context(), "1")
 	if err != nil {
 		return nil
 	}
@@ -191,7 +191,7 @@ func (s *Setting) SettingsPaymentsDates(c echo.Context) error {
 		return nil
 	}
 
-	config, err := s.services.Configuration.GetByID(c.Request().Context(), uint(1))
+	config, err := s.services.Configuration.GetByID(c.Request().Context(), "1")
 	if err != nil {
 		return nil
 	}
