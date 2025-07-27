@@ -2,6 +2,9 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"github.com/doug-martin/goqu/v9"
 	"mocku/pkg/model"
 	"mocku/pkg/repository/filters"
 	"mocku/pkg/store"
@@ -18,9 +21,26 @@ func NewConfiguration(db store.Queryable) *Configuration {
 
 // GetActiveCycleConfiguration gets the configuration for the active cycle
 func (c *Configuration) GetActiveCycleConfiguration(ctx context.Context) (model.Configuration, error) {
-	// We need to join the configurations table with cycles table
-	// and filter by active = true in the cycles table
-	return c.GetOne(ctx, filters.IsSelectFilter("cycles.active", true), filters.WithJoin("cycles", "configurations.cycle_id", "id"))
+	query := filters.ApplyFilters(c.baseQuery("configurations"),
+		filters.IsSelectFilter("cycles.active", true),
+		filters.WithJoin("cycles", "configurations.cycle_id", "id"),
+	).Select(goqu.I("configurations.*"))
+
+	q, args, err := query.ToSQL()
+	if err != nil {
+		return model.Configuration{}, err
+	}
+
+	var result model.Configuration
+	if err := c.Store.GetContext(ctx, &result, q, args...); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return model.Configuration{}, ErrNotFound
+		}
+
+		return model.Configuration{}, err
+	}
+
+	return result, nil
 }
 
 // UpdateNumberNotes updates the number of notes for the active cycle configuration

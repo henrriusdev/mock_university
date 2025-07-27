@@ -4,7 +4,6 @@ import (
 	"mocku/pkg/common"
 	"mocku/pkg/model"
 	"mocku/pkg/service"
-	"strconv"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -66,7 +65,7 @@ func (d *Directive) Students(c echo.Context) error {
 	studentDtos := make([]model.StudentsTableResponse, len(students))
 	for i, student := range students {
 		studentDtos[i] = model.StudentsTableResponse{
-			ID:           int(student.ID),
+			ID:           student.ID,
 			Name:         student.User.Name,
 			Avatar:       student.User.Avatar,
 			Email:        student.User.Email,
@@ -163,20 +162,20 @@ func (d *Directive) Careers(c echo.Context) error {
 	for i, career := range careers {
 		if career.Leader == nil {
 			careerDtos[i] = model.CareerResponse{
-				ID:          int(career.ID),
+				ID:          career.ID,
 				Name:        career.Name,
 				Description: career.Description,
 				LeaderName:  "",
-				LeaderId:    0,
+				LeaderId:    "",
 			}
 			continue
 		}
 		careerDtos[i] = model.CareerResponse{
-			ID:          int(career.ID),
+			ID:          career.ID,
 			Name:        career.Name,
 			Description: career.Description,
 			LeaderName:  career.Leader.User.Name,
-			LeaderId:    int(career.Leader.User.ID),
+			LeaderId:    career.Leader.User.ID,
 		}
 	}
 
@@ -188,7 +187,7 @@ func (d *Directive) Careers(c echo.Context) error {
 	professorsDto := make([]model.SelectResponse, len(professors))
 	for i, professor := range professors {
 		professorsDto[i] = model.SelectResponse{
-			ID:   int(professor.ID),
+			ID:   professor.ID,
 			Name: professor.User.Name,
 		}
 	}
@@ -214,7 +213,7 @@ func (d *Directive) Professors(c echo.Context) error {
 	professorDtos := make([]model.ProfessorResponse, len(professors))
 	for i, professor := range professors {
 		professorDtos[i] = model.ProfessorResponse{
-			ID:           int(professor.ID),
+			ID:           professor.ID,
 			Name:         professor.User.Name,
 			Email:        professor.User.Email,
 			Avatar:       strings.Replace(professor.User.Avatar, "./", "/", 1),
@@ -298,7 +297,7 @@ func (d *Directive) Subjects(c echo.Context) error {
 	subjectDtos := make([]model.SubjectResponse, len(subjects))
 	for i, subj := range subjects {
 		subjectDtos[i] = model.SubjectResponse{
-			ID:            int(subj.ID),
+			ID:            subj.ID,
 			Name:          subj.Name,
 			Description:   subj.Description,
 			Code:          subj.Code,
@@ -309,14 +308,14 @@ func (d *Directive) Subjects(c echo.Context) error {
 			LabHours:      subj.LabHours,
 			TotalHours:    subj.TotalHours,
 			ClassSchedule: subj.ClassSchedule,
-			ProfessorId:   int(subj.ProfessorID),
+			ProfessorId:   subj.ProfessorID,
 			ProfessorName: subj.Professor.User.Name,
 			Careers:       nil,
 		}
 
 		// Now we only have a single career
 		subjectDtos[i].Careers = append(subjectDtos[i].Careers, model.SelectResponse{
-			ID:   int(subj.CareerID),
+			ID:   subj.Career.ID,
 			Name: subj.Career.Name,
 		})
 	}
@@ -525,9 +524,9 @@ func (d *Directive) ProfessorPost(c echo.Context) error {
 	}
 
 	// Set BossID if it exists
-	var bossID *uint
+	var bossID *string
 	if professorRequest.BossId != nil {
-		bossIDValue := uint(*professorRequest.BossId)
+		bossIDValue := *professorRequest.BossId
 		bossID = &bossIDValue
 	}
 
@@ -561,17 +560,7 @@ func (d *Directive) SubjectPost(c echo.Context) error {
 		return nil
 	}
 
-	// Get prerequisite IDs
-	var prereqUintIds []uint
-	var err error
-	if subjectRequest.PreqIds != "" {
-		subjectsIdsSlice := strings.Split(subjectRequest.PreqIds, ",")
-		prereqUintIds, err = common.StringSliceToUintSlice(subjectsIdsSlice)
-		if err != nil {
-			common.HandleServerErr(d.i, err).ServeHTTP(c.Response().Writer, c.Request())
-			return nil
-		}
-	}
+	subjectsIdsSlice := strings.Split(subjectRequest.PreqIds, ",")
 
 	// Create the subject first
 	subject, err := d.services.Subject.Create(c.Request().Context(), model.Subject{
@@ -585,8 +574,8 @@ func (d *Directive) SubjectPost(c echo.Context) error {
 		LabHours:      subjectRequest.LabHours,
 		TotalHours:    subjectRequest.TotalHours,
 		ClassSchedule: classSchedule,
-		ProfessorID:   uint(subjectRequest.ProfessorId),
-		CareerID:      uint(subjectRequest.CareerId),
+		ProfessorID:   subjectRequest.ProfessorId,
+		CareerID:      subjectRequest.CareerId,
 	})
 	if err != nil {
 		common.HandleServerErr(d.i, err).ServeHTTP(c.Response().Writer, c.Request())
@@ -594,7 +583,7 @@ func (d *Directive) SubjectPost(c echo.Context) error {
 	}
 
 	// Now create prerequisite relationships if any
-	for _, prereqID := range prereqUintIds {
+	for _, prereqID := range subjectsIdsSlice {
 		// Create a prerequisite entity for each prerequisite subject
 		_, err := d.services.Subject.CreatePrerequisite(c.Request().Context(), model.Prerequisite{
 			SubjectID:      subject.ID,
@@ -607,6 +596,5 @@ func (d *Directive) SubjectPost(c echo.Context) error {
 	}
 
 	d.i.Redirect(c.Response().Writer, c.Request(), "/directive/subjects", 302)
-
 	return nil
 }

@@ -16,23 +16,19 @@ import (
 func InsertDefaultData(ctx context.Context, services *service.Services) error {
 	log.Println("Inserting default data...")
 
-	// Insert default roles
 	if err := insertDefaultRoles(ctx, services); err != nil {
 		return err
 	}
 
-	// Insert default admin user
 	if err := insertDefaultUsers(ctx, services); err != nil {
 		return err
 	}
 
-	// Insert default cycle
 	activeCycle, err := insertDefaultCycle(ctx, services)
 	if err != nil {
 		return err
 	}
 
-	// Insert default configuration
 	if err := insertDefaultConfig(ctx, services, activeCycle); err != nil {
 		return err
 	}
@@ -55,21 +51,16 @@ func insertDefaultRoles(ctx context.Context, services *service.Services) error {
 
 	// Insert roles if they don't exist
 	for _, role := range defaultRoles {
-		// Check if role exists by name
 		_, err := services.Role.GetByName(ctx, role.Name)
 		if err == nil {
 			// Role exists, continue to next role
 			continue
 		}
 
-		// If error is not "not found", return it
-		if !errors.Is(err, repository.ErrNotFound) {
-			return err
-		}
-
 		// Role doesn't exist, create it
 		_, err = services.Role.Create(ctx, role)
 		if err != nil {
+			log.Printf("Error creating role: %s", role.Name)
 			return err
 		}
 		log.Printf("Created role: %s", role.Name)
@@ -110,14 +101,13 @@ func insertDefaultUsers(ctx context.Context, services *service.Services) error {
 
 	// Create admin user
 	adminUser := model.Users{
-		Username:  "admin_master",
-		Password:  string(hashedPassword),
-		Email:     "admin@example.com",
-		Name:      "Administrador máster",
-		Avatar:    "",
-		IsActive:  true,
-		CreatedAt: time.Now(),
-		RoleID:    adminRole.ID,
+		Username: "admin_master",
+		Password: string(hashedPassword),
+		Email:    "admin@example.com",
+		Name:     "Administrador máster",
+		Avatar:   "",
+		IsActive: true,
+		RoleID:   adminRole.ID,
 	}
 
 	_, err = services.Users.Create(ctx, adminUser)
@@ -162,15 +152,14 @@ func insertDefaultCycle(ctx context.Context, services *service.Services) (model.
 
 // insertDefaultConfig inserts a default configuration for the active cycle if none exists
 func insertDefaultConfig(ctx context.Context, services *service.Services, activeCycle model.Cycle) error {
-	// Check if a configuration exists for the active cycle
 	_, err := services.Configuration.GetActiveCycleConfiguration(ctx)
 	if err == nil {
 		// Configuration exists, nothing to do
 		return nil
 	}
 
-	// If error is not "not found", return it
 	if !errors.Is(err, repository.ErrNotFound) {
+		log.Println("Error getting active cycle configuration:", err)
 		return err
 	}
 

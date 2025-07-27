@@ -116,7 +116,7 @@ func WithJoin(table, leftKey, rightKey string) SelectFilterBuilder {
 	return func(query *goqu.SelectDataset) *goqu.SelectDataset {
 		return query.Join(
 			goqu.T(table),
-			goqu.On(goqu.I(table+"."+rightKey), goqu.I(leftKey)),
+			goqu.On(goqu.I(table+"."+rightKey).Eq(goqu.I(leftKey))),
 		)
 	}
 }

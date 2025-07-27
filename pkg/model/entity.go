@@ -6,10 +6,10 @@ import (
 
 // BaseEntity is a base model entity
 type BaseEntity struct {
-	ID        string    `json:"id" db:"id"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt time.Time `json:"deleted_at" db:"deleted_at"`
+	ID        string     `json:"id" db:"id" goqu:"skipinsert,skipupdate"`
+	CreatedAt time.Time  `json:"created_at" db:"created_at" goqu:"skipinsert,skipupdate"`
+	UpdatedAt time.Time  `json:"updated_at" db:"updated_at" goqu:"skipinsert,skipupdate"`
+	DeletedAt *time.Time `json:"deleted_at" db:"deleted_at" goqu:"skipinsert,skipupdate"`
 }
 
 // Users represents the user entity
@@ -23,8 +23,8 @@ type Users struct {
 	IsActive bool   `json:"is_active" db:"is_active"`
 
 	// Relationships
-	RoleID uint `json:"role_id" db:"role_id"`
-	Role   Role `json:"role" db:"-"`
+	RoleID string `json:"role_id" db:"role_id"`
+	Role   Role   `json:"role" db:"-"`
 
 	// Reverse relationships
 	RequestsMade     []Request      `json:"requests_made" db:"-"`
@@ -109,8 +109,8 @@ type Subject struct {
 // Prerequisite represents a prerequisite relationship between subjects
 type Prerequisite struct {
 	BaseEntity
-	SubjectID      uint `json:"subject_id" db:"subject_id"`
-	PrerequisiteID uint `json:"prerequisite_id" db:"prerequisite_id"`
+	SubjectID      string `json:"subject_id" db:"subject_id"`
+	PrerequisiteID string `json:"prerequisite_id" db:"prerequisite_id"`
 
 	// Non-DB fields for convenience
 	Subject      Subject `json:"subject" db:"-"`
@@ -124,11 +124,11 @@ type Note struct {
 	Average float32   `json:"average" db:"average"`
 
 	// Relationships
-	StudentID uint    `json:"student_id" db:"student_id"`
+	StudentID string  `json:"student_id" db:"student_id"`
 	Student   Student `json:"student" db:"-"`
-	SubjectID uint    `json:"subject_id" db:"subject_id"`
+	SubjectID string  `json:"subject_id" db:"subject_id"`
 	Subject   Subject `json:"subject" db:"-"`
-	CycleID   uint    `json:"cycle_id" db:"cycle_id"`
+	CycleID   string  `json:"cycle_id" db:"cycle_id"`
 	Cycle     Cycle   `json:"cycle" db:"-"`
 }
 
@@ -193,8 +193,8 @@ type Blog struct {
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 
 	// Relationships
-	OwnerID uint  `json:"owner_id" db:"owner_id"`
-	Owner   Users `json:"owner" db:"-"`
+	OwnerID string `json:"owner_id" db:"owner_id"`
+	Owner   Users  `json:"owner" db:"-"`
 }
 
 // Request represents the request entity

@@ -9,10 +9,10 @@ import (
 
 type Module interface {
 	GetAll(ctx context.Context) ([]model.Module, error)
-	GetByID(ctx context.Context, id uint) (model.Module, error)
+	GetByID(ctx context.Context, id string) (model.Module, error)
 	Create(ctx context.Context, module model.Module) (model.Module, error)
 	Update(ctx context.Context, module model.Module) (model.Module, error)
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id string) error
 	GetByName(ctx context.Context, name string) (model.Module, error)
 	GetActive(ctx context.Context) ([]model.Module, error)
 }
@@ -29,7 +29,7 @@ func (s *ModuleService) GetAll(ctx context.Context) ([]model.Module, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *ModuleService) GetByID(ctx context.Context, id uint) (model.Module, error) {
+func (s *ModuleService) GetByID(ctx context.Context, id string) (model.Module, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
@@ -41,7 +41,7 @@ func (s *ModuleService) Update(ctx context.Context, module model.Module) (model.
 	return s.repo.Update(ctx, module)
 }
 
-func (s *ModuleService) Delete(ctx context.Context, id uint) error {
+func (s *ModuleService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 

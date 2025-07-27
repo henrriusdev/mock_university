@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/doug-martin/goqu/v9/exp"
@@ -138,6 +139,9 @@ func (b *Base[T]) GetOne(ctx context.Context, filter ...filters.SelectFilterBuil
 
 	var result T
 	if err := b.Store.GetContext(ctx, &result, q, args...); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return *new(T), ErrNotFound
+		}
 		return *new(T), err
 	}
 
