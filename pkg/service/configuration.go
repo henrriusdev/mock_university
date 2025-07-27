@@ -10,10 +10,10 @@ import (
 
 type Configuration interface {
 	GetAll(ctx context.Context) ([]model.Configuration, error)
-	GetByID(ctx context.Context, id uint) (model.Configuration, error)
+	GetByID(ctx context.Context, id string) (model.Configuration, error)
 	Create(ctx context.Context, configuration model.Configuration) (model.Configuration, error)
 	Update(ctx context.Context, configuration model.Configuration) (model.Configuration, error)
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id string) error
 	GetByKey(ctx context.Context, key string) (model.Configuration, error)
 	GetByModule(ctx context.Context, module string) ([]model.Configuration, error)
 	GetActiveCycleConfiguration(ctx context.Context) (model.Configuration, error)
@@ -41,7 +41,7 @@ func (s *ConfigurationService) GetAll(ctx context.Context) ([]model.Configuratio
 	return s.repo.GetAll(ctx)
 }
 
-func (s *ConfigurationService) GetByID(ctx context.Context, id uint) (model.Configuration, error) {
+func (s *ConfigurationService) GetByID(ctx context.Context, id string) (model.Configuration, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
@@ -53,7 +53,7 @@ func (s *ConfigurationService) Update(ctx context.Context, configuration model.C
 	return s.repo.Update(ctx, configuration)
 }
 
-func (s *ConfigurationService) Delete(ctx context.Context, id uint) error {
+func (s *ConfigurationService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 

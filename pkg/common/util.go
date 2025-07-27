@@ -17,18 +17,18 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func LoginRedirect(role int, w http.ResponseWriter, r *http.Request, i *inertia.Inertia) {
+func LoginRedirect(role string, w http.ResponseWriter, r *http.Request, i *inertia.Inertia) {
 	var view string
 	switch role {
-	case 1:
+	case "1":
 		view = "/directive"
-	case 2:
+	case "2":
 		view = "/payments"
-	case 3:
+	case "3":
 		view = "/control"
-	case 4, 5:
+	case "4", "5":
 		view = "/professor"
-	case 6:
+	case "6":
 		view = "/student"
 	}
 
@@ -226,7 +226,7 @@ func Average(notes []float64, percentages []float64) float64 {
 	return sum
 }
 
-func GenerateJWT(userID int, name, email, role string) (string, error) {
+func GenerateJWT(userID string, name, email, role string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
 		"name":    name,

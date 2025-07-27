@@ -27,9 +27,9 @@ func (c *Cycle) InactivateCycle(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	cycle.Active = false
-	_, err = c.Update(ctx, cycle)
+	_, err = c.UpdateOneById(ctx, cycle.ID, cycle)
 	return err
 }
 
@@ -39,8 +39,8 @@ func (c *Cycle) CreateCycle(ctx context.Context, name string) (model.Cycle, erro
 		Name:      name,
 		Active:    true,
 		StartDate: time.Now(),
-		EndDate:   time.Now(),
+		EndDate:   time.Now().AddDate(0, 0, 120), // 4 months by default
 	}
-	
-	return c.Insert(ctx, cycle)
+
+	return c.InsertOne(ctx, cycle)
 }

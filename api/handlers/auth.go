@@ -91,7 +91,7 @@ func (a *Auth) LoginPost(c echo.Context) error {
 		return common.ErrMethodNotAllowed
 	}
 
-	tokenString, err := common.GenerateJWT(int(user.ID), user.Name, user.Email, user.Role.Name)
+	tokenString, err := common.GenerateJWT(user.ID, user.Name, user.Email, user.Role.Name)
 	if err != nil {
 		common.HandleServerErr(a.i, err).ServeHTTP(c.Response().Writer, c.Request())
 		return nil
@@ -117,7 +117,7 @@ func (a *Auth) LoginPost(c echo.Context) error {
 		Path:     "/",
 	})
 
-	common.LoginRedirect(int(user.Role.ID), c.Response().Writer, c.Request(), a.i)
+	common.LoginRedirect(user.Role.ID, c.Response().Writer, c.Request(), a.i)
 
 	return nil
 }

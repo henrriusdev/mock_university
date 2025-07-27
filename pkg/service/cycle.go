@@ -9,10 +9,10 @@ import (
 
 type Cycle interface {
 	GetAll(ctx context.Context) ([]model.Cycle, error)
-	GetByID(ctx context.Context, id uint) (model.Cycle, error)
+	GetByID(ctx context.Context, id string) (model.Cycle, error)
 	Create(ctx context.Context, cycle model.Cycle) (model.Cycle, error)
 	Update(ctx context.Context, cycle model.Cycle) (model.Cycle, error)
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id string) error
 	GetByYear(ctx context.Context, year int) ([]model.Cycle, error)
 	GetCurrent(ctx context.Context) (model.Cycle, error)
 	GetActiveCycle(ctx context.Context) (model.Cycle, error)
@@ -30,7 +30,7 @@ func (s *CycleService) GetAll(ctx context.Context) ([]model.Cycle, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *CycleService) GetByID(ctx context.Context, id uint) (model.Cycle, error) {
+func (s *CycleService) GetByID(ctx context.Context, id string) (model.Cycle, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
@@ -42,7 +42,7 @@ func (s *CycleService) Update(ctx context.Context, cycle model.Cycle) (model.Cyc
 	return s.repo.Update(ctx, cycle)
 }
 
-func (s *CycleService) Delete(ctx context.Context, id uint) error {
+func (s *CycleService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 

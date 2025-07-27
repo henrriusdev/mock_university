@@ -9,13 +9,13 @@ import (
 
 type Note interface {
 	GetAll(ctx context.Context) ([]model.Note, error)
-	GetByID(ctx context.Context, id uint) (model.Note, error)
+	GetByID(ctx context.Context, id string) (model.Note, error)
 	Create(ctx context.Context, note model.Note) (model.Note, error)
 	Update(ctx context.Context, note model.Note) (model.Note, error)
-	Delete(ctx context.Context, id uint) error
-	GetByStudentID(ctx context.Context, studentID uint) ([]model.Note, error)
-	GetBySubjectID(ctx context.Context, subjectID uint) ([]model.Note, error)
-	GetByCycleID(ctx context.Context, cycleID uint) ([]model.Note, error)
+	Delete(ctx context.Context, id string) error
+	GetByStudentID(ctx context.Context, studentID string) ([]model.Note, error)
+	GetBySubjectID(ctx context.Context, subjectID string) ([]model.Note, error)
+	GetByCycleID(ctx context.Context, cycleID string) ([]model.Note, error)
 }
 
 type NoteService struct {
@@ -30,7 +30,7 @@ func (s *NoteService) GetAll(ctx context.Context) ([]model.Note, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *NoteService) GetByID(ctx context.Context, id uint) (model.Note, error) {
+func (s *NoteService) GetByID(ctx context.Context, id string) (model.Note, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
@@ -42,18 +42,18 @@ func (s *NoteService) Update(ctx context.Context, note model.Note) (model.Note, 
 	return s.repo.Update(ctx, note)
 }
 
-func (s *NoteService) Delete(ctx context.Context, id uint) error {
+func (s *NoteService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *NoteService) GetByStudentID(ctx context.Context, studentID uint) ([]model.Note, error) {
+func (s *NoteService) GetByStudentID(ctx context.Context, studentID string) ([]model.Note, error) {
 	return s.repo.GetAll(ctx, filters.IsSelectFilter("student_id", studentID))
 }
 
-func (s *NoteService) GetBySubjectID(ctx context.Context, subjectID uint) ([]model.Note, error) {
+func (s *NoteService) GetBySubjectID(ctx context.Context, subjectID string) ([]model.Note, error) {
 	return s.repo.GetAll(ctx, filters.IsSelectFilter("subject_id", subjectID))
 }
 
-func (s *NoteService) GetByCycleID(ctx context.Context, cycleID uint) ([]model.Note, error) {
+func (s *NoteService) GetByCycleID(ctx context.Context, cycleID string) ([]model.Note, error) {
 	return s.repo.GetAll(ctx, filters.IsSelectFilter("cycle_id", cycleID))
 }

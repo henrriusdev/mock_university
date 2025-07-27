@@ -9,11 +9,11 @@ import (
 
 type Activity interface {
 	GetAll(ctx context.Context) ([]model.Activity, error)
-	GetByID(ctx context.Context, id uint) (model.Activity, error)
+	GetByID(ctx context.Context, id string) (model.Activity, error)
 	Create(ctx context.Context, activity model.Activity) (model.Activity, error)
 	Update(ctx context.Context, activity model.Activity) (model.Activity, error)
-	Delete(ctx context.Context, id uint) error
-	GetByUserID(ctx context.Context, userID uint) ([]model.Activity, error)
+	Delete(ctx context.Context, id string) error
+	GetByUserID(ctx context.Context, userID string) ([]model.Activity, error)
 	GetByType(ctx context.Context, activityType string) ([]model.Activity, error)
 }
 
@@ -29,7 +29,7 @@ func (s *ActivityService) GetAll(ctx context.Context) ([]model.Activity, error) 
 	return s.repo.GetAll(ctx)
 }
 
-func (s *ActivityService) GetByID(ctx context.Context, id uint) (model.Activity, error) {
+func (s *ActivityService) GetByID(ctx context.Context, id string) (model.Activity, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
@@ -41,11 +41,11 @@ func (s *ActivityService) Update(ctx context.Context, activity model.Activity) (
 	return s.repo.Update(ctx, activity)
 }
 
-func (s *ActivityService) Delete(ctx context.Context, id uint) error {
+func (s *ActivityService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *ActivityService) GetByUserID(ctx context.Context, userID uint) ([]model.Activity, error) {
+func (s *ActivityService) GetByUserID(ctx context.Context, userID string) ([]model.Activity, error) {
 	return s.repo.GetAll(ctx, filters.IsSelectFilter("user_id", userID))
 }
 

@@ -9,11 +9,11 @@ import (
 
 type Request interface {
 	GetAll(ctx context.Context) ([]model.Request, error)
-	GetByID(ctx context.Context, id uint) (model.Request, error)
+	GetByID(ctx context.Context, id string) (model.Request, error)
 	Create(ctx context.Context, request model.Request) (model.Request, error)
 	Update(ctx context.Context, request model.Request) (model.Request, error)
-	Delete(ctx context.Context, id uint) error
-	GetByUserID(ctx context.Context, userID uint) ([]model.Request, error)
+	Delete(ctx context.Context, id string) error
+	GetByUserID(ctx context.Context, userID string) ([]model.Request, error)
 	GetByStatus(ctx context.Context, status string) ([]model.Request, error)
 	GetByType(ctx context.Context, requestType string) ([]model.Request, error)
 }
@@ -30,7 +30,7 @@ func (s *RequestService) GetAll(ctx context.Context) ([]model.Request, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *RequestService) GetByID(ctx context.Context, id uint) (model.Request, error) {
+func (s *RequestService) GetByID(ctx context.Context, id string) (model.Request, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
@@ -42,11 +42,11 @@ func (s *RequestService) Update(ctx context.Context, request model.Request) (mod
 	return s.repo.Update(ctx, request)
 }
 
-func (s *RequestService) Delete(ctx context.Context, id uint) error {
+func (s *RequestService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *RequestService) GetByUserID(ctx context.Context, userID uint) ([]model.Request, error) {
+func (s *RequestService) GetByUserID(ctx context.Context, userID string) ([]model.Request, error) {
 	return s.repo.GetAll(ctx, filters.IsSelectFilter("user_id", userID))
 }
 

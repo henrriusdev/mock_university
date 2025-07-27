@@ -9,10 +9,10 @@ import (
 
 type PaymentMethod interface {
 	GetAll(ctx context.Context) ([]model.PaymentMethod, error)
-	GetByID(ctx context.Context, id uint) (model.PaymentMethod, error)
+	GetByID(ctx context.Context, id string) (model.PaymentMethod, error)
 	Create(ctx context.Context, paymentMethod model.PaymentMethod) (model.PaymentMethod, error)
 	Update(ctx context.Context, paymentMethod model.PaymentMethod) (model.PaymentMethod, error)
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id string) error
 	GetByName(ctx context.Context, name string) (model.PaymentMethod, error)
 	GetActive(ctx context.Context) ([]model.PaymentMethod, error)
 }
@@ -29,7 +29,7 @@ func (s *PaymentMethodService) GetAll(ctx context.Context) ([]model.PaymentMetho
 	return s.repo.GetAll(ctx)
 }
 
-func (s *PaymentMethodService) GetByID(ctx context.Context, id uint) (model.PaymentMethod, error) {
+func (s *PaymentMethodService) GetByID(ctx context.Context, id string) (model.PaymentMethod, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
@@ -41,7 +41,7 @@ func (s *PaymentMethodService) Update(ctx context.Context, paymentMethod model.P
 	return s.repo.Update(ctx, paymentMethod)
 }
 
-func (s *PaymentMethodService) Delete(ctx context.Context, id uint) error {
+func (s *PaymentMethodService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 

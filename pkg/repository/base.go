@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/doug-martin/goqu/v9/exp"
@@ -138,13 +139,16 @@ func (b *Base[T]) GetOne(ctx context.Context, filter ...filters.SelectFilterBuil
 
 	var result T
 	if err := b.Store.GetContext(ctx, &result, q, args...); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return *new(T), ErrNotFound
+		}
 		return *new(T), err
 	}
 
 	return result, nil
 }
 
-func (b *Base[T]) GetOneById(ctx context.Context, id uint) (T, error) {
+func (b *Base[T]) GetOneById(ctx context.Context, id string) (T, error) {
 	query := filters.ApplyFilters(
 		b.baseQuery(),
 		filters.IsSelectFilter("id", id),
@@ -163,7 +167,7 @@ func (b *Base[T]) GetOneById(ctx context.Context, id uint) (T, error) {
 	return result, nil
 }
 
-func (b *Base[T]) UpdateOneById(ctx context.Context, id uint, model T, updateFilters ...filters.UpdateFilterBuilder) (T, error) {
+func (b *Base[T]) UpdateOneById(ctx context.Context, id string, model T, updateFilters ...filters.UpdateFilterBuilder) (T, error) {
 	query := b.BaseQueryUpdate().
 		Set(model).
 		Where(goqu.Ex{"id": id})
@@ -287,7 +291,7 @@ func (b *Base[T]) Insert(ctx context.Context, model T) (T, error) {
 }
 
 // Delete deletes a model by ID
-func (b *Base[T]) Delete(ctx context.Context, id uint) error {
+func (b *Base[T]) Delete(ctx context.Context, id string) error {
 	delete := b.BaseQueryDelete().Where(goqu.Ex{"id": id})
 	q, args, err := delete.ToSQL()
 	if err != nil {

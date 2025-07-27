@@ -2,6 +2,9 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"github.com/doug-martin/goqu/v9"
 	"mocku/pkg/model"
 	"mocku/pkg/repository/filters"
 	"mocku/pkg/store"
@@ -18,9 +21,26 @@ func NewConfiguration(db store.Queryable) *Configuration {
 
 // GetActiveCycleConfiguration gets the configuration for the active cycle
 func (c *Configuration) GetActiveCycleConfiguration(ctx context.Context) (model.Configuration, error) {
-	// We need to join the configurations table with cycles table
-	// and filter by active = true in the cycles table
-	return c.GetOne(ctx, filters.IsSelectFilter("cycles.active", true), filters.WithJoin("cycles", "configurations.cycle_id", "id"))
+	query := filters.ApplyFilters(c.baseQuery("configurations"),
+		filters.IsSelectFilter("cycles.active", true),
+		filters.WithJoin("cycles", "configurations.cycle_id", "id"),
+	).Select(goqu.I("configurations.*"))
+
+	q, args, err := query.ToSQL()
+	if err != nil {
+		return model.Configuration{}, err
+	}
+
+	var result model.Configuration
+	if err := c.Store.GetContext(ctx, &result, q, args...); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return model.Configuration{}, ErrNotFound
+		}
+
+		return model.Configuration{}, err
+	}
+
+	return result, nil
 }
 
 // UpdateNumberNotes updates the number of notes for the active cycle configuration
@@ -57,7 +77,7 @@ func (c *Configuration) UpdateDates(ctx context.Context, startSubjects, endSubje
 
 	config.StartRegistrationSubjects = startSubjects
 	config.EndRegistrationSubjects = endSubjects
-	_, err = c.Update(ctx, config)
+	_, err = c.UpdateOneById(ctx, config.ID, config)
 	return err
 }
 
@@ -69,7 +89,7 @@ func (c *Configuration) UpdateNumberFees(ctx context.Context, feesNumber int) (m
 	}
 
 	config.NumberFees = feesNumber
-	return c.Update(ctx, config)
+	return c.UpdateOneById(ctx, config.ID, config)
 }
 
 // UpdateNotesPercentages updates the notes percentages for the active cycle configuration
@@ -80,7 +100,7 @@ func (c *Configuration) UpdateNotesPercentages(ctx context.Context, percentages 
 	}
 
 	config.NotesPercentages = percentages
-	return c.Update(ctx, config)
+	return c.UpdateOneById(ctx, config.ID, config)
 }
 
 // UpdateFeeDates updates the fee dates for the active cycle configuration
@@ -91,20 +111,21 @@ func (c *Configuration) UpdateFeeDates(ctx context.Context, payments []time.Time
 	}
 
 	config.FeeDates = payments
-	return c.Update(ctx, config)
+	return c.UpdateOneById(ctx, config.ID, config)
 }
 
 // CreateConfiguration creates a new configuration for a cycle
 func (c *Configuration) CreateConfiguration(ctx context.Context, cycle model.Cycle) (model.Configuration, error) {
+	// Create a new configuration
 	config := model.Configuration{
-		NumberNotes:               0,
-		NumberFees:                0,
-		StartRegistrationSubjects: time.Now(),
-		EndRegistrationSubjects:   time.Now(),
-		NotesPercentages:          []float64{},
-		FeeDates:                  []time.Time{},
 		CycleID:                   cycle.ID,
+		StartRegistrationSubjects: time.Now(),
+		EndRegistrationSubjects:   time.Now().AddDate(0, 0, 30),
+		BlockNotPayInscription:    false,
+		NumberFees:                3,
+		NumberNotes:               3,
+		NotesPercentages:          []float64{0.3, 0.3, 0.4},
 	}
 
-	return c.Insert(ctx, config)
+	return c.InsertOne(ctx, config)
 }

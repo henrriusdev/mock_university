@@ -9,10 +9,10 @@ import (
 
 type Permission interface {
 	GetAll(ctx context.Context) ([]model.Permission, error)
-	GetByID(ctx context.Context, id uint) (model.Permission, error)
+	GetByID(ctx context.Context, id string) (model.Permission, error)
 	Create(ctx context.Context, permission model.Permission) (model.Permission, error)
 	Update(ctx context.Context, permission model.Permission) (model.Permission, error)
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id string) error
 	GetByName(ctx context.Context, name string) (model.Permission, error)
 	GetByModule(ctx context.Context, module string) ([]model.Permission, error)
 }
@@ -29,7 +29,7 @@ func (s *PermissionService) GetAll(ctx context.Context) ([]model.Permission, err
 	return s.repo.GetAll(ctx)
 }
 
-func (s *PermissionService) GetByID(ctx context.Context, id uint) (model.Permission, error) {
+func (s *PermissionService) GetByID(ctx context.Context, id string) (model.Permission, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
@@ -41,7 +41,7 @@ func (s *PermissionService) Update(ctx context.Context, permission model.Permiss
 	return s.repo.Update(ctx, permission)
 }
 
-func (s *PermissionService) Delete(ctx context.Context, id uint) error {
+func (s *PermissionService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 

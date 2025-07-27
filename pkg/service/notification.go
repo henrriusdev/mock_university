@@ -9,13 +9,13 @@ import (
 
 type Notification interface {
 	GetAll(ctx context.Context) ([]model.Notification, error)
-	GetByID(ctx context.Context, id uint) (model.Notification, error)
+	GetByID(ctx context.Context, id string) (model.Notification, error)
 	Create(ctx context.Context, notification model.Notification) (model.Notification, error)
 	Update(ctx context.Context, notification model.Notification) (model.Notification, error)
-	Delete(ctx context.Context, id uint) error
-	GetByUserID(ctx context.Context, userID uint) ([]model.Notification, error)
-	GetUnread(ctx context.Context, userID uint) ([]model.Notification, error)
-	MarkAsRead(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id string) error
+	GetByUserID(ctx context.Context, userID string) ([]model.Notification, error)
+	GetUnread(ctx context.Context, userID string) ([]model.Notification, error)
+	MarkAsRead(ctx context.Context, id string) error
 }
 
 type NotificationService struct {
@@ -30,7 +30,7 @@ func (s *NotificationService) GetAll(ctx context.Context) ([]model.Notification,
 	return s.repo.GetAll(ctx)
 }
 
-func (s *NotificationService) GetByID(ctx context.Context, id uint) (model.Notification, error) {
+func (s *NotificationService) GetByID(ctx context.Context, id string) (model.Notification, error) {
 	return s.repo.GetOneById(ctx, id)
 }
 
@@ -42,22 +42,22 @@ func (s *NotificationService) Update(ctx context.Context, notification model.Not
 	return s.repo.Update(ctx, notification)
 }
 
-func (s *NotificationService) Delete(ctx context.Context, id uint) error {
+func (s *NotificationService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *NotificationService) GetByUserID(ctx context.Context, userID uint) ([]model.Notification, error) {
+func (s *NotificationService) GetByUserID(ctx context.Context, userID string) ([]model.Notification, error) {
 	return s.repo.GetAll(ctx, filters.IsSelectFilter("user_id", userID))
 }
 
-func (s *NotificationService) GetUnread(ctx context.Context, userID uint) ([]model.Notification, error) {
+func (s *NotificationService) GetUnread(ctx context.Context, userID string) ([]model.Notification, error) {
 	return s.repo.GetAll(ctx,
 		filters.IsSelectFilter("user_id", userID),
 		filters.IsSelectFilter("read", false),
 	)
 }
 
-func (s *NotificationService) MarkAsRead(ctx context.Context, id uint) error {
+func (s *NotificationService) MarkAsRead(ctx context.Context, id string) error {
 	notification, err := s.GetByID(ctx, id)
 	if err != nil {
 		return err

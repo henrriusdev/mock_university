@@ -1,13 +1,13 @@
 package model
 
 type User interface {
-	GetID() int
+	GetID() string
 	GetName() string
 	GetEmail() string
 	GetUsername() string
 }
 
-func (s StudentRequest) GetID() int {
+func (s StudentRequest) GetID() string {
 	return s.ID
 }
 
@@ -23,7 +23,7 @@ func (s StudentRequest) GetUsername() string {
 	return s.Username
 }
 
-func (p ProfessorRequest) GetID() int {
+func (p ProfessorRequest) GetID() string {
 	return p.ID
 }
 
