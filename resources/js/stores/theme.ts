@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { writable } from 'svelte/store';
 
-// Define all available themes
+// Define theme types
 export type Theme = 
   | 'lara-light-blue' 
   | 'lara-dark-blue' 
@@ -13,7 +13,14 @@ export type Theme =
   | 'lara-light-green' 
   | 'lara-dark-green';
 
-export const themes: { name: string; value: Theme; dark: boolean }[] = [
+export interface ThemeOption {
+  name: string;
+  value: Theme;
+  dark: boolean;
+}
+
+// Define all available themes
+export const themes: ThemeOption[] = [
   { name: 'Lara Light Blue', value: 'lara-light-blue', dark: false },
   { name: 'Lara Dark Blue', value: 'lara-dark-blue', dark: true },
   { name: 'Lara Light Indigo', value: 'lara-light-indigo', dark: false },
@@ -26,38 +33,23 @@ export const themes: { name: string; value: Theme; dark: boolean }[] = [
   { name: 'Lara Dark Green', value: 'lara-dark-green', dark: true },
 ];
 
-type ThemeContextType = {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-};
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
-
-interface ThemeProviderProps {
-  children: ReactNode;
-}
-
-export const ThemeProvider = ({ children }: ThemeProviderProps) => {
-  const [theme, setTheme] = useState<Theme>('lara-light-blue');
-
-  // Load theme from localStorage on mount
-  useEffect(() => {
+// Get initial theme from localStorage or default
+function getInitialTheme(): Theme {
+  if (typeof window !== 'undefined') {
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme && themes.some(t => t.value === savedTheme)) {
-      setTheme(savedTheme);
+      return savedTheme;
     }
-  }, []);
+  }
+  return 'lara-light-blue';
+}
 
-  // Save theme to localStorage when it changes
-  useEffect(() => {
+// Create the theme store
+export const currentTheme = writable(getInitialTheme());
+
+// Subscribe to theme changes and apply them
+if (typeof window !== 'undefined') {
+  currentTheme.subscribe((theme: Theme) => {
     localStorage.setItem('theme', theme);
     
     // Apply theme class to body for global styling
@@ -79,13 +71,27 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     }
     
     link.href = `https://cdn.jsdelivr.net/npm/primereact@10.9.6/resources/themes/${theme}/theme.css`;
-  }, [theme]);
+  });
+}
 
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
+export function getCurrentTheme(): ThemeOption {
+  return themes.find(t => t.value === getInitialTheme()) || themes[0];
+}
 
-export default ThemeContext;
+export function toggleLightDark(currentThemeValue: Theme): void {
+  const currentThemeObj = themes.find(t => t.value === currentThemeValue);
+  if (currentThemeObj) {
+    const currentColor = currentThemeObj.value.split('-')[2]; // 'blue', 'indigo', etc.
+    const isDark = currentThemeObj.dark;
+    
+    // Find the opposite theme with the same color
+    const newThemeType = isDark ? 'light' : 'dark';
+    const targetTheme = themes.find(t => 
+      t.value.includes(`lara-${newThemeType}`) && t.value.includes(currentColor)
+    );
+    
+    if (targetTheme) {
+      currentTheme.set(targetTheme.value);
+    }
+  }
+}

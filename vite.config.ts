@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
 import path from "path";
 import laravel from "laravel-vite-plugin";
 import tailwind from "@tailwindcss/vite";
@@ -7,19 +7,20 @@ import tailwind from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [
     laravel({
-      input: ["resources/js/app.tsx", "resources/css/app.css"],
+      input: ["resources/js/app.ts", "resources/css/app.css"],
+      ssr: "resources/js/ssr.ts",
       publicDirectory: "public",
       buildDirectory: "build",
       refresh: ["resources/**"],
     }) as any,
-    react(),
+    svelte(),
     tailwind(),
   ],
   build: {
     manifest: true,
     outDir: "public/build",
     rollupOptions: {
-      input: "resources/js/app.tsx",
+      input: "resources/js/app.ts",
       output: {
         entryFileNames: "assets/[name].js",
         chunkFileNames: "assets/[name].js",
