@@ -12,7 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('traces', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
+            $table->text('action');
+            $table->jsonb('details')->nullable();
+            $table->string('ip_address')->nullable();
+            $table->text('sql_query')->nullable();
+            $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

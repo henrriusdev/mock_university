@@ -12,7 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('configurations', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
+            $table->dateTime('start_registration_subjects');
+            $table->dateTime('end_registration_subjects');
+            $table->boolean('block_not_pay_inscription')->default(false);
+            $table->jsonb('fee_dates')->nullable();
+            $table->integer('number_fees');
+            $table->integer('number_notes');
+            $table->jsonb('notes_percentages')->nullable();
+
+            $table->foreignUuid('cycle_id')->constrained('cycles');
             $table->timestamps();
         });
     }

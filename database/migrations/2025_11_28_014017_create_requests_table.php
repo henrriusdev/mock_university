@@ -12,7 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('requests', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->text('status')->default('pending'); // pending, approved, rejected
+            $table->foreignUuid('student_id')->constrained('students')->onDelete('cascade');
+            $table->foreignUuid('professor_id')->constrained('professors')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -12,7 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('notes', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
+            $table->jsonb('notes'); // JSONB para guardar parciales (ej: {corte1: 20, corte2: 15})
+            $table->double('average');
+
+            $table->foreignUuid('student_id')->constrained('students')->onDelete('cascade');
+            $table->foreignUuid('subject_id')->constrained('subjects')->onDelete('cascade');
+            $table->foreignUuid('cycle_id')->constrained('cycles')->onDelete('cascade');
+
+            $table->unique(['student_id', 'subject_id', 'cycle_id']);
             $table->timestamps();
         });
     }

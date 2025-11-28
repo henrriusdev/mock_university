@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('professors', function (Blueprint $table) {
+        Schema::create('precedence', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignUuid('boss_id')->nullable()->constrained('professors')->onDelete('set null');
+            $table->foreignUuid('subject_id')->constrained('subjects')->onDelete('cascade');
+            $table->foreignUuid('precedence_id')->constrained('subjects')->onDelete('cascade');
+            $table->unique(['subject_id', 'precedence_id']); // Evitar duplicados
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('professors');
+        Schema::dropIfExists('prerequisites');
     }
 };
