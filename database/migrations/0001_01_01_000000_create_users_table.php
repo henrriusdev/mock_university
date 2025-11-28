@@ -11,12 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::create('roles', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique(); // Ej: 'admin', 'student', 'finance'
+            $table->string('description')->nullable(); // Ej: 'Tiene acceso a todo'
+            $table->timestamps();
+        });
+
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('first_name');
+            $table->string('last_name');
+            $table->date('dob')->nullable();
+            $table->string('phone')->nullable();
+            $table->jsonb('address')->nullable();
             $table->string('password');
+            $table->string('profile_picture')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->foreignId('role_id')->constrained()->onDelete('restrict');
             $table->rememberToken();
             $table->timestamps();
         });
