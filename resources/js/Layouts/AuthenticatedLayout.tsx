@@ -1,9 +1,25 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
+import { Button } from '@/Components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/Components/ui/dropdown-menu';
+import { Separator } from '@/Components/ui/separator';
+import {
+    Sheet,
+    SheetClose,
+    SheetContent,
+    SheetTrigger,
+} from '@/Components/ui/sheet';
+import { cn } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/react';
-import { PropsWithChildren, ReactNode, useState } from 'react';
+import { LogOut, Menu, User2 } from 'lucide-react';
+import { PropsWithChildren, ReactNode } from 'react';
 
 export default function Authenticated({
     header,
@@ -11,169 +27,213 @@ export default function Authenticated({
 }: PropsWithChildren<{ header?: ReactNode }>) {
     const user = usePage().props.auth.user;
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+    const navigation = [
+        {
+            label: 'Dashboard',
+            href: route('dashboard'),
+            active: Boolean(route().current('dashboard')),
+        },
+    ];
+
+    const initials =
+        (user?.name
+            ?.split(' ')
+            .filter(Boolean)
+            .map((segment: string) => segment[0]?.toUpperCase())
+            .slice(0, 2)
+            .join('') ||
+            user?.email?.[0]?.toUpperCase() ||
+            '?');
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <nav className="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <div className="min-h-screen bg-background">
+            <nav className="border-b bg-card">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
-                                <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
-                                </Link>
-                            </div>
+                    <div className="flex h-16 items-center justify-between">
+                        <div className="flex items-center gap-6">
+                            <Link href="/" className="flex items-center">
+                                <ApplicationLogo className="block h-8 w-auto fill-foreground" />
+                            </Link>
 
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    Dashboard
-                                </NavLink>
+                            <div className="hidden items-center gap-1 md:flex">
+                                {navigation.map((item) => (
+                                    <Link
+                                        key={item.label}
+                                        href={item.href}
+                                        className={cn(
+                                            'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                            item.active
+                                                ? 'bg-muted text-foreground'
+                                                : 'text-muted-foreground hover:text-foreground',
+                                        )}
+                                    >
+                                        {item.label}
+                                    </Link>
+                                ))}
                             </div>
                         </div>
 
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
-                                            >
-                                                {user.name}
-
-                                                <svg
-                                                    className="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
+                        <div className="flex items-center gap-2">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        className="hidden items-center gap-2 md:flex"
+                                    >
+                                        <Avatar className="h-8 w-8">
+                                            {user?.profile_picture && (
+                                                <AvatarImage
+                                                    src={user.profile_picture}
+                                                    alt={user.name ?? 'User avatar'}
+                                                />
+                                            )}
+                                            <AvatarFallback>
+                                                {initials}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-sm font-medium">
+                                            {user?.name}
                                         </span>
-                                    </Dropdown.Trigger>
-
-                                    <Dropdown.Content>
-                                        <Dropdown.Link
-                                            href={route('profile.edit')}
-                                        >
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                    <DropdownMenuLabel className="flex flex-col gap-1">
+                                        <span className="text-xs text-muted-foreground">
+                                            Signed in as
+                                        </span>
+                                        <span className="text-sm font-medium text-foreground">
+                                            {user?.name}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {user?.email}
+                                        </span>
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem asChild>
+                                        <Link href={route('profile.edit')} className="flex items-center gap-2">
+                                            <User2 className="h-4 w-4" />
                                             Profile
-                                        </Dropdown.Link>
-                                        <Dropdown.Link
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem asChild>
+                                        <Link
                                             href={route('logout')}
                                             method="post"
                                             as="button"
+                                            className="flex w-full items-center gap-2"
                                         >
+                                            <LogOut className="h-4 w-4" />
                                             Log Out
-                                        </Dropdown.Link>
-                                    </Dropdown.Content>
-                                </Dropdown>
-                            </div>
-                        </div>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
 
-                        <div className="-me-2 flex items-center sm:hidden">
-                            <button
-                                onClick={() =>
-                                    setShowingNavigationDropdown(
-                                        (previousState) => !previousState,
-                                    )
-                                }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none dark:text-gray-500 dark:hover:bg-gray-900 dark:hover:text-gray-400 dark:focus:bg-gray-900 dark:focus:text-gray-400"
-                            >
-                                <svg
-                                    className="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        className={
-                                            !showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        className={
-                                            showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                            <Sheet>
+                                <SheetTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="md:hidden"
+                                    >
+                                        <Menu className="h-5 w-5" />
+                                        <span className="sr-only">Open navigation</span>
+                                    </Button>
+                                </SheetTrigger>
+                                <SheetContent side="left" className="w-80 px-0">
+                                    <div className="flex flex-col gap-6 p-6">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-10 w-10">
+                                                {user?.profile_picture && (
+                                                    <AvatarImage
+                                                        src={user.profile_picture}
+                                                        alt={user?.name ?? 'User avatar'}
+                                                    />
+                                                )}
+                                                <AvatarFallback className="text-base">
+                                                    {initials}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="space-y-0.5">
+                                                <p className="text-sm font-semibold text-foreground">
+                                                    {user?.name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {user?.email}
+                                                </p>
+                                            </div>
+                                        </div>
 
-                <div
-                    className={
-                        (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
-                    }
-                >
-                    <div className="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            href={route('dashboard')}
-                            active={route().current('dashboard')}
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                    </div>
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-semibold uppercase text-muted-foreground">
+                                                Navigation
+                                            </p>
+                                            <Separator />
+                                            <div className="flex flex-col gap-1">
+                                                {navigation.map((item) => (
+                                                    <SheetClose asChild key={item.label}>
+                                                        <Link
+                                                            href={item.href}
+                                                            className={cn(
+                                                                'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                                                item.active
+                                                                    ? 'bg-muted text-foreground'
+                                                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                                                            )}
+                                                        >
+                                                            {item.label}
+                                                        </Link>
+                                                    </SheetClose>
+                                                ))}
+                                            </div>
+                                        </div>
 
-                    <div className="border-t border-gray-200 pb-1 pt-4 dark:border-gray-600">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800 dark:text-gray-200">
-                                {user.name}
-                            </div>
-                            <div className="text-sm font-medium text-gray-500">
-                                {user.email}
-                            </div>
-                        </div>
-
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route('logout')}
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-semibold uppercase text-muted-foreground">
+                                                Account
+                                            </p>
+                                            <Separator />
+                                            <div className="flex flex-col gap-1">
+                                                <SheetClose asChild>
+                                                    <Link
+                                                        href={route('profile.edit')}
+                                                        className="rounded-md px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                                                    >
+                                                        Profile
+                                                    </Link>
+                                                </SheetClose>
+                                                <SheetClose asChild>
+                                                    <Link
+                                                        href={route('logout')}
+                                                        method="post"
+                                                        as="button"
+                                                        className="rounded-md px-3 py-2 text-left text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                                                    >
+                                                        Log Out
+                                                    </Link>
+                                                </SheetClose>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </SheetContent>
+                            </Sheet>
                         </div>
                     </div>
                 </div>
             </nav>
 
             {header && (
-                <header className="bg-white shadow dark:bg-gray-800">
+                <header className="bg-card shadow">
                     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                         {header}
                     </div>
                 </header>
             )}
 
-            <main>{children}</main>
+            <main className="bg-muted/20">
+                {children}
+            </main>
         </div>
     );
 }
