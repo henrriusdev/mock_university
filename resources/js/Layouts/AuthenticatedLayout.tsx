@@ -11,14 +11,23 @@ import {
 } from '@/Components/ui/dropdown-menu';
 import { Separator } from '@/Components/ui/separator';
 import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetTrigger,
-} from '@/Components/ui/sheet';
-import { cn } from '@/lib/utils';
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarInset,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarProvider,
+    SidebarSeparator,
+    SidebarTrigger,
+} from '@/Components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/react';
-import { LogOut, Menu, User2 } from 'lucide-react';
+import { BookOpen, BookOpenCheck, BookOpenText, BookPlus, Cog, CreditCard, FileText, GraduationCap, LayoutDashboard, LogOut, ScrollText, ShieldUser, SquareUser, TableOfContents, User2, UserCog, UserPen } from 'lucide-react';
 import { PropsWithChildren, ReactNode } from 'react';
 
 export default function Authenticated({
@@ -32,6 +41,145 @@ export default function Authenticated({
             label: 'Dashboard',
             href: route('dashboard'),
             active: Boolean(route().current('dashboard')),
+            icon: LayoutDashboard,
+        },
+        {
+            label: 'Professors',
+            href: 'professors.index',
+            active: Boolean(route().current('professors.*')),
+            icon: UserPen,
+        },
+        {
+            label: 'Professor Dashboard',
+            href: 'professor-dashboard.index',
+            active: Boolean(route().current('professor-dashboard.*')),
+            icon: LayoutDashboard,
+        },
+        {
+            label: 'Careers',
+            href: 'careers.index',
+            active: Boolean(route().current('careers.*')),
+            icon: GraduationCap,
+        },
+        {
+            label: 'Leader Dashboard',
+            href: 'career-dashboard.index',
+            active: Boolean(route().current('career-dashboard.*')),
+            icon: LayoutDashboard,
+        },
+        {
+            label: 'Students',
+            href: 'students.index',
+            active: Boolean(route().current('students.*')),
+            icon: User2,
+        },
+        {
+            label: 'Student Dashboard',
+            href: 'student-dashboard.index',
+            active: Boolean(route().current('student-dashboard.*')),
+            icon: LayoutDashboard,
+        },
+        {
+            label: 'Registrars',
+            href: 'registrars.index',
+            active: Boolean(route().current('registrars.*')),
+            icon: ShieldUser,
+        },
+        {
+            label: 'Registrar Dashboard',
+            href: 'registrar-dashboard.index',
+            active: Boolean(route().current('registrar-dashboard.*')),
+            icon: LayoutDashboard,
+        },
+        {
+            label: 'Settings',
+            href: 'profile.edit',
+            active: Boolean(route().current('profile.*')),
+            icon: Cog,
+        },
+        {
+            label: 'Subjects',
+            href: 'subjects.index',
+            active: Boolean(route().current('subjects.*')),
+            icon: BookOpen,
+        },
+        {
+            label: 'Current subjects',
+            href: 'current-subjects.index',
+            active: Boolean(route().current('current-subjects.*')),
+            icon: BookOpenCheck,
+        },
+        {
+            label: 'Note History',
+            href: 'note-history.index',
+            active: Boolean(route().current('note-history.*')),
+            icon: BookOpenText,
+        },
+        {
+            label: 'Subject Inscription',
+            href: 'subject-inscriptions.index',
+            active: Boolean(route().current('subject-inscriptions.*')),
+            icon: BookPlus,
+        },
+        {
+            label: 'Requests',
+            href: 'requests.index',
+            active: Boolean(route().current('requests.*')),
+            icon: FileText,
+        },
+        {
+            label: 'Audit logs',
+            href: 'traces.index',
+            active: Boolean(route().current('traces.*')),
+            icon: ScrollText,
+        },
+        {
+            label: 'Cashiers',
+            href: 'cashiers.index',
+            active: Boolean(route().current('cashiers.*')),
+            icon: SquareUser,
+        },
+        {
+            label: 'Payments',
+            href: 'payments.index',
+            active: Boolean(route().current('payments.*')),
+            icon: BookOpenCheck,
+        },
+        {
+            label: 'Invoices',
+            href: 'invoices.index',
+            active: Boolean(route().current('invoices.*')),
+            icon: CreditCard,
+        },
+        {
+            label: 'Payment reports',
+            href: 'payment-reports.index',
+            active: Boolean(route().current('payment-reports.*')),
+            icon: TableOfContents,
+        },
+        {
+            label: 'Cashier Dashboard',
+            href: 'cashier-dashboard.index',
+            active: Boolean(route().current('cashier-dashboard.*')),
+            icon: LayoutDashboard,
+        },
+        {
+            label: 'Reports',
+            href: 'reports.index',
+            active: Boolean(route().current('reports.*')),
+            icon: TableOfContents,
+        },
+        {
+            label: 'User Management',
+            href: 'user-management.index',
+            active: Boolean(route().current('user-management.*')),
+            icon: UserCog,
+        },
+        {
+            label: 'My logs',
+            href: 'my-logs.index',
+            active: Boolean(route().current('my-logs.*')),
+            icon: ScrollText,
         },
     ];
 
@@ -45,195 +193,132 @@ export default function Authenticated({
             user?.email?.[0]?.toUpperCase() ||
             '?');
 
+    const hasHeader = Boolean(header);
+
     return (
-        <div className="min-h-screen bg-background">
-            <nav className="border-b bg-card">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 items-center justify-between">
-                        <div className="flex items-center gap-6">
-                            <Link href="/" className="flex items-center">
-                                <ApplicationLogo className="block h-8 w-auto fill-foreground" />
-                            </Link>
+        <SidebarProvider defaultOpen className="bg-muted/20">
+            <Sidebar collapsible="icon">
+                <SidebarHeader className="p-2 border-b border-sidebar-border">
+                    <Link
+                        href="/"
+                        className="flex items-center h-12 gap-2 px-2 rounded-md"
+                    >
+                        <ApplicationLogo className="w-auto h-8 fill-foreground" />
+                    </Link>
+                </SidebarHeader>
 
-                            <div className="hidden items-center gap-1 md:flex">
-                                {navigation.map((item) => (
-                                    <Link
-                                        key={item.label}
-                                        href={item.href}
-                                        className={cn(
-                                            'rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                                            item.active
-                                                ? 'bg-muted text-foreground'
-                                                : 'text-muted-foreground hover:text-foreground',
-                                        )}
-                                    >
-                                        {item.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        className="hidden items-center gap-2 md:flex"
-                                    >
-                                        <Avatar className="h-8 w-8">
-                                            {user?.profile_picture && (
-                                                <AvatarImage
-                                                    src={user.profile_picture}
-                                                    alt={user.name ?? 'User avatar'}
-                                                />
-                                            )}
-                                            <AvatarFallback>
-                                                {initials}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <span className="text-sm font-medium">
-                                            {user?.name}
-                                        </span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
-                                    <DropdownMenuLabel className="flex flex-col gap-1">
-                                        <span className="text-xs text-muted-foreground">
-                                            Signed in as
-                                        </span>
-                                        <span className="text-sm font-medium text-foreground">
-                                            {user?.name}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">
-                                            {user?.email}
-                                        </span>
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem asChild>
-                                        <Link href={route('profile.edit')} className="flex items-center gap-2">
-                                            <User2 className="h-4 w-4" />
-                                            Profile
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem asChild>
-                                        <Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
-                                            className="flex w-full items-center gap-2"
+                <SidebarContent>
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                {navigation.map(({ icon: Icon, ...item }) => (
+                                    <SidebarMenuItem key={item.label}>
+                                        <SidebarMenuButton
+                                            asChild
+                                            isActive={item.active}
+                                            tooltip={item.label}
                                         >
-                                            <LogOut className="h-4 w-4" />
-                                            Log Out
-                                        </Link>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                                            <Link
+                                                href={item.href}
+                                                className="flex items-center w-full gap-2"
+                                            >
+                                                <Icon className="w-4 h-4" aria-hidden="true" />
+                                                <span className="truncate">{item.label}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                </SidebarContent>
 
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="md:hidden"
-                                    >
-                                        <Menu className="h-5 w-5" />
-                                        <span className="sr-only">Open navigation</span>
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent side="left" className="w-80 px-0">
-                                    <div className="flex flex-col gap-6 p-6">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-10 w-10">
-                                                {user?.profile_picture && (
-                                                    <AvatarImage
-                                                        src={user.profile_picture}
-                                                        alt={user?.name ?? 'User avatar'}
-                                                    />
-                                                )}
-                                                <AvatarFallback className="text-base">
-                                                    {initials}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div className="space-y-0.5">
-                                                <p className="text-sm font-semibold text-foreground">
-                                                    {user?.name}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {user?.email}
-                                                </p>
-                                            </div>
-                                        </div>
+                <SidebarSeparator />
 
-                                        <div className="space-y-2">
-                                            <p className="text-xs font-semibold uppercase text-muted-foreground">
-                                                Navigation
-                                            </p>
-                                            <Separator />
-                                            <div className="flex flex-col gap-1">
-                                                {navigation.map((item) => (
-                                                    <SheetClose asChild key={item.label}>
-                                                        <Link
-                                                            href={item.href}
-                                                            className={cn(
-                                                                'rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                                                                item.active
-                                                                    ? 'bg-muted text-foreground'
-                                                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                                                            )}
-                                                        >
-                                                            {item.label}
-                                                        </Link>
-                                                    </SheetClose>
-                                                ))}
-                                            </div>
-                                        </div>
+                <SidebarFooter className="p-2 mt-auto border-t border-sidebar-border">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-start gap-3 rounded-md px-2 py-2 group-data-[collapsible=icon]:justify-center"
+                            >
+                                <Avatar className="w-8 h-8">
+                                    {user?.profile_picture && (
+                                        <AvatarImage
+                                            src={user.profile_picture}
+                                            alt={user?.name ?? 'User avatar'}
+                                        />
+                                    )}
+                                    <AvatarFallback>{initials}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex min-w-0 flex-col text-left group-data-[collapsible=icon]:hidden">
+                                    <span className="text-sm font-medium truncate">
+                                        {user?.name}
+                                    </span>
+                                    <span className="text-xs truncate text-muted-foreground">
+                                        {user?.email}
+                                    </span>
+                                </div>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" sideOffset={8} className="w-56">
+                            <DropdownMenuLabel className="flex flex-col gap-1">
+                                <span className="text-xs text-muted-foreground">
+                                    Signed in as
+                                </span>
+                                <span className="text-sm font-medium text-foreground">
+                                    {user?.name}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                    {user?.email}
+                                </span>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                                <Link
+                                    href={route('profile.edit')}
+                                    className="flex items-center gap-2"
+                                >
+                                    <User2 className="w-4 h-4" />
+                                    Profile
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                                <Link
+                                    href={route('logout')}
+                                    method="post"
+                                    as="button"
+                                    className="flex items-center w-full gap-2"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    Log Out
+                                </Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </SidebarFooter>
+            </Sidebar>
 
-                                        <div className="space-y-2">
-                                            <p className="text-xs font-semibold uppercase text-muted-foreground">
-                                                Account
-                                            </p>
-                                            <Separator />
-                                            <div className="flex flex-col gap-1">
-                                                <SheetClose asChild>
-                                                    <Link
-                                                        href={route('profile.edit')}
-                                                        className="rounded-md px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                                                    >
-                                                        Profile
-                                                    </Link>
-                                                </SheetClose>
-                                                <SheetClose asChild>
-                                                    <Link
-                                                        href={route('logout')}
-                                                        method="post"
-                                                        as="button"
-                                                        className="rounded-md px-3 py-2 text-left text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                                                    >
-                                                        Log Out
-                                                    </Link>
-                                                </SheetClose>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </SheetContent>
-                            </Sheet>
-                        </div>
-                    </div>
+            <SidebarInset className="bg-muted/20">
+                <div className="flex items-center gap-2 px-4 border-b h-14 bg-background sm:px-6 lg:px-8">
+                    <SidebarTrigger />
+                    {hasHeader && (
+                        <>
+                            <Separator orientation="vertical" className="h-6" />
+                            <div className="flex items-center flex-1 overflow-hidden">
+                                <div className="flex-1 overflow-hidden">
+                                    {header}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
-            </nav>
-
-            {header && (
-                <header className="bg-card shadow">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
-                    </div>
-                </header>
-            )}
-
-            <main className="bg-muted/20">
-                {children}
-            </main>
-        </div>
+                <div className="flex-1 p-4 sm:p-6 lg:p-8">
+                    {children}
+                </div>
+            </SidebarInset>
+        </SidebarProvider>
     );
 }
