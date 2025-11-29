@@ -3,14 +3,22 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasUuids, Notifiable;
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
 
     /**
      * The attributes that are mass assignable.
@@ -20,8 +28,16 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'first_name',
+        'last_name',
+        'identification_number',
+        'dob',
+        'phone',
+        'address',
         'password',
-        ''
+        'profile_picture',
+        'is_active',
+        'role_id',
     ];
 
     /**
@@ -43,7 +59,52 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'dob' => 'date',
+            'address' => 'array',
+            'is_active' => 'boolean',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Role, self>
+     */
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * @return HasOne<Student>
+     */
+    public function student(): HasOne
+    {
+        return $this->hasOne(Student::class);
+    }
+
+    /**
+     * @return HasOne<Professor>
+     */
+    public function professor(): HasOne
+    {
+        return $this->hasOne(Professor::class);
+    }
+
+    /**
+     * Domain notifications stored in notifications table, separate from Laravel's polymorphic notifications channel.
+     *
+     * @return HasMany<Notification>
+     */
+    public function notificationsRelation(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    /**
+     * @return HasMany<Trace>
+     */
+    public function traces(): HasMany
+    {
+        return $this->hasMany(Trace::class);
     }
 }
