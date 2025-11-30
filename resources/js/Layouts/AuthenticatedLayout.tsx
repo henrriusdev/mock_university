@@ -26,8 +26,28 @@ import {
     SidebarSeparator,
     SidebarTrigger,
 } from '@/Components/ui/sidebar';
+import { Roles } from '@/types/props';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, BookOpenCheck, BookOpenText, BookPlus, Cog, CreditCard, FileText, GraduationCap, LayoutDashboard, LogOut, ScrollText, ShieldUser, SquareUser, TableOfContents, User2, UserCog, UserPen } from 'lucide-react';
+import {
+    BookOpen,
+    BookOpenCheck,
+    BookOpenText,
+    BookPlus,
+    Cog,
+    CreditCard,
+    FileText,
+    GraduationCap,
+    LayoutDashboard,
+    LogOut,
+    Pencil,
+    ScrollText,
+    ShieldUser,
+    SquareUser,
+    TableOfContents,
+    User2,
+    UserCog,
+    UserPen,
+} from 'lucide-react';
 import { PropsWithChildren, ReactNode } from 'react';
 
 export default function Authenticated({
@@ -35,6 +55,7 @@ export default function Authenticated({
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
     const user = usePage().props.auth.user;
+    console.log(user);
 
     const navigation = [
         {
@@ -42,156 +63,212 @@ export default function Authenticated({
             href: route('dashboard'),
             active: Boolean(route().current('dashboard')),
             icon: LayoutDashboard,
+            roles: [Roles.ADMIN],
         },
         {
             label: 'Professors',
             href: 'professors.index',
             active: Boolean(route().current('professors.*')),
             icon: UserPen,
+            roles: [Roles.ADMIN, Roles.PROFESSOR_BOSS, Roles.CAREER_LEAD],
         },
         {
             label: 'Professor Dashboard',
             href: 'professor-dashboard.index',
             active: Boolean(route().current('professor-dashboard.*')),
             icon: LayoutDashboard,
+            roles: [Roles.PROFESSOR, Roles.PROFESSOR_BOSS, Roles.CAREER_LEAD],
         },
         {
             label: 'Careers',
-            href: 'careers.index',
+            href: route('careers.index'),
             active: Boolean(route().current('careers.*')),
             icon: GraduationCap,
+            roles: [Roles.ADMIN, Roles.CAREER_LEAD],
         },
         {
             label: 'Leader Dashboard',
             href: 'career-dashboard.index',
             active: Boolean(route().current('career-dashboard.*')),
             icon: LayoutDashboard,
+            roles: [Roles.CAREER_LEAD],
         },
         {
             label: 'Students',
             href: 'students.index',
             active: Boolean(route().current('students.*')),
             icon: User2,
+            roles: [Roles.ADMIN, Roles.CAREER_LEAD],
         },
         {
             label: 'Student Dashboard',
             href: 'student-dashboard.index',
             active: Boolean(route().current('student-dashboard.*')),
             icon: LayoutDashboard,
+            roles: [Roles.STUDENT],
         },
         {
             label: 'Registrars',
             href: 'registrars.index',
             active: Boolean(route().current('registrars.*')),
             icon: ShieldUser,
+            roles: [Roles.ADMIN],
         },
         {
             label: 'Registrar Dashboard',
             href: 'registrar-dashboard.index',
             active: Boolean(route().current('registrar-dashboard.*')),
             icon: LayoutDashboard,
+            roles: [Roles.REGISTRAR],
         },
         {
             label: 'Settings',
             href: 'profile.edit',
             active: Boolean(route().current('profile.*')),
             icon: Cog,
+            roles: [
+                Roles.ADMIN,
+                Roles.CAREER_LEAD,
+                Roles.REGISTRAR,
+                Roles.CASHIER,
+            ],
         },
         {
             label: 'Subjects',
             href: 'subjects.index',
             active: Boolean(route().current('subjects.*')),
             icon: BookOpen,
+            roles: [
+                Roles.ADMIN,
+                Roles.PROFESSOR,
+                Roles.PROFESSOR_BOSS,
+                Roles.CAREER_LEAD,
+            ],
         },
         {
             label: 'Current subjects',
             href: 'current-subjects.index',
             active: Boolean(route().current('current-subjects.*')),
             icon: BookOpenCheck,
+            roles: [Roles.STUDENT],
         },
         {
             label: 'Note History',
             href: 'note-history.index',
             active: Boolean(route().current('note-history.*')),
             icon: BookOpenText,
+            roles: [Roles.STUDENT],
         },
         {
             label: 'Subject Inscription',
             href: 'subject-inscriptions.index',
             active: Boolean(route().current('subject-inscriptions.*')),
             icon: BookPlus,
+            roles: [Roles.STUDENT],
         },
         {
             label: 'Requests',
             href: 'requests.index',
             active: Boolean(route().current('requests.*')),
             icon: FileText,
+            roles: [
+                Roles.STUDENT,
+                Roles.PROFESSOR,
+                Roles.CAREER_LEAD,
+                Roles.REGISTRAR,
+                Roles.ADMIN,
+                Roles.PROFESSOR_BOSS,
+            ],
         },
         {
             label: 'Audit logs',
             href: 'traces.index',
             active: Boolean(route().current('traces.*')),
             icon: ScrollText,
+            roles: [Roles.ADMIN],
         },
         {
             label: 'Cashiers',
             href: 'cashiers.index',
             active: Boolean(route().current('cashiers.*')),
             icon: SquareUser,
+            roles: [Roles.ADMIN],
         },
         {
             label: 'Payments',
             href: 'payments.index',
             active: Boolean(route().current('payments.*')),
             icon: BookOpenCheck,
+            roles: [Roles.CASHIER],
         },
         {
             label: 'Invoices',
             href: 'invoices.index',
             active: Boolean(route().current('invoices.*')),
             icon: CreditCard,
+            roles: [Roles.CASHIER, Roles.REGISTRAR, Roles.ADMIN],
         },
         {
             label: 'Payment reports',
             href: 'payment-reports.index',
             active: Boolean(route().current('payment-reports.*')),
             icon: TableOfContents,
+            roles: [Roles.CASHIER],
         },
         {
             label: 'Cashier Dashboard',
             href: 'cashier-dashboard.index',
             active: Boolean(route().current('cashier-dashboard.*')),
             icon: LayoutDashboard,
+            roles: [Roles.CASHIER],
         },
         {
             label: 'Reports',
             href: 'reports.index',
             active: Boolean(route().current('reports.*')),
             icon: TableOfContents,
+            roles: [Roles.ADMIN],
         },
         {
             label: 'User Management',
             href: 'user-management.index',
             active: Boolean(route().current('user-management.*')),
             icon: UserCog,
+            roles: [Roles.ADMIN],
         },
         {
             label: 'My logs',
             href: 'my-logs.index',
             active: Boolean(route().current('my-logs.*')),
             icon: ScrollText,
+            roles: [
+                Roles.ADMIN,
+                Roles.CAREER_LEAD,
+                Roles.REGISTRAR,
+                Roles.CASHIER,
+                Roles.PROFESSOR,
+                Roles.PROFESSOR_BOSS,
+                Roles.STUDENT,
+            ],
+        },
+        {
+            label: 'Roles & Permissions',
+            href: 'roles-permissions.index',
+            active: Boolean(route().current('roles-permissions.*')),
+            icon: Pencil,
+            roles: [Roles.ADMIN],
         },
     ];
 
     const initials =
-        (user?.name
+        user?.name
             ?.split(' ')
             .filter(Boolean)
             .map((segment: string) => segment[0]?.toUpperCase())
             .slice(0, 2)
             .join('') ||
-            user?.email?.[0]?.toUpperCase() ||
-            '?');
+        user?.email?.[0]?.toUpperCase() ||
+        '?';
 
     const hasHeader = Boolean(header);
 
@@ -212,23 +289,34 @@ export default function Authenticated({
                         <SidebarGroupLabel>Navigation</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {navigation.map(({ icon: Icon, ...item }) => (
-                                    <SidebarMenuItem key={item.label}>
-                                        <SidebarMenuButton
-                                            asChild
-                                            isActive={item.active}
-                                            tooltip={item.label}
-                                        >
-                                            <Link
-                                                href={item.href}
-                                                className="flex items-center w-full gap-2"
+                                {navigation
+                                    .filter((item) =>
+                                        item.roles.some(
+                                            (role) => user?.role === role,
+                                        ),
+                                    )
+                                    .map(({ icon: Icon, ...item }) => (
+                                        <SidebarMenuItem key={item.label}>
+                                            <SidebarMenuButton
+                                                asChild
+                                                isActive={item.active}
+                                                tooltip={item.label}
                                             >
-                                                <Icon className="w-4 h-4" aria-hidden="true" />
-                                                <span className="truncate">{item.label}</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                ))}
+                                                <Link
+                                                    href={item.href}
+                                                    className="flex items-center w-full gap-2"
+                                                >
+                                                    <Icon
+                                                        className="w-4 h-4"
+                                                        aria-hidden="true"
+                                                    />
+                                                    <span className="truncate">
+                                                        {item.label}
+                                                    </span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    ))}
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
@@ -262,7 +350,11 @@ export default function Authenticated({
                                 </div>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" sideOffset={8} className="w-56">
+                        <DropdownMenuContent
+                            align="end"
+                            sideOffset={8}
+                            className="w-56"
+                        >
                             <DropdownMenuLabel className="flex flex-col gap-1">
                                 <span className="text-xs text-muted-foreground">
                                     Signed in as
@@ -315,9 +407,7 @@ export default function Authenticated({
                         </>
                     )}
                 </div>
-                <div className="flex-1 p-4 sm:p-6 lg:p-8">
-                    {children}
-                </div>
+                <div className="flex-1 p-4 sm:p-6 lg:p-8">{children}</div>
             </SidebarInset>
         </SidebarProvider>
     );

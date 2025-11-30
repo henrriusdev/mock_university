@@ -71,7 +71,9 @@ class Subject extends Model
      */
     public function prerequisites(): BelongsToMany
     {
-        return $this->belongsToMany(self::class, 'precedence', 'subject_id', 'precedence_id');
+        return $this->belongsToMany(self::class, 'precedence', 'subject_id', 'precedence_id')
+            ->withPivot('id')
+            ->withTimestamps();
     }
 
     /**
@@ -79,6 +81,8 @@ class Subject extends Model
      */
     public function unlocks(): BelongsToMany
     {
-        return $this->belongsToMany(self::class, 'precedence', 'precedence_id', 'subject_id');
+        return $this->belongsToMany(self::class, 'precedence', 'precedence_id', 'subject_id')
+            ->withPivot('id')
+            ->withTimestamps();
     }
 }

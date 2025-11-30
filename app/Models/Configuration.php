@@ -31,6 +31,8 @@ class Configuration extends Model
         'end_registration_subjects' => 'datetime',
         'block_not_pay_inscription' => 'boolean',
         'fee_dates' => 'array',
+        'number_fees' => 'integer',
+        'number_notes' => 'integer',
         'notes_percentages' => 'array',
     ];
 

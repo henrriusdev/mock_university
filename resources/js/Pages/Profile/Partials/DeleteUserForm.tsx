@@ -82,9 +82,15 @@ export default function DeleteUserForm({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <Dialog open={confirmingUserDeletion} onOpenChange={handleOpenChange}>
+                <Dialog
+                    open={confirmingUserDeletion}
+                    onOpenChange={handleOpenChange}
+                >
                     <DialogTrigger asChild>
-                        <Button variant="destructive" onClick={confirmUserDeletion}>
+                        <Button
+                            variant="destructive"
+                            onClick={confirmUserDeletion}
+                        >
                             Delete Account
                         </Button>
                     </DialogTrigger>
@@ -95,9 +101,9 @@ export default function DeleteUserForm({
                                 Are you sure you want to delete your account?
                             </DialogTitle>
                             <DialogDescription>
-                                Once your account is deleted, all of its resources
-                                and data will be permanently removed. Please enter
-                                your password to confirm.
+                                Once your account is deleted, all of its
+                                resources and data will be permanently removed.
+                                Please enter your password to confirm.
                             </DialogDescription>
                         </DialogHeader>
 
@@ -112,7 +118,9 @@ export default function DeleteUserForm({
                                     name="password"
                                     ref={passwordInput}
                                     value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('password', e.target.value)
+                                    }
                                     autoFocus
                                     placeholder="Password"
                                 />
@@ -131,7 +139,11 @@ export default function DeleteUserForm({
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit" variant="destructive" disabled={processing}>
+                                <Button
+                                    type="submit"
+                                    variant="destructive"
+                                    disabled={processing}
+                                >
                                     Delete Account
                                 </Button>
                             </DialogFooter>

@@ -38,7 +38,9 @@ export default function Register() {
                         required
                     />
                     {errors.name && (
-                        <p className="text-sm text-destructive">{errors.name}</p>
+                        <p className="text-sm text-destructive">
+                            {errors.name}
+                        </p>
                     )}
                 </div>
 
@@ -54,7 +56,9 @@ export default function Register() {
                         required
                     />
                     {errors.email && (
-                        <p className="text-sm text-destructive">{errors.email}</p>
+                        <p className="text-sm text-destructive">
+                            {errors.email}
+                        </p>
                     )}
                 </div>
 
@@ -70,7 +74,9 @@ export default function Register() {
                         required
                     />
                     {errors.password && (
-                        <p className="text-sm text-destructive">{errors.password}</p>
+                        <p className="text-sm text-destructive">
+                            {errors.password}
+                        </p>
                     )}
                 </div>
 

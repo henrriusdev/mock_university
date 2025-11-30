@@ -43,7 +43,9 @@ export default function ResetPassword({
                         onChange={(e) => setData('email', e.target.value)}
                     />
                     {errors.email && (
-                        <p className="text-sm text-destructive">{errors.email}</p>
+                        <p className="text-sm text-destructive">
+                            {errors.email}
+                        </p>
                     )}
                 </div>
 
@@ -59,7 +61,9 @@ export default function ResetPassword({
                         onChange={(e) => setData('password', e.target.value)}
                     />
                     {errors.password && (
-                        <p className="text-sm text-destructive">{errors.password}</p>
+                        <p className="text-sm text-destructive">
+                            {errors.password}
+                        </p>
                     )}
                 </div>
 

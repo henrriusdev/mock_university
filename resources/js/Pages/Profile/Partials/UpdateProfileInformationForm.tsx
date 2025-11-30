@@ -119,9 +119,7 @@ export default function UpdateProfileInformation({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-muted-foreground">
-                            Saved.
-                        </p>
+                        <p className="text-sm text-muted-foreground">Saved.</p>
                     </Transition>
                 </CardFooter>
             </form>

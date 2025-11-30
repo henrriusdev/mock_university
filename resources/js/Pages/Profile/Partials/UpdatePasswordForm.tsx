@@ -94,7 +94,9 @@ export default function UpdatePasswordForm({
                             id="password"
                             ref={passwordInput}
                             value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
+                            onChange={(e) =>
+                                setData('password', e.target.value)
+                            }
                             type="password"
                             autoComplete="new-password"
                         />
@@ -138,9 +140,7 @@ export default function UpdatePasswordForm({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-muted-foreground">
-                            Saved.
-                        </p>
+                        <p className="text-sm text-muted-foreground">Saved.</p>
                     </Transition>
                 </CardFooter>
             </form>

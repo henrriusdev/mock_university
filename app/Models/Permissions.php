@@ -17,6 +17,7 @@ class Permissions extends Model
 
     protected $fillable = [
         'name',
+        'slug',
         'description',
     ];
 
@@ -25,6 +26,17 @@ class Permissions extends Model
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'roles_permissions');
+        return $this->belongsToMany(Role::class, 'roles_permissions', 'permission_id', 'role_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * @return BelongsToMany<User>
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_permissions', 'permission_id', 'user_id')
+            ->withPivot('id')
+            ->withTimestamps();
     }
 }

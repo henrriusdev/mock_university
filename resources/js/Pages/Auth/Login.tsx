@@ -50,7 +50,9 @@ export default function Login({
                         onChange={(e) => setData('email', e.target.value)}
                     />
                     {errors.email && (
-                        <p className="text-sm text-destructive">{errors.email}</p>
+                        <p className="text-sm text-destructive">
+                            {errors.email}
+                        </p>
                     )}
                 </div>
 
@@ -65,7 +67,9 @@ export default function Login({
                         onChange={(e) => setData('password', e.target.value)}
                     />
                     {errors.password && (
-                        <p className="text-sm text-destructive">{errors.password}</p>
+                        <p className="text-sm text-destructive">
+                            {errors.password}
+                        </p>
                     )}
                 </div>
 
@@ -78,7 +82,10 @@ export default function Login({
                                 setData('remember', checked === true)
                             }
                         />
-                        <Label htmlFor="remember" className="text-sm font-normal text-muted-foreground">
+                        <Label
+                            htmlFor="remember"
+                            className="text-sm font-normal text-muted-foreground"
+                        >
                             Remember me
                         </Label>
                     </div>

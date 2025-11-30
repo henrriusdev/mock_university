@@ -30,7 +30,10 @@ export default function VerifyEmail({ status }: { status?: string }) {
                 </div>
             )}
 
-            <form onSubmit={submit} className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <form
+                onSubmit={submit}
+                className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
                 <Button type="submit" disabled={processing}>
                     Resend Verification Email
                 </Button>

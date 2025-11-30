@@ -11,9 +11,7 @@ export default function Guest({ children }: PropsWithChildren) {
             </Link>
 
             <Card className="mt-8 w-full max-w-md">
-                <CardContent className="p-6 sm:p-8">
-                    {children}
-                </CardContent>
+                <CardContent className="p-6 sm:p-8">{children}</CardContent>
             </Card>
         </div>
     );
