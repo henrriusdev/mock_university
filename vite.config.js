@@ -10,10 +10,6 @@ export default defineConfig({
             ssr: 'resources/js/ssr.tsx',
             refresh: true,
         }),
-        watch({
-            pattern: "app/{Controllers,Models}/**/*.php",
-            command: "php artisan scribe:generate",
-        }),
         react(),
     ],
 });

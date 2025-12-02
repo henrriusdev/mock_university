@@ -11,7 +11,7 @@ class StoreCareerRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,12 @@ class StoreCareerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'careers' => ['required', 'array', 'min:1'],
+            'careers.*.id' => ['nullable', 'uuid', 'exists:careers,id'],
+            'careers.*.name' => ['required', 'string', 'max:255'],
+            'careers.*.code' => ['required', 'string', 'max:255'],
+            'careers.*.description' => ['nullable', 'string'],
+            'careers.*.leader_id' => ['nullable', 'uuid', 'exists:professors,id'],
         ];
     }
 }

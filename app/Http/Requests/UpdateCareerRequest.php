@@ -11,7 +11,7 @@ class UpdateCareerRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,10 @@ class UpdateCareerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'leader_id' => ['nullable', 'uuid', 'exists:professors,id'],
         ];
     }
 }

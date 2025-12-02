@@ -19,7 +19,9 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/careers', [CareerController::class, 'index'])->middleware(['auth', 'verified'])->name('careers.index');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('careers', CareerController::class);
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

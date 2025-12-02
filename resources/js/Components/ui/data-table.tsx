@@ -3,6 +3,7 @@ import {
     type ColumnDef,
     type ColumnFiltersState,
     type FilterFn,
+    type Row,
     type SortingState,
     type Table as TanTable,
     type VisibilityState,
@@ -83,6 +84,7 @@ interface DataTableProps<TData, TValue> {
     defaultPageSize?: number;
     defaultColumnVisibility?: VisibilityState;
     emptyMessage?: string;
+    children?: (row: Row<TData>) => React.ReactNode;
     className?: string;
 }
 
@@ -95,6 +97,7 @@ export function DataTable<TData, TValue>({
     defaultPageSize,
     defaultColumnVisibility,
     emptyMessage = 'No results found.',
+    children,
     className,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -163,18 +166,14 @@ export function DataTable<TData, TValue>({
     );
 
     const resolvedColumns = React.useMemo(() => {
-        if (!filterConfigById.size) {
-            return columns;
-        }
-
-        const patchColumns = <TVal,>(
+        const applyFilterConfig = <TVal,>(
             defs: ColumnDef<TData, TVal>[],
         ): ColumnDef<TData, TVal>[] =>
             defs.map((column) => {
                 if ('columns' in column && column.columns) {
                     return {
                         ...column,
-                        columns: patchColumns(
+                        columns: applyFilterConfig(
                             column.columns as ColumnDef<TData, unknown>[],
                         ),
                     };
@@ -219,10 +218,43 @@ export function DataTable<TData, TValue>({
                 };
             });
 
-        return patchColumns(
-            columns as ColumnDef<TData, unknown>[],
-        ) as ColumnDef<TData, TValue>[];
-    }, [columns, equalsFilterFn, filterConfigById, multiSelectFilterFn]);
+        const baseColumns = (filterConfigById.size
+            ? applyFilterConfig(columns as ColumnDef<TData, unknown>[])
+            : (columns as ColumnDef<TData, unknown>[])) as ColumnDef<
+            TData,
+            unknown
+        >[];
+
+        if (!children) {
+            return baseColumns as ColumnDef<TData, TValue>[];
+        }
+
+        return [
+            ...baseColumns,
+            {
+                id: '__actions',
+                header: () => (
+                    <>
+                    
+                    </>
+                ),
+                enableSorting: false,
+                enableHiding: false,
+                cell: ({ row }) => (
+                    <div className="flex items-center justify-center gap-2">
+                        {children(row)}
+                    </div>
+                ),
+                meta: { title: "Actions" },
+            } satisfies ColumnDef<TData, unknown>,
+        ] as ColumnDef<TData, TValue>[];
+    }, [
+        columns,
+        equalsFilterFn,
+        filterConfigById,
+        multiSelectFilterFn,
+        children,
+    ]);
 
     const table = useReactTable({
         data,
@@ -251,7 +283,7 @@ export function DataTable<TData, TValue>({
     return (
         <div className={cn('space-y-4', className)}>
             <DataTableToolbar table={table} search={search} filters={filters} />
-            <div className="rounded-md border">
+            <div className="border rounded-md">
                 <UiTable>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -295,7 +327,7 @@ export function DataTable<TData, TValue>({
                             <TableRow>
                                 <TableCell
                                     colSpan={table.getAllLeafColumns().length}
-                                    className="h-24 text-center text-sm text-muted-foreground"
+                                    className="h-24 text-sm text-center text-muted-foreground"
                                 >
                                     {emptyMessage}
                                 </TableCell>
@@ -328,7 +360,7 @@ function DataTableToolbar<TData>({
 
     return (
         <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-1 flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center flex-1 gap-2">
                 {searchColumn ? (
                     <Input
                         placeholder={search?.placeholder ?? 'Search...'}
@@ -340,7 +372,7 @@ function DataTableToolbar<TData>({
                                     : undefined,
                             )
                         }
-                        className="h-9 w-full sm:w-64"
+                        className="w-full h-9 sm:w-64"
                     />
                 ) : null}
 
@@ -369,7 +401,7 @@ function DataTableToolbar<TData>({
                         className="h-8 px-2 text-sm"
                     >
                         Reset
-                        <X className="ml-2 h-4 w-4" />
+                        <X className="w-4 h-4 ml-2" />
                     </Button>
                 ) : null}
             </div>
@@ -425,20 +457,20 @@ function DataTableFacetedFilter<TData>({
                     size="sm"
                     className="h-8 border-dashed"
                 >
-                    <Filter className="mr-2 h-4 w-4" />
+                    <Filter className="w-4 h-4 mr-2" />
                     {title}
                     {selectedValues.size > 0 ? (
                         <Badge
                             variant="secondary"
-                            className="ml-2 rounded-full px-2"
+                            className="px-2 ml-2 rounded-full"
                         >
                             {selectedValues.size}
                         </Badge>
                     ) : null}
-                    <ChevronDown className="ml-2 h-4 w-4" />
+                    <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-60 p-1">
+            <DropdownMenuContent align="start" className="p-1 w-60">
                 {multi ? (
                     options.map((option) => {
                         const checked = selectedValues.has(option.value);
@@ -463,7 +495,7 @@ function DataTableFacetedFilter<TData>({
                                 className="capitalize"
                             >
                                 {option.icon ? (
-                                    <option.icon className="mr-2 h-4 w-4" />
+                                    <option.icon className="w-4 h-4 mr-2" />
                                 ) : null}
                                 {option.label}
                             </DropdownMenuCheckboxItem>
@@ -488,9 +520,9 @@ function DataTableFacetedFilter<TData>({
                                 value={option.value}
                                 className="capitalize"
                             >
-                                <span className="flex w-full items-center gap-2">
+                                <span className="flex items-center w-full gap-2">
                                     {option.icon ? (
-                                        <option.icon className="h-4 w-4" />
+                                        <option.icon className="w-4 h-4" />
                                     ) : null}
                                     <span>{option.label}</span>
                                 </span>
@@ -528,9 +560,9 @@ function DataTableViewOptions<TData>({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="ml-auto h-8">
+                <Button variant="outline" size="sm" className="h-8 ml-auto">
                     Columns
-                    <ChevronDown className="ml-2 h-4 w-4" />
+                    <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -583,7 +615,7 @@ function DataTablePagination<TData>({
                         table.setPageSize(Number(value));
                     }}
                 >
-                    <SelectTrigger className="h-8 w-24">
+                    <SelectTrigger className="w-24 h-8">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -655,11 +687,11 @@ export function DataTableColumnHeader<TData, TValue>({
         >
             <span>{title}</span>
             {isSorted === 'asc' ? (
-                <ArrowUp className="h-4 w-4" />
+                <ArrowUp className="w-4 h-4" />
             ) : isSorted === 'desc' ? (
-                <ArrowDown className="h-4 w-4" />
+                <ArrowDown className="w-4 h-4" />
             ) : (
-                <ArrowUpDown className="h-4 w-4" />
+                <ArrowUpDown className="w-4 h-4" />
             )}
         </Button>
     );
