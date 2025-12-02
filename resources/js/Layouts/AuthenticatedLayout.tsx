@@ -67,7 +67,7 @@ export default function Authenticated({
         },
         {
             label: 'Professors',
-            href: 'professors.index',
+            href: route('professors.index'),
             active: Boolean(route().current('professors.*')),
             icon: UserPen,
             roles: [Roles.ADMIN, Roles.PROFESSOR_BOSS, Roles.CAREER_LEAD],

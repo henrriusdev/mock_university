@@ -119,8 +119,8 @@ const careersFormSchema = z.object({
 type CareersFormValues = z.infer<typeof careersFormSchema>;
 type CareersFormItem = CareersFormValues['careers'][number];
 
-export default function Careers() {
-  const { careers } = usePage<{ careers: CareerRow[] }>().props;
+export default function Professors() {
+  const { professors: careers } = usePage<{ professors: CareerRow[] }>().props;
   const [isEdit, setIsEdit] = useState(false);
   const [career, setCareer] = useState<CareerRow | null>(null);
 

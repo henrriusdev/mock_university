@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CareerController;
+use App\Http\Controllers\ProfessorController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,7 @@ Route::get('/dashboard', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('careers', CareerController::class);
+    Route::resource('professors', ProfessorController::class);
 });
 
 Route::middleware('auth')->group(function () {

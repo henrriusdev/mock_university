@@ -13,7 +13,6 @@ class CareerController extends Controller
 {
     /**
      * Display a listing of the resource.
-     * @group Career
      */
     public function index()
     {
