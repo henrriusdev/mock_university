@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CareerController;
 use App\Http\Controllers\ProfessorController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,10 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/invitations/{token}', InvitationController::class)
+    ->middleware('guest')
+    ->name('invitations.accept');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('careers', CareerController::class);

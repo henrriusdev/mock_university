@@ -1,8 +1,10 @@
 import { Pencil } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { z } from 'zod';
 
-import { BatchCareersDialog } from '@/Components/forms/BatchCareerDialog';
+import {
+  BatchProfessorDialog,
+  type ProfessorRow,
+} from '@/Components/forms/BatchProfessorDialog';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -16,125 +18,86 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage } from '@inertiajs/react';
 import type { ColumnDef, Row } from '@tanstack/react-table';
 
-type CareerRow = {
-  id: string;
-  code: string;
-  name: string;
-  description: string | null;
-  leader: string | null;
-  leaderId: string | null;
-};
-
-const columns: ColumnDef<CareerRow>[] = [
+const columns: ColumnDef<ProfessorRow>[] = [
   {
-    accessorKey: 'code',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Code" />
-    ),
-    cell: ({ row }) => (
-      <span className="font-mono text-xs tracking-wide uppercase text-muted-foreground sm:text-sm">
-        {row.getValue<string>('code')}
-      </span>
-    ),
-    meta: { title: 'Code' },
-  },
-  {
-    accessorKey: 'name',
+    accessorKey: 'firstName',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
-    cell: ({ row }) => (
-      <span className="font-medium text-foreground">
-        {row.getValue<string>('name')}
-      </span>
-    ),
-    meta: { title: 'Name' },
-  },
-  {
-    accessorKey: 'leader',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Leader" />
-    ),
     cell: ({ row }) => {
-      const leader = row.original.leader;
-      if (!leader) {
-        return <Badge variant="outline">Unassigned</Badge>;
-      }
-
-      return <span>{leader}</span>;
-    },
-    meta: { title: 'Leader' },
-  },
-  {
-    accessorKey: 'description',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Description" />
-    ),
-    cell: ({ row }) => {
-      const description = row.original.description;
-      if (!description) {
-        return <span className="text-muted-foreground">—</span>;
-      }
-
+      const { firstName, lastName } = row.original;
       return (
-        <span className="block max-w-2xl truncate text-muted-foreground">
-          {description}
+        <span className="font-medium text-foreground">
+          {firstName} {lastName}
         </span>
       );
     },
-    enableSorting: false,
-    meta: { title: 'Description' },
+    meta: { title: 'Name' },
+  },
+  {
+    accessorKey: 'email',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Email" />
+    ),
+    cell: ({ row }) => (
+      <span className="font-mono text-xs text-muted-foreground sm:text-sm">
+        {row.original.email}
+      </span>
+    ),
+    meta: { title: 'Email' },
+  },
+  {
+    id: 'boss',
+    accessorFn: (row) => row.boss?.name ?? EMPTY_FILTER_VALUE,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Boss" />
+    ),
+    cell: ({ row }) => {
+      const boss = row.original.boss;
+      if (!boss) {
+        return <Badge variant="outline">Unassigned</Badge>;
+      }
+
+      return <span>{boss.name}</span>;
+    },
+    meta: { title: 'Boss' },
+  },
+  {
+    accessorKey: 'createdAt',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Created" />
+    ),
+    cell: ({ row }) => {
+      const created = row.original.createdAt;
+      if (!created) {
+        return <span className="text-muted-foreground">—</span>;
+      }
+
+      const formatted = new Date(created).toLocaleString();
+
+      return <span className="text-muted-foreground">{formatted}</span>;
+    },
+    meta: { title: 'Created' },
   },
 ];
 
-const careerFormSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z
-    .string()
-    .trim()
-    .min(1, 'Name is required')
-    .max(255, 'Name must not exceed 255 characters'),
-  code: z
-    .string()
-    .trim()
-    .min(1, 'Code is required')
-    .max(255, 'Code must not exceed 255 characters'),
-  description: z
-    .string()
-    .max(65535, 'Description is too long')
-    .optional()
-    .nullable(),
-  leaderId: z
-    .union([z.string().trim().length(0), z.string().uuid('Leader must be a valid UUID')])
-    .optional()
-    .transform((value) => (!value || value.length === 0 ? undefined : value)),
-});
-
-const careersFormSchema = z.object({
-  careers: z
-    .array(careerFormSchema)
-    .min(1, 'Add at least one career to continue'),
-});
-
-type CareersFormValues = z.infer<typeof careersFormSchema>;
-type CareersFormItem = CareersFormValues['careers'][number];
-
 export default function Professors() {
-  const { professors: careers } = usePage<{ professors: CareerRow[] }>().props;
+  const { professors } = usePage<{ professors: ProfessorRow[] }>().props;
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [career, setCareer] = useState<CareerRow | null>(null);
+  const [selectedProfessor, setSelectedProfessor] = useState<ProfessorRow | null>(null);
 
-  const leaderFilterOptions = useMemo(() => {
-    if (!careers?.length) {
+  const bossFilterOptions = useMemo(() => {
+    if (!professors?.length) {
       return [];
     }
 
     const names = new Set<string>();
     let includeUnassigned = false;
 
-    careers.forEach((career) => {
-      if (career.leader) {
-        names.add(career.leader);
+    professors.forEach((professor) => {
+      if (professor.boss?.name) {
+        names.add(professor.boss.name);
       } else {
         includeUnassigned = true;
       }
@@ -149,58 +112,70 @@ export default function Professors() {
     }
 
     return options;
-  }, [careers]);
+  }, [professors]);
 
-  const filters = useMemo<DataTableFilterConfig<CareerRow>[]>(() => {
-    if (!leaderFilterOptions.length) {
+  const filters = useMemo<DataTableFilterConfig<ProfessorRow>[]>(() => {
+    if (!bossFilterOptions.length) {
       return [];
     }
 
     return [
       {
-        columnId: 'leader',
-        title: 'Leader',
-        options: leaderFilterOptions,
+        columnId: 'boss',
+        title: 'Boss',
+        options: bossFilterOptions,
         multi: true,
       },
     ];
-  }, [leaderFilterOptions]);
+  }, [bossFilterOptions]);
 
   return (
     <AuthenticatedLayout
       header={
         <h2 className="text-xl font-semibold leading-tight text-foreground">
-          Careers
+          Professors
         </h2>
       }
     >
-      <Head title="Careers" />
+      <Head title="Professors" />
       <div className="py-12">
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <Card>
             <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle>Careers</CardTitle>
-              <BatchCareersDialog open={isEdit} onOpenChange={setIsEdit} isEdit={isEdit} career={career} />
+              <CardTitle>Professors</CardTitle>
+              <BatchProfessorDialog
+                professor={selectedProfessor}
+                isEdit={isEdit}
+                open={dialogOpen}
+                onOpenChange={(open) => {
+                  setDialogOpen(open);
+                  if (!open) {
+                    setSelectedProfessor(null);
+                    setIsEdit(false);
+                  }
+                }}
+              />
             </CardHeader>
             <CardContent className="p-6">
               <DataTable
                 columns={columns}
-                data={careers ?? []}
+                data={professors ?? []}
                 search={{
-                  columnId: 'name',
-                  placeholder: 'Search careers...',
+                  columnId: 'firstName',
+                  placeholder: 'Search professors...',
                 }}
                 filters={filters}
                 pageSizes={[10, 25, 50]}
-                emptyMessage="No careers found."
+                emptyMessage="No professors found."
               >
-                {(row: Row<CareerRow>) => (
+                {(row: Row<ProfessorRow>) => (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setCareer(row.original);
+                      setSelectedProfessor(row.original);
                       setIsEdit(true);
+                      setDialogOpen(true);
                     }}
                     className="gap-1"
                   >
